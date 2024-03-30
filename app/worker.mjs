@@ -1,5 +1,5 @@
 import * as turf from '@turf/turf'
-import polylabel from 'polylabel';
+// import polylabel from 'polylabel';
 
 
 const installEvent = () => {

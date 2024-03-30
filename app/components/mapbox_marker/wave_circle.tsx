@@ -240,11 +240,12 @@ export default class WaveCircle {
         let pins: any[] = [];
         for (let index = 0; index < selectedArea.length; index++) {
             const polygon = selectedArea[index];
-            var p = polylabel(polygon.geometry.coordinates, 1.0);
+            var p : number[] = polylabel(polygon.geometry.coordinates, 1.0);
             if (p != null && typeof p[0] === 'number' && typeof p[1] === 'number' && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) {
                 pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'danger-icon' }));
             } else {
-                p = turf.centroid(polygon).geometry.coordinates;
+                const coor = turf.centroid(polygon).geometry.coordinates;
+                p = [coor[0], coor[1]];
                 pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'danger-icon' }));
             }
         }

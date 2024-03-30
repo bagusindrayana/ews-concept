@@ -9,7 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@turf/turf": "^6.5.0",
+    "@turf/turf": "^7.0.0-alpha.2",
     "@types/mapbox-gl": "^3.1.0",
     "@types/polylabel": "^1.1.3",
     "mapbox-gl": "^3.2.0",
