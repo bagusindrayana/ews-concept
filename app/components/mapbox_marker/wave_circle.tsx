@@ -89,7 +89,7 @@ export default class WaveCircle {
                         this.highlightSelectedArea(data.highlightSelectedArea);
                     }
 
-                    if(this.selectedPointSetting){
+                    if (this.selectedPointSetting) {
                         this.showSelectedPoint(data.highlightSelectedArea);
                     }
                 }
@@ -240,7 +240,7 @@ export default class WaveCircle {
         let pins: any[] = [];
         for (let index = 0; index < selectedArea.length; index++) {
             const polygon = selectedArea[index];
-            var p : number[] = polylabel(polygon.geometry.coordinates, 1.0);
+            var p: number[] = polylabel(polygon.geometry.coordinates, 1.0);
             if (p != null && typeof p[0] === 'number' && typeof p[1] === 'number' && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) {
                 pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'danger-icon' }));
             } else {
@@ -248,38 +248,49 @@ export default class WaveCircle {
                 p = [coor[0], coor[1]];
                 pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'danger-icon' }));
             }
+            //if p not in this.selecttedPoint
+            if (this.selecttedPoint.findIndex((el) => el[0] == p[0] && el[1] == p[1]) == -1) {
+                this.selecttedPoint.push(p);
+                const markerEl = document.createElement('div');
+                markerEl.innerHTML = '<p class="uppercase">'+polygon.properties.shapeName+'</p>';
+                markerEl.classList.add('marker-daerah');
+                new mapboxgl.Marker(markerEl)
+                    .setLngLat([p[0], p[1]])
+                    .addTo(this.map)
+            }
         }
 
         //add circle point to map
-        if (pins.length > 0) {
-            if (this.map?.getSource('pin-source-' + this.id)) {
-                (this.map?.getSource('pin-source-' + this.id) as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": pins });
-            } else {
-                this.map?.addSource('pin-source-' + this.id, {
-                    'type': 'geojson',
-                    'data': { "type": "FeatureCollection", "features": pins }
-                });
-            }
+        // if (pins.length > 0) {
+        //     if (this.map?.getSource('pin-source-' + this.id)) {
+        //         (this.map?.getSource('pin-source-' + this.id) as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": pins });
+        //     } else {
+        //         this.map?.addSource('pin-source-' + this.id, {
+        //             'type': 'geojson',
+        //             'data': { "type": "FeatureCollection", "features": pins }
+        //         });
+        //     }
 
-            if (!this.map?.getLayer('pin-layer-' + this.id)) {
-                this.map?.addLayer({
-                    'id': 'pin-layer-' + this.id,
-                    'type': 'symbol',
-                    'source': 'pin-source-' + this.id,
-                    'layout': {
-                        'icon-image': '{icon}',
-                        'icon-size': 0.05,
-                        'text-field': '{title}',
-                        'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
-                        'text-offset': [0, 0.6],
-                        'text-anchor': 'top',
-                    },
-                    'paint': {
-                        "text-color": "red"
-                    }
-                });
-            }
-        }
+        //     if (!this.map?.getLayer('pin-layer-' + this.id)) {
+        //         this.map?.addLayer({
+        //             'id': 'pin-layer-' + this.id,
+        //             'type': 'symbol',
+        //             'source': 'pin-source-' + this.id,
+        //             'layout': {
+        //                 'icon-image': '{icon}',
+        //                 'icon-size': 0.05,
+        //                 'text-field': '{title}',
+        //                 'text-font': ['Open Sans Semibold', 'Arial Unicode MS Bold'],
+        //                 'text-offset': [0, 0.6],
+        //                 'text-anchor': 'bottom',
+
+        //             },
+        //             'paint': {
+        //                 "text-color": "red",
+        //             },
+        //         });
+        //     }
+        // }
     }
 
     // checkIntersection()  {

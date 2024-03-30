@@ -42,7 +42,7 @@ export default function Home() {
       });
 
       map.current!.loadImage(
-        '/danger-svgrepo-com.png', (err, image:any) => {
+        '/danger-svgrepo-com.png', (err, image: any) => {
           // Throw an error if something goes wrong.
           if (err) throw err;
 
@@ -50,6 +50,16 @@ export default function Home() {
           map.current!.addImage('danger-icon', image);
 
         });
+
+        map.current!.loadImage(
+          '/hexagons.png', (err, image: any) => {
+            // Throw an error if something goes wrong.
+            if (err) throw err;
+  
+            // Add the image to the map style.
+            map.current!.addImage('hexagons', image);
+  
+          });
 
       map.current!.addLayer({
         'id': 'wilayah',
@@ -152,6 +162,7 @@ export default function Home() {
 
     //wait 1 second
     await new Promise(r => setTimeout(r, 1000));
+    setEvents([...events, data.message]);
     map.current.flyTo({
       center: [data.lng, data.lat],
       zoom: 7,
@@ -170,7 +181,7 @@ export default function Home() {
       .setLngLat([data.lng, data.lat])
       .addTo(map.current)
 
-    setEvents([...events, data.message]);
+    
     const newWaves = [
       new WaveCircle('p-wave-' + time, 6000, map.current, [data.lng, data.lat], {
         color: '#744a00',
@@ -179,7 +190,7 @@ export default function Home() {
           color: '#ffaa13',
           opacity: 1
         },
-        selectedPointSetting:{},
+        selectedPointSetting: {},
         worker: worker.current
       }),
       new WaveCircle('s-wave-' + time, 2000, map.current, [data.lng, data.lat], {
@@ -317,7 +328,7 @@ export default function Home() {
           {events.map((v, i) => {
             return <li key={i}>{v}</li>
           })}
-          
+
 
         </ul>
       </Card>

@@ -26,7 +26,7 @@ function checkIntersection(allPolygon,center,size,id) {
     let highlightSelectedArea = [];
     for (let index = 0; index < allPolygon.length; index++) {
         const polygon = allPolygon[index];
-        var intersection = turf.intersect(polygon, buffer);
+        var intersection = turf.intersect(turf.featureCollection([polygon, buffer]));
         if (intersection) {
             // console.log(intersection);
             highlightIntersectArea.push(intersection);
