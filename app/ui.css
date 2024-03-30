@@ -1,0 +1,251 @@
+:root {
+    --orange: #fc7216;
+    --red: #FC3B16;
+  }
+
+.red-color {
+    color: var(--red);
+}
+
+.red-bg {
+    background-color: var(--red);
+}
+
+.red-border {
+    border: 3px solid var(--red);
+}
+
+.strip-bar {
+
+    background-image: url("/strip.svg");
+    background-size: 27.59%;
+    width: 1915px;
+    height: 50px;
+    display: inline-block;
+    margin-bottom: -5px;
+}
+
+.strip {
+
+    background-color: black;
+    width: 100vw;
+    border-top: 3px solid var(--red);
+    border-bottom: 3px solid var(--red);
+    position: fixed;
+
+    
+}
+
+.strip-wrapper {
+    width: 1915px;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+@keyframes marquee1 {
+    0% {
+        transform: translateX(100%);
+    }
+
+    100% {
+        transform: translateX(-100%);
+    }
+}
+
+@keyframes marquee2 {
+    from {
+        transform: translateX(0%);
+    }
+
+    to {
+        transform: translateX(-200%);
+    }
+}
+
+.loop-strip {
+    animation: loopStrip infinite linear;
+    animation-duration: 5s;
+}
+
+.loop-strip-reverse {
+    animation: loopStrip infinite linear reverse;
+    animation-duration: 5s;
+}
+
+.anim-duration-10 {
+    animation-duration: 10s !important;
+}
+
+.anim-duration-20 {
+    animation-duration: 20s !important;
+}
+
+@keyframes loopStrip {
+
+    from {
+        transform: translateX(0);
+    }
+
+    to {
+        transform: translateX(-100%);
+    }
+
+}
+
+.show-pop-up {
+    animation: showPopUp 0.3s ease-in-out;
+}
+
+
+
+@keyframes showPopUp {
+    0% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.close-pop-up {
+    animation: closePopUp 0.3s ease-in-out forwards;
+}
+
+@keyframes closePopUp {
+    0% {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    100% {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+}
+
+.vertical-reveal {
+    animation: verticalReveal 0.3s ease-in-out;
+}
+
+@keyframes verticalReveal {
+    0% {
+        transform: scaleY(0);
+    }
+
+    100% {
+        transform: scaleY(1);
+    }
+}
+
+.glow-effect {
+    animation: glowEffect 1s infinite;
+}
+
+@keyframes glowEffect {
+    0% {
+        -webkit-box-shadow: 0px 0px 66px 17px rgba(252, 60, 22, 0.59);
+        -moz-box-shadow: 0px 0px 66px 17px rgba(252, 60, 22, 0.59);
+        box-shadow: 0px 0px 66px 17px rgba(252, 60, 22, 0.59);
+    }
+
+    50% {
+        -webkit-box-shadow: 0px 0px 66px 44px rgba(252, 60, 22, 0.9);
+        -moz-box-shadow: 0px 0px 66px 44px rgba(252, 60, 22, 0.9);
+        box-shadow: 0px 0px 66px 44px rgba(252, 60, 22, 0.9);
+    }
+
+    100% {
+        -webkit-box-shadow: 0px 0px 66px 17px rgba(252, 60, 22, 0.59);
+        -moz-box-shadow: 0px 0px 66px 17px rgba(252, 60, 22, 0.59);
+        box-shadow: 0px 0px 66px 17px rgba(252, 60, 22, 0.59);
+    }
+}
+/* 
+.card {
+    background-color: black;
+    border: 3px var(--orange) solid;
+    transition: 0.3s;
+   
+    color: white;
+}
+
+.card-header {
+    padding: 10px;
+    border-bottom: 3px var(--orange) solid;
+    color: var(--orange);
+}
+
+.card-content {
+    padding: 20px;
+} */
+
+
+.marker-gempa {
+    /* border: 3px red solid; */
+    /* width: 25px;
+    height: 25px; */
+    font-size: 20px;
+    color: red;
+    cursor: pointer;
+    
+}
+
+.marker-gempa-wave {
+    border: 3px red solid;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    font-size: 20px;
+    color: red;
+    cursor: pointer;
+    
+}
+
+.mapboxgl-popup {
+    width: auto;
+}
+
+.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+    border-top-color: unset;
+    height: 70px;
+    width: 3px;
+    background-color: red;
+    border:unset;
+}
+
+.mapboxgl-popup-anchor-top .mapboxgl-popup-tip {
+    border-top-color: unset;
+    height: 70px;
+    width: 3px;
+    background-color: red;
+    border:unset;
+}
+
+.mapboxgl-popup-content {
+    background-color: unset;
+    border: unset;
+    border-radius: 0;
+    padding: unset;
+    max-width: 200px;
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0% {
+        opacity: 0;
+    }
+
+    50% {
+        opacity: 1;
+    }
+
+    100% {
+        opacity: 0;
+    }
+}
