@@ -9,6 +9,8 @@ import TitikGempa from './components/mapbox_marker/titik_gempa';
 import GempaBumiAlert from './components/GempaBumiAlert';
 import * as turf from '@turf/turf'
 import Card from './components/card/card';
+import { createRoot } from 'react-dom/client';
+import AnimatedPopup from 'mapbox-gl-animated-popup';
 
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
@@ -41,6 +43,8 @@ export default function Home() {
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
   const [infoGempas, setInfoGempas] = useState<InfoGempa[]>([]);
   const [stackAlerts, setStackAlerts] = useState<InfoGempa[]>([]);
+  const [detailInfoGempa, setDetailInfoGempa] = useState<InfoGempa | null>(null);
+
   const igs = useRef<InfoGempa[]>([]);
   const markerDaerahs = useRef<any[]>([]);
 
@@ -48,7 +52,7 @@ export default function Home() {
 
 
   const warningHandler = async (data: any) => {
-    
+
     await new Promise(r => setTimeout(r, 6000));
     const time = new Date().toLocaleTimeString();
     if (!map.current) return;
@@ -134,7 +138,7 @@ export default function Home() {
             }
           });
         });
-        
+
 
         initWorker();
 
@@ -151,7 +155,7 @@ export default function Home() {
       console.log('connected');
     });
     socket.on('warning', (v: any) => {
-      const nig : InfoGempa = {
+      const nig: InfoGempa = {
         lng: parseFloat(v.lng),
         lat: parseFloat(v.lat),
         mag: v.mage || 9.0,
@@ -280,7 +284,7 @@ export default function Home() {
               lng: feature.geometry.coordinates[0],
               lat: feature.geometry.coordinates[1],
               mag: feature.properties.mag,
-              depth: feature.geometry.depth,
+              depth: feature.properties.depth,
               place: feature.properties.place,
               time: feature.properties.time
             });
@@ -325,6 +329,58 @@ export default function Home() {
             });
           }
 
+          map.current!.on('click', 'earthquakes-layer', (e: any) => {
+            // Copy coordinates array.
+            const coordinates = e.features[0].geometry.coordinates.slice();
+            const d = e.features[0].properties;
+            const placeholder = document.createElement('div');
+            const root = createRoot(placeholder)
+            root.render(<Card title={
+              <div className='overflow-hidden'>
+                <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+                <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                  <p className='p-1 bg-black font-bold text-2xl text-glow'>GEMPA BUMI</p>
+                </div>
+              </div>
+            } className='min-h-48 min-w-48 whitespace-pre-wrap' >
+              <ul>
+                <li>
+                  Magnitudo : {d.mag}
+                </li>
+                <li>
+                  Kedalaman : {d.depth}
+                </li>
+                <li>
+                  Waktu : {new Date(d.time!).toLocaleString()}
+                </li>
+                <li>
+                  Lokasi (Lat,Lng) : <br />{coordinates[0]} , {coordinates[1]}
+                </li>
+              </ul>
+            </Card>);
+
+            new AnimatedPopup({
+              openingAnimation: {
+                duration: 100,
+                easing: 'easeOutSine',
+                transform: 'scale'
+              },
+              closingAnimation: {
+                duration: 100,
+                easing: 'easeInOutSine',
+                transform: 'scale'
+              }
+            }).setDOMContent(placeholder).setLngLat(coordinates).addTo(map.current!);
+          });
+
+          map.current!.on('mouseenter', 'earthquakes-layer', () => {
+            map.current!.getCanvas().style.cursor = 'pointer';
+          });
+
+          // Change it back to a pointer when it leaves.
+          map.current!.on('mouseleave', 'earthquakes-layer', () => {
+            map.current!.getCanvas().style.cursor = '';
+          });
 
         });
       })
@@ -359,7 +415,7 @@ export default function Home() {
             lastGempaId.current = data.identifier;
             const coordinates = data.info.point.coordinates.split(",");
 
-            const nig : InfoGempa = {
+            const nig: InfoGempa = {
               lng: parseFloat(coordinates[0]),
               lat: parseFloat(coordinates[1]),
               mag: parseFloat(data.info.magnitude),
@@ -381,13 +437,65 @@ export default function Home() {
               depth: data.info.depth,
               message: data.info.description + "\n" + data.info.instruction
             });
-            
+
           }
         })
         .catch((error) => {
           console.error('Error initializing socket:', error);
         });
     }, 5000);
+  }
+
+  const selectedPopup = useRef<any>(null);
+  function selectEvent(d: InfoGempa) {
+    setDetailInfoGempa(d);
+    if (selectedPopup.current) {
+      selectedPopup.current.remove();
+    }
+    map.current!.flyTo({
+      center: [d.lng, d.lat],
+      zoom: 7,
+      essential: true
+    });
+    const placeholder = document.createElement('div');
+    const root = createRoot(placeholder)
+    root.render(<Card title={
+      <div className='overflow-hidden'>
+        <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+        <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+          <p className='p-1 bg-black font-bold text-2xl text-glow'>GEMPA BUMI</p>
+        </div>
+      </div>
+    } className='min-h-48 min-w-48 whitespace-pre-wrap' >
+      <ul>
+        <li>
+          Magnitudo : {d.mag}
+        </li>
+        <li>
+          Kedalaman : {d.depth}
+        </li>
+        <li>
+          Waktu : {new Date(d.time!).toLocaleString()}
+        </li>
+        <li>
+          Lokasi (Lat,Lng) : <br />{d.lat} , {d.lng}
+        </li>
+      </ul>
+    </Card>);
+
+    selectedPopup.current = new AnimatedPopup({
+      closeOnClick: false,
+      openingAnimation: {
+        duration: 100,
+        easing: 'easeOutSine',
+        transform: 'scale'
+      },
+      closingAnimation: {
+        duration: 100,
+        easing: 'easeInOutSine',
+        transform: 'scale'
+      }
+    }).setDOMContent(placeholder).setLngLat([d.lng, d.lat]).addTo(map.current!);
   }
 
 
@@ -451,7 +559,12 @@ export default function Home() {
 
 
 
-              return <li key={i} className='flex flex-col mb-2 list-event'>
+              return <li key={i}
+                onClick={() => {
+                  selectEvent(v);
+
+                }}
+                className='flex flex-col mb-2 list-event cursor-pointer'>
                 <span className='text-sm'>{readAbleTime}</span>
                 <div className=' bordered p-2'>
                   {Number(v.mag).toFixed(2)} M - {v.place || "uknown"}
@@ -462,6 +575,55 @@ export default function Home() {
         </div>
 
       </Card>
+
+      {detailInfoGempa && <Card title={
+        <p className='font-bold text-glow-red'>
+          DETAIL EVENT
+        </p>
+      }
+        footer={
+          <p className='font-bold text-glow-red'>
+            FOOTER
+          </p>
+        }
+        className='show-pop-up fixed right-6 bottom-6'>
+        <div className='h-80 w-96 overflow-y-auto'>
+          <ul >
+            <li className='flex flex-col mb-2 list-event'>
+              <div className=' bordered p-2'>
+                TIME : {detailInfoGempa.time}
+              </div>
+            </li>
+            <li className='flex flex-col mb-2 list-event'>
+              <div className=' bordered p-2'>
+                MAGNITUDE : {Number(detailInfoGempa.mag).toFixed(2)} M
+              </div>
+            </li>
+            <li className='flex flex-col mb-2 list-event'>
+              <div className=' bordered p-2'>
+                DEPTH : {detailInfoGempa.depth} KM
+              </div>
+            </li>
+            <li className='flex flex-col mb-2 list-event'>
+              <div className=' bordered p-2'>
+                PLACE : {detailInfoGempa.place}
+              </div>
+            </li>
+            <li className='flex flex-col mb-2 list-event'>
+              <div className=' bordered p-2'>
+                LATITUDE : {detailInfoGempa.lat}
+              </div>
+            </li>
+            <li className='flex flex-col mb-2 list-event'>
+              <div className=' bordered p-2'>
+                LONGITUDE : {detailInfoGempa.lng}
+              </div>
+            </li>
+
+
+          </ul>
+        </div>
+      </Card>}
 
 
     </div>

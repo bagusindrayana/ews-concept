@@ -533,6 +533,14 @@
     box-shadow: inset 0 0 0 1px var(--border-glow-color), 0 0 0 1px var(--border-glow-color);
 }
 
+.red-bordered-top {
+    color: var(--danger-text-color);
+    --border-glow-color: rgba(var(--danger-glow-rgb), 0.7);
+    border-color: unset;
+    border-top: 3px solid var(--danger-glow-rgb);
+    box-shadow: inset 0 0 0 1px var(--border-glow-color), 0 0 0 1px var(--border-glow-color);
+}
+
 .card {
     background-color: black;
     border: 3px var(--red) solid;
@@ -547,6 +555,14 @@
     color: var(--orange);
     position: relative;
 }
+
+.card-footer {
+    padding: 6px;
+    border-top: 3px var(--red) solid;
+    color: var(--orange);
+    position: relative;
+}
+
 
 .card-content {
     padding: 12px;

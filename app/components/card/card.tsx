@@ -1,11 +1,13 @@
 export default function Card({
     children,
     title,
+    footer,
     className,
     borderColor
 }: Readonly<{
     children: React.ReactNode,
     title?: React.ReactNode,
+    footer?: React.ReactNode,
     className?: string
     borderColor?: string
 }>) {
@@ -16,5 +18,8 @@ export default function Card({
         <div className="card-content">
             {children}
         </div>
+        {footer && <div className="card-footer red-bordered-top">
+            {footer}
+        </div>}
     </div>)
 }
