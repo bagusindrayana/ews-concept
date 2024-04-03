@@ -69,7 +69,7 @@ export default class TitikGempa {
             <div className='overflow-hidden'>
                 <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
                 <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                    <p className='p-1 bg-black font-bold text-2xl'>GEMPA BUMI</p>
+                    <p className='p-1 bg-black font-bold text-2xl text-glow'>GEMPA BUMI</p>
                 </div>
             </div>
         } className='min-h-48 min-w-48 whitespace-pre-wrap' >

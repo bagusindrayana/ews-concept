@@ -8,6 +8,7 @@ import Worker from 'web-worker';
 import TitikGempa from './components/mapbox_marker/titik_gempa';
 import GempaBumiAlert from './components/GempaBumiAlert';
 import * as turf from '@turf/turf'
+import Card from './components/card/card';
 
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
@@ -17,6 +18,9 @@ interface InfoGempa {
   lat: number;
   mag: number;
   depth: string;
+  place?: string;
+  time?: string;
+  message?: string;
 }
 let socket;
 export default function Home() {
@@ -35,13 +39,16 @@ export default function Home() {
 
   const tgs = useRef<TitikGempa[]>([]);
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
+  const [infoGempas, setInfoGempas] = useState<InfoGempa[]>([]);
+  const [stackAlerts, setStackAlerts] = useState<InfoGempa[]>([]);
+  const igs = useRef<InfoGempa[]>([]);
   const markerDaerahs = useRef<any[]>([]);
 
   const lastGempaId = useRef<string>('');
 
 
   const warningHandler = async (data: any) => {
-    setAlertGempaBumis([...alertGempaBumis, data]);
+    
     await new Promise(r => setTimeout(r, 6000));
     const time = new Date().toLocaleTimeString();
     if (!map.current) return;
@@ -65,6 +72,9 @@ export default function Home() {
       adaGempa.current = true;
       sendWave();
     }
+
+    await new Promise(r => setTimeout(r, 4000));
+    setStackAlerts([...stackAlerts, data]);
   }
 
   const socketInitializer = () => {
@@ -124,8 +134,7 @@ export default function Home() {
             }
           });
         });
-        getTitikGempaJson();
-        getGempa();
+        
 
         initWorker();
 
@@ -142,6 +151,19 @@ export default function Home() {
       console.log('connected');
     });
     socket.on('warning', (v: any) => {
+      const nig : InfoGempa = {
+        lng: parseFloat(v.lng),
+        lat: parseFloat(v.lat),
+        mag: v.mage || 9.0,
+        depth: v.depth || "10 Km",
+        message: v.message,
+        place: v.place,
+        time: new Date().toLocaleString()
+      };
+
+      setAlertGempaBumis([...alertGempaBumis, nig]);
+      //add data to first infoGempas
+      setInfoGempas([nig, ...infoGempas]);
       warningHandler(v);
     });
 
@@ -157,12 +179,14 @@ export default function Home() {
     });
 
     loadGeoJsonData();
+    getTitikGempaJson();
+    getGempa();
     return () => {
       socket!.disconnect();
     }
 
 
-  }, [alertGempaBumis]);
+  }, [alertGempaBumis, infoGempas, stackAlerts]);
 
 
 
@@ -245,47 +269,69 @@ export default function Home() {
 
   function getTitikGempaJson() {
     const url = "https://bmkg-content-inatews.storage.googleapis.com/gempaQL.json";
-    map.current!.on('load', () => {
-      //check earthquakes layer
-      if (map.current!.getLayer('earthquakes-layer')) {
-        //update source
-        (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(url);
-      } else {
-        //add source
-        map.current!.addSource('earthquakes', {
-          type: 'geojson',
-          // Use a URL for the value for the `data` property.
-          data: url
-        });
-
-        map.current!.addLayer({
-          'id': 'earthquakes-layer',
-          'type': 'circle',
-          'source': 'earthquakes',
-          'paint': {
-            'circle-radius': ["to-number", ['get', 'mag']],
-            'circle-stroke-width': 2,
-
-            'circle-color': [
-              "case",
-              //depth <= 50 red, depth <= 100 orange, depth <= 250 yellow, depth <= 600 green, depth > 600 blue
-              ['<=', ["to-number", ['get', 'depth']], 50],
-              "red",
-              ['<=', ["to-number", ['get', 'depth']], 100],
-              "orange",
-              ['<=', ["to-number", ['get', 'depth']], 250],
-              "yellow",
-              ['<=', ["to-number", ['get', 'depth']], 600],
-              "green",
-              "blue",
-            ],
-            'circle-stroke-color': 'white'
+    fetch(url)
+      .then(response => response.json())
+      .then((data) => {
+        map.current!.on('load', () => {
+          let ifg: InfoGempa[] = [];
+          for (let index = 0; index < data.features.length; index++) {
+            const feature = data.features[index];
+            ifg.push({
+              lng: feature.geometry.coordinates[0],
+              lat: feature.geometry.coordinates[1],
+              mag: feature.properties.mag,
+              depth: feature.geometry.depth,
+              place: feature.properties.place,
+              time: feature.properties.time
+            });
           }
+          igs.current = ifg;
+          setInfoGempas(ifg);
+
+          //check earthquakes layer
+          if (map.current!.getLayer('earthquakes-layer')) {
+            //update source
+            (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(url);
+          } else {
+            //add source
+            map.current!.addSource('earthquakes', {
+              type: 'geojson',
+              data: data
+            });
+
+            map.current!.addLayer({
+              'id': 'earthquakes-layer',
+              'type': 'circle',
+              'source': 'earthquakes',
+              'paint': {
+                'circle-radius': ["to-number", ['get', 'mag']],
+                'circle-stroke-width': 2,
+
+                'circle-color': [
+                  "case",
+                  //depth <= 50 red, depth <= 100 orange, depth <= 250 yellow, depth <= 600 green, depth > 600 blue
+                  ['<=', ["to-number", ['get', 'depth']], 50],
+                  "red",
+                  ['<=', ["to-number", ['get', 'depth']], 100],
+                  "orange",
+                  ['<=', ["to-number", ['get', 'depth']], 250],
+                  "yellow",
+                  ['<=', ["to-number", ['get', 'depth']], 600],
+                  "green",
+                  "blue",
+                ],
+                'circle-stroke-color': 'white'
+              }
+            });
+          }
+
+
         });
-      }
+      })
+      .catch((error) => {
+        console.error('Error initializing socket:', error);
+      });
 
-
-    });
   }
 
   function getGempa() {
@@ -312,6 +358,22 @@ export default function Home() {
           if (lastGempaId.current != data.identifier) {
             lastGempaId.current = data.identifier;
             const coordinates = data.info.point.coordinates.split(",");
+
+            const nig : InfoGempa = {
+              lng: parseFloat(coordinates[0]),
+              lat: parseFloat(coordinates[1]),
+              mag: parseFloat(data.info.magnitude),
+              depth: data.info.depth,
+              message: data.info.description + "\n" + data.info.instruction,
+              place: data.info.place,
+              time: new Date().toLocaleString()
+            };
+
+            igs.current.unshift(nig);
+
+            setAlertGempaBumis([...alertGempaBumis, nig]);
+            //add data to first infoGempas
+            setInfoGempas(igs.current);
             warningHandler({
               lng: parseFloat(coordinates[0]),
               lat: parseFloat(coordinates[1]),
@@ -319,6 +381,7 @@ export default function Home() {
               depth: data.info.depth,
               message: data.info.description + "\n" + data.info.instruction
             });
+            
           }
         })
         .catch((error) => {
@@ -333,7 +396,29 @@ export default function Home() {
     <div>
 
       <div ref={mapContainer} className="w-full h-screen" />
-
+      {/* <GempaBumiAlert
+           
+            props={
+              {
+                magnitudo: 9.0,
+                kedalaman: '10 km',
+                show: true,
+              }
+            } /> */}
+      <div className="grid grid-cols-3 grid-flow-col gap-4 w-1/2 fixed left-6 top-6">
+        {stackAlerts.map((v, i) => {
+          return <div key={i}><Card title={
+            <div className='overflow-hidden'>
+              <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+              <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                <p className='p-1 bg-black font-bold text-2xl text-glow'>GEMPA BUMI</p>
+              </div>
+            </div>
+          } className='show-pop-up'>
+            <p className='whitespace-pre-wrap'>{v.message}</p>
+          </Card></div>
+        })}
+      </div>
       {alertGempaBumis.map((v, i) => {
         return <div key={i}>
           <GempaBumiAlert
@@ -348,6 +433,35 @@ export default function Home() {
             } />
         </div>
       })}
+
+      <Card title={
+        <p className='font-bold text-glow-red' style={{
+          color: "red"
+        }}>EVENT LOG</p>
+      } className=' fixed right-6 top-6'>
+        <div className='h-80 w-96 overflow-y-auto'>
+          <ul >
+            {infoGempas.map((v: InfoGempa, i) => {
+              let readAbleTime = v.time;
+              //convert 2024-04-03 05:45:04.621973 to d/m/Y H:i:s
+              if (v.time) {
+                const date = new Date(v.time);
+                readAbleTime = date.toLocaleString('id-ID');
+              }
+
+
+
+              return <li key={i} className='flex flex-col mb-2 list-event'>
+                <span className='text-sm'>{readAbleTime}</span>
+                <div className=' bordered p-2'>
+                  {Number(v.mag).toFixed(2)} M - {v.place || "uknown"}
+                </div>
+              </li>
+            })}
+          </ul>
+        </div>
+
+      </Card>
 
 
     </div>

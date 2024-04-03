@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+@import url(//fonts.googleapis.com/css?family=Roboto+Condensed:400,600,700);
+
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
@@ -18,15 +20,13 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
+  background: linear-gradient(to bottom,
       transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-    margin: 0;
-    padding: 0;
-    font-family: Arial, Helvetica, sans-serif;
+      rgb(var(--background-end-rgb))) rgb(var(--background-start-rgb));
+  margin: 0;
+  padding: 0;
+  font-family: 'Roboto Condensed', Arial, Helvetica, sans-serif;
+
 }
 
 @layer utilities {

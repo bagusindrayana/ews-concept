@@ -1,4 +1,3 @@
-import './styles.css'
 export default function Card({
     children,
     title,
@@ -10,12 +9,8 @@ export default function Card({
     className?: string
     borderColor?: string
 }>) {
-    return (<div className={'card '+className} style={{
-        border: " 3px " + (borderColor??"red") + " solid"
-    }}>
-        <div className="card-header" style={{
-            borderBottom: " 3px " + (borderColor??"red") + " solid"
-        }}>
+    return (<div className={'card red-bordered '+className}>
+        <div className="card-header red-bordered-bottom">
             {title}
         </div>
         <div className="card-content">
