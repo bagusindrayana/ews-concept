@@ -76,31 +76,50 @@ export default class WaveCircle {
 
         if ((this.intersectAreaSetting || this.selectedAreaSetting || this.selectedPointSetting) && this.worker != null) {
             setInterval(() => {
-                this.worker!.postMessage({ type: 'checkIntersection', allPolygon: this.allPolygon, center: this.center, size: this.size, id: this.id });
+                this.worker!.postMessage({ type: 'checkHighlightArea', center: this.center, size: this.size, id: this.id });
             }, 1000);
             this.worker.addEventListener('message', (event) => {
                 const data = event.data;
-                if (data.type == "checkIntersection" && data.id == this.id) {
-                    if (this.intersectAreaSetting) {
-                        this.highlightIntersectArea(data.highlightIntersectArea);
+                var area = data.area;
+                if(data.id == this.id && area.length > 0){
+                    if(this.selectedPointSetting){
+                        this.showSelectedPoint(area);
                     }
-
-                    if (this.selectedAreaSetting) {
-                        this.highlightSelectedArea(data.highlightSelectedArea);
-                    }
-
-                    if (this.selectedPointSetting) {
-                        this.showSelectedPoint(data.highlightSelectedArea);
+                    if(this.selectedAreaSetting){
+                        this.highlightSelectedArea(area);
                     }
                 }
+                
+                // if (data.type == "checkIntersection" && data.id == this.id) {
+                //     if (this.intersectAreaSetting) {
+                //         this.highlightIntersectArea(data.highlightIntersectArea);
+                //     }
+
+                //     if (this.selectedAreaSetting) {
+                //         this.highlightSelectedArea(data.highlightSelectedArea);
+                //     }
+
+                //     if (this.selectedPointSetting) {
+                //         this.showSelectedPoint(data.highlightSelectedArea);
+                //     }
+                // }
             })
         }
 
-        // if(this.intersectPoint){
+        // if(this.selectedPointSetting || this.selectedAreaSetting){
         //     setInterval(() => {
-        //         this.checkPoint();
+        //         var area = this.checkPoint();
+        //         if(this.selectedPointSetting){
+        //             this.showSelectedPoint(area);
+        //         }
+        //         if(this.selectedAreaSetting){
+        //             this.highlightSelectedArea(area);
+        //         }
+                
         //     }, 1000);
         // }
+
+        
     }
     render() {
         if (this.map == null) return;
@@ -240,21 +259,26 @@ export default class WaveCircle {
         let pins: any[] = [];
         for (let index = 0; index < selectedArea.length; index++) {
             const polygon = selectedArea[index];
-            var p: number[] = polylabel(polygon.geometry.coordinates, 1.0);
-            if (p != null && typeof p[0] === 'number' && typeof p[1] === 'number' && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) {
-                pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'danger-icon' }));
-            } else {
-                const coor = turf.centroid(polygon).geometry.coordinates;
-                p = [coor[0], coor[1]];
-                pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'danger-icon' }));
-            }
+            console.log(polygon);
+            const p: number[] = turf.centroid(polygon).geometry.coordinates;
+            // var p: number[] = polylabel(polygon.geometry.coordinates, 1.0);
+            // if (p != null && typeof p[0] === 'number' && typeof p[1] === 'number' && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) {
+            //     pins.push(turf.point(p, { title: polygon.properties.alt_name, icon: 'danger-icon' }));
+            // } else {
+            //     const coor = turf.centroid(polygon).geometry.coordinates;
+            //     p = [coor[0], coor[1]];
+            //     pins.push(turf.point(p, { title: polygon.properties.alt_name, icon: 'danger-icon' }));
+            // }
             //if p not in this.selecttedPoint
             if (this.selecttedPoint.findIndex((el) => el[0] == p[0] && el[1] == p[1]) == -1) {
                 this.selecttedPoint.push(p);
+                const markerParent = document.createElement('div');
                 const markerEl = document.createElement('div');
-                markerEl.innerHTML = '<p class="uppercase">'+polygon.properties.shapeName+'</p>';
+                markerEl.innerHTML = '<p class="uppercase">'+polygon.properties.alt_name+'</p>';
                 markerEl.classList.add('marker-daerah');
-                new mapboxgl.Marker(markerEl)
+                markerEl.classList.add('show-pop-up');
+                markerParent.appendChild(markerEl);
+                new mapboxgl.Marker(markerParent)
                     .setLngLat([p[0], p[1]])
                     .addTo(this.map)
             }
@@ -311,10 +335,10 @@ export default class WaveCircle {
     //             highlightArea.push(intersection);
     //             var p = polylabel(polygon.geometry.coordinates, 1.0);
     //             if (p != null && typeof p[0] === 'number' && typeof p[1] === 'number' && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) {
-    //                 pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'monument' }));
+    //                 pins.push(turf.point(p, { title: polygon.properties.alt_name, icon: 'monument' }));
     //             } else {
     //                 p = turf.centroid(polygon).geometry.coordinates;
-    //                 pins.push(turf.point(p, { title: polygon.properties.shapeName, icon: 'monument' }));
+    //                 pins.push(turf.point(p, { title: polygon.properties.alt_name, icon: 'monument' }));
     //             }
 
     //         }
@@ -356,23 +380,29 @@ export default class WaveCircle {
     //     }
     // }
 
-    // checkPoint(){
-    //     if (this.map == null || this.size <= 0 || !this.intersectPoint) return;
-    //     const coordinate = [this.center[0], this.center[1]];
-    //     const radius = this.size;
-    //     var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
+    checkPoint():any[]{
+        if (this.map == null || this.size <= 0) return [];
+        const coordinate = [this.center[0], this.center[1]];
+        const radius = this.size;
+        var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
 
-    //     let points = [];
+        let points : any[] = [];
+        let highlightArea: any[] = [];
 
-    //     for (let index = 0; index < this.allPolygon.length; index++) {
-    //         const polygon = this.allPolygon[index];
-    //         var p = polylabel(polygon.geometry.coordinates, 1.0);
-    //         if (p != null && typeof p[0] === 'number' && typeof p[1] === 'number' && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) {
-    //         } else {
-    //             p = turf.centroid(polygon).geometry.coordinates;
-    //         }
-    //         const cek = turf.booleanContains(buffer, turf.point(p));
-    //         // console.log(cek);
-    //     }
-    // }
+        for (let index = 0; index < this.allPolygon.length; index++) {
+            const polygon = this.allPolygon[index];
+            var p: number[] = polylabel(polygon.geometry.coordinates, 1.0);
+            if (p != null && typeof p[0] === 'number' && typeof p[1] === 'number' && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) {
+            } else {
+                p = turf.centroid(polygon).geometry.coordinates;
+            }
+            const cek = turf.booleanContains(buffer, turf.point(p));
+            if (cek) {
+                points.push(p);
+                highlightArea.push(polygon);
+            }
+        }
+
+        return highlightArea;
+    }
 }
