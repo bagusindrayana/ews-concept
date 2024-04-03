@@ -17,7 +17,7 @@ interface InfoGempa {
   mag: number;
   depth: string;
 }
-
+let socket;
 export default function Home() {
   const mapContainer = useRef<HTMLDivElement | null>(null); // Update the type of mapContainer ref
   const map = useRef<mapboxgl.Map | null>(null); // Update the type of the map ref
@@ -27,7 +27,7 @@ export default function Home() {
 
   const geoJsonData = useRef<any>(null);
   const worker = useRef<Worker | null>(null);
-  const [socket, setSocket] = useState<any>(null);
+  
 
   const adaGempa = useRef<boolean>(false);
   // const [titikGempas, setTitikGempas] = useState<TitikGempa[]>([]);
@@ -41,7 +41,7 @@ export default function Home() {
 
   const warningHandler = async (data: any) => {
     infoGempas.current.push(data);
-    setAlertGempaBumis(infoGempas.current);
+    setAlertGempaBumis([...alertGempaBumis, data]);
     await new Promise(r => setTimeout(r, 6000));
     const time = new Date().toLocaleTimeString();
     if (!map.current) return;
@@ -76,9 +76,7 @@ export default function Home() {
     if (socket != null) return;
     fetch('/api/socket')
       .then(() => {
-        let s = io();
-        
-        setSocket(s);
+        console.log('Socket is initializing');
       })
       .catch((error) => {
         console.error('Error initializing socket:', error);
@@ -141,7 +139,20 @@ export default function Home() {
 
 
   useEffect(() => {
-    if (map.current) return;
+    socketInitializer();
+
+    socket = io();
+
+    socket.on('connect', () => {
+      console.log('connected');
+    });
+    socket.on('warning', (v: any) => {
+      warningHandler(v);
+    });
+    
+    if (map.current) return () => {
+      socket!.disconnect();
+    };
     map.current = new mapboxgl.Map({
       container: mapContainer.current!,
       style: 'mapbox://styles/mapbox/dark-v11',
@@ -151,25 +162,13 @@ export default function Home() {
     });
 
     loadGeoJsonData();
-    socketInitializer();
-  }, [socket,alertGempaBumis]);
-  
-  useEffect(()=>{
-    console.log(alertGempaBumis);
- },[alertGempaBumis])
-
- useEffect(() => {
-  if (!socket) return;
-  socket.on('connect', () => {
-    console.log('connected');
-  });
-  socket.on('warning', (v: any) => {
-    warningHandler(v);
-  });
-  return () => {
-    socket.removeAllListeners();
-  };
- },[socket]);
+    return () => {
+      socket!.disconnect();
+    }
+   
+    
+  }, [alertGempaBumis]);
+ 
 
 
   const sendWave = () => {
