@@ -200,10 +200,12 @@
     color: black;
     background-color: red;
     padding: 2px;
-    font-size: 10px;
+    font-size: 8px;
     text-transform: uppercase;
-    
-    
+    max-width: 75px;
+    line-height: 1;
+    text-align: center;
+    font-weight: bold;
 }
 
 

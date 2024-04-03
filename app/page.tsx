@@ -7,6 +7,7 @@ import io from 'socket.io-client'
 import Worker from 'web-worker';
 import TitikGempa from './components/mapbox_marker/titik_gempa';
 import GempaBumiAlert from './components/GempaBumiAlert';
+import * as turf from '@turf/turf'
 
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
@@ -27,20 +28,19 @@ export default function Home() {
 
   const geoJsonData = useRef<any>(null);
   const worker = useRef<Worker | null>(null);
-  
+
 
   const adaGempa = useRef<boolean>(false);
   // const [titikGempas, setTitikGempas] = useState<TitikGempa[]>([]);
 
   const tgs = useRef<TitikGempa[]>([]);
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
-  const infoGempas = useRef<InfoGempa[]>([]);
+  const markerDaerahs = useRef<any[]>([]);
 
   const lastGempaId = useRef<string>('');
 
 
   const warningHandler = async (data: any) => {
-    infoGempas.current.push(data);
     setAlertGempaBumis([...alertGempaBumis, data]);
     await new Promise(r => setTimeout(r, 6000));
     const time = new Date().toLocaleTimeString();
@@ -56,18 +56,13 @@ export default function Home() {
       pWaveSpeed: 6000,
       sWaveSpeed: 3000,
       map: map.current!,
+      description: data.message
     });
 
-    // setTitikGempas([...titikGempas, tg]);
     tgs.current.push(tg);
 
     if (worker.current != null) {
-      // console.log('ada gempa');
       adaGempa.current = true;
-      // setInterval(() => {
-      //   sendWave();
-      // }, 500);
-
       sendWave();
     }
   }
@@ -149,7 +144,7 @@ export default function Home() {
     socket.on('warning', (v: any) => {
       warningHandler(v);
     });
-    
+
     if (map.current) return () => {
       socket!.disconnect();
     };
@@ -165,10 +160,10 @@ export default function Home() {
     return () => {
       socket!.disconnect();
     }
-   
-    
+
+
   }, [alertGempaBumis]);
- 
+
 
 
   const sendWave = () => {
@@ -198,6 +193,26 @@ export default function Home() {
     const uniqueData = areas.filter((obj, index, self) =>
       index === self.findIndex((t) => isEqual(t.properties, obj.properties))
     );
+
+    for (let x = 0; x < uniqueData.length; x++) {
+      const element = uniqueData[x];
+      const p: number[] = turf.centroid(element).geometry.coordinates;
+      if (markerDaerahs.current.findIndex((el) => el[0] == p[0] && el[1] == p[1]) == -1) {
+        markerDaerahs.current.push([p[0], p[1]]);
+        const markerParent = document.createElement('div');
+        const markerEl = document.createElement('div');
+        markerEl.innerHTML = '<p class="uppercase">' + element.properties.alt_name + '</p>';
+        markerEl.classList.add('marker-daerah');
+        markerEl.classList.add('show-pop-up');
+        markerParent.appendChild(markerEl);
+        new mapboxgl.Marker(markerParent)
+          .setLngLat([p[0], p[1]])
+          .addTo(map.current!)
+      }
+
+
+    }
+
     if (map.current!.getSource('hightlight-wave')) {
       (map.current!.getSource('hightlight-wave') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": uniqueData });
     } else {
@@ -301,7 +316,8 @@ export default function Home() {
               lng: parseFloat(coordinates[0]),
               lat: parseFloat(coordinates[1]),
               mag: parseFloat(data.info.magnitude),
-              depth: data.info.depth
+              depth: data.info.depth,
+              message: data.info.description + "\n" + data.info.instruction
             });
           }
         })
@@ -320,16 +336,16 @@ export default function Home() {
 
       {alertGempaBumis.map((v, i) => {
         return <div key={i}>
-          <GempaBumiAlert  
-          key={i}
-          props={
-            {
-              magnitudo: v.mag || 9.0,
-              kedalaman: v.depth || '0 km',
-              show: true,
-              closeInSecond: 5
-            }
-          } />
+          <GempaBumiAlert
+            key={i}
+            props={
+              {
+                magnitudo: v.mag || 9.0,
+                kedalaman: v.depth || '0 km',
+                show: true,
+                closeInSecond: 5
+              }
+            } />
         </div>
       })}
 
