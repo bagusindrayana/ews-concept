@@ -444,6 +444,10 @@ export default function Home() {
           console.error('Error initializing socket:', error);
         });
     }, 5000);
+
+    // setInterval(()=>{
+    //   const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json";
+    // });
   }
 
   const selectedPopup = useRef<any>(null);
@@ -466,8 +470,8 @@ export default function Home() {
           <p className='p-1 bg-black font-bold text-2xl text-glow'>GEMPA BUMI</p>
         </div>
       </div>
-    } className='min-h-48 min-w-48 whitespace-pre-wrap' >
-      <ul>
+    } className='min-h-48 min-w-48 whitespace-pre-wrap ' >
+      <ul >
         <li>
           Magnitudo : {d.mag}
         </li>
@@ -546,83 +550,91 @@ export default function Home() {
         <p className='font-bold text-glow-red' style={{
           color: "red"
         }}>EVENT LOG</p>
-      } className=' fixed right-6 top-6'>
-        <div className='h-80 w-96 overflow-y-auto'>
-          <ul >
-            {infoGempas.map((v: InfoGempa, i) => {
-              let readAbleTime = v.time;
-              //convert 2024-04-03 05:45:04.621973 to d/m/Y H:i:s
-              if (v.time) {
-                const date = new Date(v.time);
-                readAbleTime = date.toLocaleString('id-ID');
-              }
+      } footer={
+        <p className='font-bold text-glow-red'>
+
+        </p>
+      } className=' fixed right-6 top-6 card-float w-1/2 md:w-1/4'>
+        <ul >
+          {infoGempas.map((v: InfoGempa, i) => {
+            let readAbleTime = v.time;
+            //convert 2024-04-03 05:45:04.621973 to d/m/Y H:i:s
+            if (v.time) {
+              const date = new Date(v.time);
+              readAbleTime = date.toLocaleString('id-ID');
+            }
 
 
 
-              return <li key={i}
-                onClick={() => {
-                  selectEvent(v);
+            return <li key={i}
+              onClick={() => {
+                selectEvent(v);
 
-                }}
-                className='flex flex-col mb-2 list-event cursor-pointer'>
-                <span className='text-sm'>{readAbleTime}</span>
-                <div className=' bordered p-2'>
-                  {Number(v.mag).toFixed(2)} M - {v.place || "uknown"}
-                </div>
-              </li>
-            })}
-          </ul>
-        </div>
+              }}
+              className='flex flex-col mb-2 list-event cursor-pointer'>
+              <span className='text-sm'>{readAbleTime}</span>
+              <div className=' bordered p-2'>
+                {Number(v.mag).toFixed(2)} M - {v.place || "uknown"}
+              </div>
+            </li>
+          })}
+        </ul>
 
       </Card>
 
       {detailInfoGempa && <Card title={
-        <p className='font-bold text-glow-red'>
-          DETAIL EVENT
-        </p>
+        <div className='w-full flex justify-between'>
+          <p className='font-bold text-glow-red'>
+            DETAIL EVENT
+          </p>
+          <button onClick={() => {
+            if (selectedPopup.current) {
+              selectedPopup.current.remove();
+            }
+            setDetailInfoGempa(null);
+          }}>X</button>
+        </div>
       }
         footer={
           <p className='font-bold text-glow-red'>
-            FOOTER
+
           </p>
         }
-        className='show-pop-up fixed right-6 bottom-6'>
-        <div className='h-80 w-96 overflow-y-auto'>
-          <ul >
-            <li className='flex flex-col mb-2 list-event'>
-              <div className=' bordered p-2'>
-                TIME : {detailInfoGempa.time}
-              </div>
-            </li>
-            <li className='flex flex-col mb-2 list-event'>
-              <div className=' bordered p-2'>
-                MAGNITUDE : {Number(detailInfoGempa.mag).toFixed(2)} M
-              </div>
-            </li>
-            <li className='flex flex-col mb-2 list-event'>
-              <div className=' bordered p-2'>
-                DEPTH : {detailInfoGempa.depth} KM
-              </div>
-            </li>
-            <li className='flex flex-col mb-2 list-event'>
-              <div className=' bordered p-2'>
-                PLACE : {detailInfoGempa.place}
-              </div>
-            </li>
-            <li className='flex flex-col mb-2 list-event'>
-              <div className=' bordered p-2'>
-                LATITUDE : {detailInfoGempa.lat}
-              </div>
-            </li>
-            <li className='flex flex-col mb-2 list-event'>
-              <div className=' bordered p-2'>
-                LONGITUDE : {detailInfoGempa.lng}
-              </div>
-            </li>
+        className='show-pop-up fixed right-6 bottom-6  card-float w-1/2 md:w-1/4'>
+        <ul >
+          <li className='flex flex-col mb-2 list-event'>
+            <div className=' bordered p-2'>
+              TIME : {detailInfoGempa.time}
+            </div>
+          </li>
+          <li className='flex flex-col mb-2 list-event'>
+            <div className=' bordered p-2'>
+              MAGNITUDE : {Number(detailInfoGempa.mag).toFixed(2)} M
+            </div>
+          </li>
+          <li className='flex flex-col mb-2 list-event'>
+            <div className=' bordered p-2'>
+              DEPTH : {Number(detailInfoGempa.depth).toFixed(2)} KM
+            </div>
+          </li>
+          <li className='flex flex-col mb-2 list-event'>
+            <div className=' bordered p-2'>
+              PLACE : {detailInfoGempa.place}
+            </div>
+          </li>
+          <li className='flex flex-col mb-2 list-event'>
+            <div className=' bordered p-2'>
+              LATITUDE : {detailInfoGempa.lat}
+            </div>
+          </li>
+          <li className='flex flex-col mb-2 list-event'>
+            <div className=' bordered p-2'>
+              LONGITUDE : {detailInfoGempa.lng}
+            </div>
+          </li>
 
 
-          </ul>
-        </div>
+        </ul>
       </Card>}
 
 

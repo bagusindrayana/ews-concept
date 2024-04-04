@@ -500,7 +500,7 @@
 
 .text-glow {
     --text-glow-color: rgba(var(--glow-rgb), 0.5);
-    color: var(--text-color);
+    color: var(--text-color) !important;
     text-shadow: -1px 1px 0 var(--text-glow-color), 1px -1px 0 var(--text-glow-color), -1px -1px 0 var(--text-glow-color), 1px 1px 0 var(--text-glow-color);
 
 }
@@ -545,8 +545,8 @@
     background-color: black;
     border: 3px var(--red) solid;
     transition: 0.3s;
-
-    color: white;
+    color: var(--text-color);
+    /* color: white; */
 }
 
 .card-header {
@@ -566,4 +566,14 @@
 
 .card-content {
     padding: 12px;
+}
+
+.card-float {
+    /* width: 30%; */
+    
+}
+.card-float .card-content {
+    display: block;
+    height: 40vh;
+    overflow-y: auto;
 }

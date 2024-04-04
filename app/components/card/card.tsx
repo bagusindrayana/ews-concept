@@ -15,7 +15,7 @@ export default function Card({
         <div className="card-header red-bordered-bottom">
             {title}
         </div>
-        <div className="card-content">
+        <div className="card-content p-2">
             {children}
         </div>
         {footer && <div className="card-footer red-bordered-top">
