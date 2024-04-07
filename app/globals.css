@@ -34,3 +34,24 @@ body {
     text-wrap: balance;
   }
 }
+
+@font-face {
+  font-family: "DS-Digital";
+  src: url("/ds_digital/DIGITAL.TXT");
+}
+@font-face {
+  font-family: "DS-Digital";
+  src: url("/ds_digital/DS-DIGIB.TTF");
+  font-weight: bold;
+}
+@font-face {
+  font-family: "DS-Digital";
+  src: url("/ds_digital/DS-DIGII.TTF");
+  font-style: italic, oblique;
+}
+@font-face {
+  font-family: "DS-Digital";
+  src: url("/ds_digital/DS-DIGIT.TTF");
+  font-weight: bold;
+  font-style: italic, oblique;
+}

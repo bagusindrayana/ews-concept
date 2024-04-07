@@ -8,6 +8,9 @@ interface GempaBumiAlertProps {
 }
 
 export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
+    const notifSound = "/sounds/system-notification-199277.mp3"
+    const warningSound = "/sounds/error-call-to-attention-129258.mp3"
+    
     const [close, setClose] = useState(false);
     useEffect(() => {
         const allPopUp = document.querySelectorAll('.warning .show-pop-up');
@@ -28,6 +31,20 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
 
             
         }
+        var notif = new Audio(notifSound);
+        notif.play();
+
+        setTimeout(() => {
+            var warning = new Audio(warningSound);
+            warning.play();
+        },1000);
+        
+        // setTimeout(() => {
+        //     const audioDangerElement = document.getElementById('danger');
+        //     if(audioDangerElement){
+        //         (audioDangerElement as HTMLAudioElement).play();
+        //     }
+        // },2000);
     }, [props.show]);
 
     useEffect(() => {
@@ -45,6 +62,7 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
     }, [props.closeInSecond]);
 
     return (!close && <div className='absolute m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg'>
+        
         <div className='warning scale-100 md:scale-150 flex flex-col justify-center items-center '>
             <div className='long-hex flex flex-col justify-center opacity-0 show-pop-up animation-delay-1'>
                 <div className="flex justify-evenly w-full items-center">
@@ -63,12 +81,16 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
             <div className="w-full flex justify-center info">
                 <div className="basic-hex -mt-12 -mr-2 opacity-0 show-pop-up flex flex-col justify-center items-center text-glow">
                     <p className='text-xl'>{props.magnitudo}</p>
-                    <p className='text-xs'>Magnitudo</p>
+                    <p style={{
+                        fontSize: '10px',
+                    }}>MAGNITUDO</p>
                 </div>
                 <div className="basic-hex opacity-0 show-pop-up"></div>
                 <div className="basic-hex -mt-12 -ml-2 opacity-0 show-pop-up flex flex-col justify-center items-center text-glow">
                     <p className='text-xl'>{props.kedalaman}</p>
-                    <p className='text-xs'>Kedalaman</p>
+                    <p style={{
+                        fontSize: '10px',
+                    }}>KEDALAMAN</p>
                 </div>
             </div>
             <div className="w-full flex justify-between show-pop-up">

@@ -10,9 +10,10 @@ const SocketHandler = (req:any, res:any) => {
       res.socket.server.io = io
     }
     //get message query
-    const { lat,lng,message } = req.query
+    const { lat,lng,message,id } = req.query
     //emit message
     res.socket.server.io.emit('warning', {
+        id: id,
         lat: parseFloat(lat),
         lng: parseFloat(lng),
         message: message

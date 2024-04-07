@@ -6,6 +6,7 @@ import Card from "../card/card";
 
 type TitikGempaSetting = {
     coordinates: number[],
+    mag?: number,
     depth?: number,
     map?: mapboxgl.Map,
     sWaveSpeed?: number,
@@ -30,16 +31,30 @@ export default class TitikGempa {
         this.init();
     }
 
+    get description() {
+        return this.setting?.description;
+    }
+
     get center() {
         return this.setting?.coordinates;
     }
 
+    get mag() {
+        return this.setting?.mag;
+    }
+
+    get depth() {
+        return this.setting?.depth;
+    }
+
     init() {
         if (this.setting != null && this.setting.pWaveSpeed != null && this.setting.sWaveSpeed != null) {
-            this.animateWave();
+           
             if (this.setting.map != null) {
+                
                 this.renderMarker();
                 setTimeout(() => {
+                    this.animateWave();
                     this.renderPopup();
                 }, 1000);
             }
@@ -69,7 +84,7 @@ export default class TitikGempa {
             <div className='overflow-hidden'>
                 <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
                 <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                    <p className='p-1 bg-black font-bold text-2xl text-glow'>GEMPA BUMI</p>
+                    <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
                 </div>
             </div>
         } className='min-h-48 min-w-48 whitespace-pre-wrap' >
@@ -101,7 +116,6 @@ export default class TitikGempa {
     renderWave() {
         if (this.setting?.map == null) return;
 
-
         const circles: any = {
             type: 'FeatureCollection',
             features: [
@@ -114,8 +128,9 @@ export default class TitikGempa {
                     properties: {
                         id: 'p-wave',
                         radius: this.pWaveRadius,
-                        lat: this.setting?.coordinates[1],
-                        color: 'orange'
+                        lat: parseFloat(this.setting?.coordinates[1].toString()),
+                        color: 'orange',
+                        titikGempa: this.center
                     }
                 },
                 {
@@ -127,8 +142,9 @@ export default class TitikGempa {
                     properties: {
                         id: 's-wave',
                         radius: this.sWaveRadius,
-                        lat: this.setting?.coordinates[1],
-                        color: 'red'
+                        lat: parseFloat(this.setting?.coordinates[1].toString()),
+                        color: 'red',
+                        titikGempa: this.center
                     }
                 }
 
@@ -136,6 +152,7 @@ export default class TitikGempa {
         };
 
         if (!this.setting.map?.getSource('wave-source-' + this.id)) {
+            console.log(circles);
             this.setting.map.addSource('wave-source-' + this.id, {
                 type: 'geojson',
                 data: circles
@@ -173,14 +190,15 @@ export default class TitikGempa {
     }
 
     animateWave() {
+        
         const animate = (time: number) => {
             if (!this.curTime) this.curTime = time;
 
 
             const deltaTime = time - this.curTime;
             if (this.setting != null && this._play) {
-                this.pWaveRadius = 0 + ((deltaTime / 1000) * this.setting.pWaveSpeed!);
-                this.sWaveRadius = 0 + ((deltaTime / 1000) * this.setting.sWaveSpeed!);
+                this.pWaveRadius = ((deltaTime / 1000) * this.setting.pWaveSpeed!);
+                this.sWaveRadius = ((deltaTime / 1000) * this.setting.sWaveSpeed!);
             }
 
 
@@ -188,6 +206,14 @@ export default class TitikGempa {
             requestAnimationFrame(animate);
         }
         requestAnimationFrame(animate);
+        // setInterval(() => {
+        //     if (this.setting != null && this._play) {
+        //         this.pWaveRadius += this.setting.pWaveSpeed!;
+        //         this.sWaveRadius += this.setting.sWaveSpeed!;
+        //     }
+
+        //     this.renderWave();
+        // }, 1000);
     }
 
 
@@ -198,5 +224,12 @@ export default class TitikGempa {
 
     pause() {
         this._play = false;
+    }
+
+    removeAllRender() {
+        if (this.setting?.map != null) {
+            this.setting.map.removeLayer(this.id);
+            this.setting.map.removeSource('wave-source-' + this.id);
+        }
     }
 }

@@ -54,7 +54,7 @@ function checkHighlightArea(center,size,id) {
     self.postMessage({id: id, type: "checkHighlightArea", area:highlightSelectedArea});
 }
 
-function checkMultiHighlightArea(pWaves,sWaves,id) {
+function checkMultiHighlightArea(titikGempa,id) {
     let highlightSelectedArea = [];
     // for (let i = 0; i < pWave.centers.length; i++) {
     //     const coordinate = pWave.centers[i];
@@ -76,46 +76,127 @@ function checkMultiHighlightArea(pWaves,sWaves,id) {
     
     
     for (let index = 0; index < allPolygon.length; index++) {
-        for (let i = 0; i < pWaves.length; i++) {
-            const coordinate = pWaves[i].center;
-            const radius = pWaves[i].radius;
-            if(radius == 0) continue;
-    
-            var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
-            const polygon = allPolygon[index];
-            polygon.properties.color = "orange";
-            var intersection = turf.booleanIntersects(polygon, buffer);
-            if (intersection) {
-                highlightSelectedArea.push(polygon);
+        const polygon = allPolygon[index];
+        for (let it = 0; it < titikGempa.length; it++) {
+            const tg = titikGempa[it];
 
+            const coordinate = tg.center;
+            const radius = tg.pWaveRadius;
+            if(radius > 0) {
+                var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
+            
+                polygon.properties.color = "orange";
+                polygon.properties.hit = false;
+                polygon.properties.center = turf.centroid(polygon).geometry.coordinates;
+                polygon.properties.titik_id = tg.id;
+                
+                var intersection = turf.booleanIntersects(polygon, buffer);
+                if (intersection) {
+                    highlightSelectedArea.push(polygon);
+                    titikGempa[it].areaTerdampak.push(polygon.properties);
+
+                }
             }
+    
+            
+
+            // const radius2 = tg.sWaveRadius;
+            // if(radius2 > 0){
+            //     var buffer = turf.buffer(turf.point(coordinate), radius2, { units: 'meters' });
+        
+            //     var intersection = turf.booleanIntersects(polygon, buffer);
+            //     //var intersection = turf.booleanPointInPolygon(turf.centroid(polygon), buffer);
+            //     if (intersection) {
+            //         const item = highlightSelectedArea.find(e => e.properties.mhid === polygon.properties.mhid);
+            //         item.properties.color = "red";
+            //         item.properties.hit = true;
+                    
+
+            //     }
+            // }
+    
+            
+            
         }
+
+        for (let it = 0; it < titikGempa.length; it++) {
+            const tg = titikGempa[it];
+
+            const coordinate = tg.center;
+            const radius = tg.sWaveRadius;
+    
+            if(radius > 0){
+                var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
+        
+                var intersection = turf.booleanIntersects(polygon, buffer);
+                //var intersection = turf.booleanPointInPolygon(turf.centroid(polygon), buffer);
+                if (intersection) {
+                    const item = highlightSelectedArea.find(e => e.properties.mhid === polygon.properties.mhid);
+                    if(item){
+                        item.properties.color = "red";
+                        item.properties.hit = true;
+                    }
+                    const at = tg.areaTerdampak.find(e => e.mhid === polygon.properties.mhid);
+                    if(at) {
+                        at.color = "red";
+                        at.hit = true;
+                    }
+                    
+                    
+
+                }
+            }
+    
+            
+            
+        }
+        // for (let i = 0; i < pWaves.length; i++) {
+        //     const coordinate = pWaves[i].center;
+        //     const radius = pWaves[i].radius;
+        //     if(radius == 0) continue;
+    
+        //     var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
+            
+        //     polygon.properties.color = "orange";
+        //     polygon.properties.hit = false;
+        //     polygon.properties.titikGempa.push(sWaves[i]);
+            
+        //     var intersection = turf.booleanIntersects(polygon, buffer);
+        //     if (intersection) {
+        //         highlightSelectedArea.push(polygon);
+
+        //     }
+        // }
 
       
 
-        for (let i = 0; i < sWaves.length; i++) {
-            const coordinate = sWaves[i].center;
-            const radius = sWaves[i].radius;
-            if(radius == 0) continue;
+        // for (let i = 0; i < sWaves.length; i++) {
+        //     const coordinate = sWaves[i].center;
+        //     const radius = sWaves[i].radius;
+        //     if(radius == 0) continue;
     
-            var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
-            const polygon = allPolygon[index];
-            
-           
-            var intersection = turf.booleanIntersects(polygon, buffer);
-            //var intersection = turf.booleanPointInPolygon(turf.centroid(polygon), buffer);
-            if (intersection) {
-                highlightSelectedArea.find(e => e.properties.mhid === polygon.properties.mhid).properties.color = "red";
-                // else {
-                //     polygon.properties.color = "red";
-                //     highlightSelectedArea.push(polygon);
-                // }
+        //     var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
+        
+        //     var intersection = turf.booleanIntersects(polygon, buffer);
+        //     //var intersection = turf.booleanPointInPolygon(turf.centroid(polygon), buffer);
+        //     if (intersection) {
+        //         const item = highlightSelectedArea.find(e => e.properties.mhid === polygon.properties.mhid);
+        //         item.properties.color = "red";
+        //         item.properties.hit = true;
+        //         // polygon.properties.titikGempa = coordinate;
+        //         // if (item.properties.titikGempa) {
+        //         //     polygon.properties.titikGempa.push(sWaves[i]);
+        //         // }
+
+        //         // else {
+        //         //     polygon.properties.color = "red";
+        //         //     highlightSelectedArea.push(polygon);
+        //         // }
                 
 
-            }
+        //     }
             
-        }
-        
+        // }
         
     }
 
@@ -125,7 +206,7 @@ function checkMultiHighlightArea(pWaves,sWaves,id) {
     // highlightSelectedArea = highlightSelectedArea.filter((v,i,a)=>a.findIndex(t=>(t.properties.kabkot_id === v.properties.kabkot_id))===i);
     
 
-    self.postMessage({id: id, type: "checkMultiHighlightArea", area:highlightSelectedArea});
+    self.postMessage({id: id, type: "checkMultiHighlightArea", area:highlightSelectedArea,titikGempa:titikGempa});
 }
 
 self.addEventListener('message', function(ev) {
@@ -142,7 +223,7 @@ self.addEventListener('message', function(ev) {
     }
 
     if(data.type == "checkMultiHighlightArea") {
-        checkMultiHighlightArea(data.pWaves,data.sWaves,data.id);
+        checkMultiHighlightArea(data.titikGempa,data.id);
        
         
     }
@@ -152,7 +233,6 @@ self.addEventListener('message', function(ev) {
         for (let index = 0; index < geoJson.features.length; index++) {
             const feature = geoJson.features[index];
             if (!feature.geometry) {
-                console.log(feature);
                 continue;
             }
             if (feature.geometry.type == 'Polygon') {
@@ -161,7 +241,6 @@ self.addEventListener('message', function(ev) {
                 allPolygon.push(turf.multiPolygon(feature.geometry.coordinates, feature.properties))
             }
         }
-        console.log(allPolygon);
         
     }
     

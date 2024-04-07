@@ -12,10 +12,10 @@ export default function Card({
     borderColor?: string
 }>) {
     return (<div className={'card red-bordered '+className}>
-        <div className="card-header red-bordered-bottom">
+        {title && <div className="card-header red-bordered-bottom">
             {title}
-        </div>
-        <div className="card-content p-2">
+        </div>}
+        <div className="card-content p-2 style-2">
             {children}
         </div>
         {footer && <div className="card-footer red-bordered-top">
