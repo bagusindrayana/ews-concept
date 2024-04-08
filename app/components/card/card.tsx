@@ -1,3 +1,5 @@
+import { useState } from "react"
+
 export default function Card({
     children,
     title,
@@ -11,8 +13,12 @@ export default function Card({
     className?: string
     borderColor?: string
 }>) {
-    return (<div className={'card red-bordered '+className}>
-        {title && <div className="card-header red-bordered-bottom">
+    const [open, setOpen] = useState(false)
+    return (<div className={'card red-bordered '+className+" "+(open?"open":"")}>
+        {title && <div className="card-header red-bordered-bottom" onClick={()=>{
+
+            setOpen(!open)
+        }}>
             {title}
         </div>}
         <div className="card-content p-2 custom-scrollbar">

@@ -849,14 +849,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       
 
       <Card title={
-        <p className='font-bold text-glow-red text-sm' style={{
+        <p className='font-bold text-glow-red text-sm text-center' style={{
           color: "red"
         }}>EVENT LOG</p>
-      } footer={
-        <p className='font-bold text-glow-red'>
-
-        </p>
-      } className=' fixed right-6 top-6 card-float w-1/2 md:w-1/5 show-pop-up'>
+      } className=' fixed right-0  md:right-6 top-1 md:top-6 card-float md:w-1/3 lg:w-1/5 show-pop-up'>
         <ul >
           {infoGempas.map((v: InfoGempa, i) => {
             let readAbleTime = v.time;
@@ -907,11 +903,11 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       }
         footer={
-          <p className='font-bold text-glow-red'>
+          <p className='font-bold text-glow-red '>
 
           </p>
         }
-        className='show-pop-up fixed right-6 bottom-6  card-float w-1/2 md:w-1/5'>
+        className='right-6 bottom-6 fixed hidden md:block  card-float w-1/2 md:w-1/5 show-pop-up '>
         <ul >
           <li className='flex flex-col mb-2 list-event'>
             <div className=' bordered p-2' style={{
@@ -969,7 +965,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       }
 
-        className='show-pop-up fixed bottom-6 left-0 right-0 m-auto w-1/3 md:w-1/6'>
+        className='show-pop-up fixed bottom-16 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/5'>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
         }}>
@@ -1013,14 +1009,14 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       }
 
-        className='show-pop-up fixed bottom-6 left-6 card-float w-1/2 md:w-1/5'>
+        className='show-pop-up fixed bottom-6 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/5'>
         <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
             fontSize: "10px"
           }}>
-          <div className='w-full flex gap-2' >
+          <div className='w-full flex   gap-2' >
             <div>
-              <div id="internal" className="label bordered flex mb-2">
-                <div className="flex flex-col items-center p-1">
+              <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
+                <div className="flex flex-col items-center p-1 ">
                   <div className="text -characters">{infoGempaDirasakanTerakhir.mag}</div>
                   <div className="text">MAG</div>
                 </div>
