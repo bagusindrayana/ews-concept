@@ -831,3 +831,11 @@ label#internal {
         width: 40px;
     }
 }
+
+.github-icon {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background-image: url('https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg');
+    background-color: white;
+}

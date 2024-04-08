@@ -126,7 +126,7 @@ export default function Home() {
     if (socket != null) return;
     fetch('/api/socket')
       .then(() => {
-        
+
         console.log('Socket is initializing');
 
         socket = io();
@@ -175,7 +175,7 @@ export default function Home() {
       .then(data => {
         geoJsonData.current = data;
         map.current!.on('load', () => {
-          if(!map.current!.getSource('wilayah')){
+          if (!map.current!.getSource('wilayah')) {
             map.current!.addSource('wilayah', {
               type: 'geojson',
               generateId: true,
@@ -192,7 +192,7 @@ export default function Home() {
               }
             });
           }
-          
+
         });
 
 
@@ -372,7 +372,7 @@ export default function Home() {
 
       map.current!.moveLayer('outline');
       for (let tg of tgs.current) {
-        if(map.current!.getLayer(tg.id)){
+        if (map.current!.getLayer(tg.id)) {
           map.current!.moveLayer(tg.id);
         }
       }
@@ -382,7 +382,7 @@ export default function Home() {
   }
 
   function getTitikGempaJson() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/gempaQL.json?t="+new Date().getTime();
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/gempaQL.json?t=" + new Date().getTime();
     fetch(url)
       .then(response => response.json())
       .then((data) => {
@@ -506,7 +506,7 @@ export default function Home() {
   }
 
   function getGempa() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t="+new Date().getTime();
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t=" + new Date().getTime();
     fetch(url)
       .then(response => response.json())
       .then((data) => {
@@ -525,7 +525,7 @@ export default function Home() {
           time: sentTime.toLocaleString()
         };
 
-        
+
         //if sent time is less than 5 minutes
         if ((currentTime.toMillis() - sentTime.toMillis()) < 600000) {
 
@@ -554,7 +554,7 @@ export default function Home() {
   }
 
   function getGempaKecil() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json?t="+new Date().getTime();
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json?t=" + new Date().getTime();
     fetch(url)
       .then(response => response.json())
       .then((data) => {
@@ -631,7 +631,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
 
   function getGempaPeriodik() {
     setInterval(() => {
-      const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t="+new Date().getTime()
+      const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t=" + new Date().getTime()
       //await fetch
       fetch(url)
         .then(response => response.json())
@@ -744,7 +744,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
   }
 
   const selectedPopup = useRef<any>(null);
-  
+
   function selectEvent(d: InfoGempa) {
     setDetailInfoGempa(d);
     if (selectedPopup.current) {
@@ -813,7 +813,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       time: new Date().toLocaleTimeString()
     };
 
-    
+
     warningHandler({
       id: id,
       lng: randomPosition[0],
@@ -977,6 +977,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </ul>
       </Card>}
 
+      <div className='fixed  bottom-32 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
+        testDemoGempa();
+      }}>
+        Test Gempa
+      </div>
+
       {infoGempaTerakhir && <Card title={
         <div className='w-full flex justify-center text-center'>
           <p className='font-bold text-glow-red text-sm '>
@@ -986,7 +992,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       }
 
-        className='show-pop-up fixed bottom-16 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/5'>
+        className='show-pop-up fixed bottom-20 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/5'>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
         }}>
@@ -1030,7 +1036,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       }
 
-        className='show-pop-up fixed bottom-6 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/5'>
+        className='show-pop-up fixed bottom-10 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/5'>
         <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
           fontSize: "10px"
         }}>
@@ -1080,11 +1086,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       </Card>}
 
-      <div className='fixed sm:bottom-28 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={()=>{
-        testDemoGempa();
-      }}>
-        Test Gempa
-      </div>
+      
 
       {alertGempaBumis.map((v, i) => {
         return <div className='z-50' key={i}>
@@ -1100,7 +1102,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             } />
         </div>
       })}
-
+      <div className="fixed bottom-2 md:bottom-1 right-0 md:right-72 left-0 md:left-auto">
+        <a title="Link Github" href="https://github.com/bagusindrayana/ews-concept" className='flex gap-1 text-center justify-center  m-auto'>
+          <div className='github-icon'></div>
+          <span>Github</span>
+        </a>
+      </div>
     </div>
 
   );
