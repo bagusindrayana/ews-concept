@@ -391,7 +391,7 @@ export default function Home() {
         getGempa();
         getGempaKecil();
 
-        setInfoGempas(igs.current);
+        
         
         console.log("Loaded");
         map.current!.on('load', () => {
@@ -409,6 +409,8 @@ export default function Home() {
             });
           }
           igs.current = ifg;
+
+          setInfoGempas(igs.current);
 
 
           //check earthquakes layer
