@@ -198,7 +198,10 @@ export default function Home() {
 
         initWorker();
 
-      }).catch(error => console.error('Error fetching data:', error));
+      }).catch((error) => {
+        alert("Failed load geojson data : " + error);
+        console.error('Error fetching data:', error);
+      });
   };
 
 
@@ -797,6 +800,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
   }
 
   function testDemoGempa() {
+    if(geoJsonData.current == null) {
+      alert("Wait loading geojson");
+      return;
+    };
     const bbox = turf.bbox(geoJsonData.current);
     const randomPosition = turf.randomPosition(bbox);
     const mag = (Math.random() * 10).toFixed(1);
