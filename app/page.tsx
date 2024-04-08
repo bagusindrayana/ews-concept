@@ -192,10 +192,9 @@ export default function Home() {
               }
             });
           }
-
         });
 
-
+        getTitikGempaJson();
         initWorker();
 
       }).catch((error) => {
@@ -228,8 +227,7 @@ export default function Home() {
     });
 
     loadGeoJsonData();
-    getTitikGempaJson();
-    getGempa();
+    
     if (socket) return () => {
       socket!.disconnect();
     };
@@ -389,6 +387,13 @@ export default function Home() {
     fetch(url)
       .then(response => response.json())
       .then((data) => {
+        document.getElementById("loading-screen")!.style.display = "none";
+        getGempa();
+        getGempaKecil();
+
+        setInfoGempas(igs.current);
+        
+        console.log("Loaded");
         map.current!.on('load', () => {
           let ifg: InfoGempa[] = [];
           for (let index = 0; index < data.features.length; index++) {
@@ -495,10 +500,7 @@ export default function Home() {
           map.current!.on('mouseleave', 'earthquakes-layer', () => {
             map.current!.getCanvas().style.cursor = '';
           });
-
-          getGempaKecil();
-
-          setInfoGempas(igs.current)
+          
 
         });
       })
@@ -689,6 +691,22 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         .then(response => response.json())
         .then((data) => {
           const feature = data.features[0];
+  const msg = `
+  ${feature.properties.place}
+  Magnitudo : ${feature.properties.mag}
+  Kedalaman : ${feature.properties.depth}
+  Lokasi (Lat,Lng) : 
+  ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
+          const nig: InfoGempa = {
+            id: feature.properties.id,
+            lng: parseFloat(feature.geometry.coordinates[1]),
+            lat: parseFloat(feature.geometry.coordinates[0]),
+            mag: parseFloat(feature.properties.mag) || 9.0,
+            depth: feature.properties.depth || "10 Km",
+            message: msg,
+            place: feature.properties.place,
+            time: new Date().toLocaleString()
+          };
           if (lastGempaKecilId.current != feature.properties.id) {
             lastGempaKecilId.current = feature.properties.id;
             var notif = new Audio(smallEarthQuakeSound);
@@ -700,11 +718,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               essential: true
             });
 
-            const msg = `${feature.properties.place}
-Magnitudo : ${feature.properties.mag}
-Kedalaman : ${feature.properties.depth}
-Lokasi (Lat,Lng) : 
-${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
+            
 
             const tg = new TitikGempa(lastGempaKecilId.current, {
               coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
@@ -716,22 +730,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               depth: feature.properties.depth || "10 Km",
             });
 
+            
 
 
 
-
-            const nig: InfoGempa = {
-              id: feature.properties.id,
-              lng: parseFloat(feature.geometry.coordinates[1]),
-              lat: parseFloat(feature.geometry.coordinates[0]),
-              mag: parseFloat(feature.properties.mag) || 9.0,
-              depth: feature.properties.depth || "10 Km",
-              message: msg,
-              place: feature.properties.place,
-              time: new Date().toLocaleString()
-            };
+           
             igs.current.push(nig)
-            setInfoGempas(igs.current)
+            setInfoGempas(igs.current);
 
             if (titikGempaKecil.current) {
               titikGempaKecil.current.removeAllRender();
@@ -739,6 +744,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             titikGempaKecil.current = tg;
             // setTitikGempaKecil(tg);
           }
+          
+          setInfoGempaTerakhir(nig);
         })
         .catch((error) => {
           console.error('Error initializing socket:', error);
@@ -800,14 +807,14 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
   }
 
   function testDemoGempa() {
-    if(geoJsonData.current == null) {
+    if (geoJsonData.current == null) {
       alert("Wait loading geojson");
       return;
     };
     const bbox = turf.bbox(geoJsonData.current);
     const randomPosition = turf.randomPosition(bbox);
     const mag = (Math.random() * 10).toFixed(1);
-    const depth = (Math.random() * 100).toFixed(2) + " Km";
+    const depth = (Math.random() * 100).toFixed(1) + " Km";
     const message = "Gempa Bumi Test Pada Lokasi : Lat : " + randomPosition[1] + " Lng : " + randomPosition[0] + " Magnitudo : " + mag + " Kedalaman : " + depth;
     const id = `tg-${new Date().toLocaleTimeString()}`;
     const nig: InfoGempa = {
@@ -1093,7 +1100,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       </Card>}
 
-      
+
 
       {alertGempaBumis.map((v, i) => {
         return <div className='z-50' key={i}>
@@ -1114,6 +1121,11 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
           <div className='github-icon'></div>
           <span>Github</span>
         </a>
+      </div>
+
+
+      <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg' id='loading-screen'>
+        <span className="loader"></span>
       </div>
     </div>
 

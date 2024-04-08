@@ -7,10 +7,10 @@ interface GempaBumiAlertProps {
     closeInSecond?: number;
 }
 
-export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
+export default function GempaBumiAlert({ props }: { props: GempaBumiAlertProps }) {
     const notifSound = "/sounds/system-notification-199277.mp3"
     const warningSound = "/sounds/error-call-to-attention-129258.mp3"
-    
+
     const [close, setClose] = useState(false);
     useEffect(() => {
         const allPopUp = document.querySelectorAll('.warning .show-pop-up');
@@ -29,7 +29,7 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
                 v.classList.remove('close-pop-up');
             });
 
-            
+
         }
         var notif = new Audio(notifSound);
         notif.play();
@@ -37,8 +37,8 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
         setTimeout(() => {
             var warning = new Audio(warningSound);
             warning.play();
-        },1000);
-        
+        }, 1000);
+
         // setTimeout(() => {
         //     const audioDangerElement = document.getElementById('danger');
         //     if(audioDangerElement){
@@ -62,8 +62,8 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
     }, [props.closeInSecond]);
 
     return (!close && <div className='absolute m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center '>
-        
-<div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg'></div>
+
+        <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg'></div>
         <div className='warning scale-75 md:scale-150 flex flex-col justify-center items-center '>
             <div className='long-hex flex flex-col justify-center opacity-0 show-pop-up animation-delay-1'>
                 <div className="flex justify-evenly w-full items-center">
@@ -100,12 +100,12 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
             </div>
         </div>
         <div className='strip top-0'>
-        <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse'></div><div className='strip-bar loop-strip-reverse'></div>
+            <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse'></div><div className='strip-bar loop-strip-reverse'></div>
+            </div>
         </div>
-      </div>
-      <div className='strip bottom-0'>
-        <div className='strip-wrapper'><div className='strip-bar loop-strip'></div><div className='strip-bar loop-strip'></div>
+        <div className='strip bottom-0'>
+            <div className='strip-wrapper'><div className='strip-bar loop-strip'></div><div className='strip-bar loop-strip'></div>
+            </div>
         </div>
-      </div>
-        </div>);
+    </div>);
 }

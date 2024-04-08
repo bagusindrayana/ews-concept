@@ -602,21 +602,19 @@
     -moz-transform: skew(15deg);
     -o-transform: skew(15deg);
     background-color: var(--orange);
-    -webkit-box-shadow:0px 0px 5px 0px rgba(252,114,22,1);
-    -moz-box-shadow: 0px 0px 5px 0px rgba(252,114,22,1);
-    box-shadow: 0px 0px 5px 0px rgba(252,114,22,1);
+    -webkit-box-shadow: 0px 0px 5px 0px rgba(252, 114, 22, 1);
+    -moz-box-shadow: 0px 0px 5px 0px rgba(252, 114, 22, 1);
+    box-shadow: 0px 0px 5px 0px rgba(252, 114, 22, 1);
     display: flex;
     align-items: center;
     padding: 6px;
     overflow: hidden;
 }
 
-.jajar-genjang .time-countdown {
-    
-}
+.jajar-genjang .time-countdown {}
 
 .jajar-genjang.danger {
-    
+
     background-color: var(--red);
     -webkit-box-shadow: 0px 0px 5px 0px rgba(250, 23, 23, 1);
     -moz-box-shadow: 0px 0px 5px 0px rgba(250, 23, 23, 1);
@@ -648,7 +646,7 @@
 
 .item-daerah {
 
-    
+
     width: 100%;
     position: relative;
 
@@ -682,24 +680,21 @@
     font-family: 'DS-Digital';
 }
 
-.custom-scrollbar::-webkit-scrollbar-track
-{
-	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
-	border-radius: 10px;
-	background-color: rgb(61, 61, 61);
+.custom-scrollbar::-webkit-scrollbar-track {
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    background-color: rgb(61, 61, 61);
 }
 
-.custom-scrollbar::-webkit-scrollbar
-{
-	width: 12px;
-	background-color: rgb(61, 61, 61);
+.custom-scrollbar::-webkit-scrollbar {
+    width: 12px;
+    background-color: rgb(61, 61, 61);
 }
 
-.custom-scrollbar::-webkit-scrollbar-thumb
-{
-	border-radius: 10px;
-	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
-	background-color: var(--red);
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+    -webkit-box-shadow: inset 0 0 6px rgba(0, 0, 0, .3);
+    background-color: var(--red);
 }
 
 /* slide animation from left to right */
@@ -721,8 +716,9 @@ label#internal {
     --decal-width: 50px;
     --label-corner-size: 3px;
     --label-gutter-size: 5px;
-    
+
 }
+
 .label {
     overflow: hidden;
     /* padding: 1px calc(var(--gutter-size) - 3px); */
@@ -753,25 +749,24 @@ label#internal {
     --stripe-size: 15px;
     --glow-color: rgba(var(--danger-glow-rgb), .8);
     --glow-size: 3px;
-    background-image: repeating-linear-gradient(
-      -45deg,
-      /* glow boundary */
-      var(--glow-color) calc(-1 * var(--glow-size)),
-      /* fade into foreground */
-      var(--stripe-color) 0,
-      /* fade from foreground */
-      var(--stripe-color) calc(var(--stripe-size) - var(--glow-size) / 2),
-      /* glow boundary */
-      var(--glow-color) calc(var(--stripe-size) + var(--glow-size) / 2),
-      /* fade to background */
-      transparent calc(var(--stripe-size) + var(--glow-size) / 2),
-      /* fade from background */
-      transparent calc(2 * var(--stripe-size)),
-      /* glow boundary */
-      var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size))
-    );
+    background-image: repeating-linear-gradient(-45deg,
+            /* glow boundary */
+            var(--glow-color) calc(-1 * var(--glow-size)),
+            /* fade into foreground */
+            var(--stripe-color) 0,
+            /* fade from foreground */
+            var(--stripe-color) calc(var(--stripe-size) - var(--glow-size) / 2),
+            /* glow boundary */
+            var(--glow-color) calc(var(--stripe-size) + var(--glow-size) / 2),
+            /* fade to background */
+            transparent calc(var(--stripe-size) + var(--glow-size) / 2),
+            /* fade from background */
+            transparent calc(2 * var(--stripe-size)),
+            /* glow boundary */
+            var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size)));
     box-shadow: inset 0 0 1px calc(var(--glow-size) / 2) var(--shade-3);
-  }
+}
+
 .-blink {
     animation-name: blink;
     animation-duration: var(--blink-duration);
@@ -781,9 +776,9 @@ label#internal {
 
 @keyframes blink {
     50% {
-      opacity: 0;
+        opacity: 0;
     }
-  }
+}
 
 .label#internal .text.-characters {
     font-size: 3.5rem;
@@ -826,7 +821,7 @@ label#internal {
     .label#internal .text {
         font-size: 2.5rem;
     }
-    
+
     .label#internal .decal {
         width: 40px;
     }
@@ -838,4 +833,43 @@ label#internal {
     border-radius: 50%;
     background-image: url('https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg');
     background-color: white;
+}
+
+.loader {
+    width: 48px;
+    height: 48px;
+    display: inline-block;
+    position: relative;
+}
+
+.loader::after,
+.loader::before {
+    content: '';
+    box-sizing: border-box;
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--orange);
+    position: absolute;
+    left: 0;
+    top: 0;
+    animation: scaleOut 2s ease-in-out infinite;
+}
+
+.loader::after {
+    border-color: var(--red);
+    animation-delay: 1s;
+}
+
+#loading-screen {
+    background-color: black;
+}
+
+@keyframes scaleOut {
+    0% {
+        transform: scale(0);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
