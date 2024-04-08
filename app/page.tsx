@@ -81,10 +81,6 @@ export default function Home() {
       }
     }, 2000);
 
-    // setAlertGempaBumis([...alertGempaBumis, nig]);
-    // //add data to first infoGempas
-    // setInfoGempas(igs.current);
-
     setAlertGempaBumis([...alertGempaBumis, nig]);
     //add data to first infoGempas
     setInfoGempas([nig, ...infoGempas]);
@@ -193,7 +189,8 @@ export default function Home() {
             });
           }
         });
-
+        getGempa();
+        getGempaKecil();
         getTitikGempaJson();
         initWorker();
 
@@ -227,7 +224,7 @@ export default function Home() {
     });
 
     loadGeoJsonData();
-    
+
     if (socket) return () => {
       socket!.disconnect();
     };
@@ -302,9 +299,6 @@ export default function Home() {
 
       alerts.push(nig);
     }
-
-    // setInfoGempas(igs.current);
-    // sas.current = alerts;
 
     //get last alert
     if (alerts.length > 0) {
@@ -388,31 +382,22 @@ export default function Home() {
       .then(response => response.json())
       .then((data) => {
         document.getElementById("loading-screen")!.style.display = "none";
-        getGempa();
-        getGempaKecil();
-
-        
-        
-        console.log("Loaded");
+        let ifg: InfoGempa[] = [];
+        for (let index = 0; index < data.features.length; index++) {
+          const feature = data.features[index];
+          ifg.push({
+            id: feature.properties.id,
+            lng: feature.geometry.coordinates[0],
+            lat: feature.geometry.coordinates[1],
+            mag: feature.properties.mag,
+            depth: feature.properties.depth,
+            place: feature.properties.place,
+            time: feature.properties.time
+          });
+        }
+        igs.current = ifg;
+        setInfoGempas(igs.current);
         map.current!.on('load', () => {
-          let ifg: InfoGempa[] = [];
-          for (let index = 0; index < data.features.length; index++) {
-            const feature = data.features[index];
-            ifg.push({
-              id: feature.properties.id,
-              lng: feature.geometry.coordinates[0],
-              lat: feature.geometry.coordinates[1],
-              mag: feature.properties.mag,
-              depth: feature.properties.depth,
-              place: feature.properties.place,
-              time: feature.properties.time
-            });
-          }
-          igs.current = ifg;
-
-          setInfoGempas(igs.current);
-
-
           //check earthquakes layer
           if (map.current!.getLayer('earthquakes-layer')) {
             //update source
@@ -502,9 +487,10 @@ export default function Home() {
           map.current!.on('mouseleave', 'earthquakes-layer', () => {
             map.current!.getCanvas().style.cursor = '';
           });
-          
+
 
         });
+        
       })
       .catch((error) => {
         console.error('Error initializing socket:', error);
@@ -688,12 +674,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
     }, 5000);
 
     setInterval(() => {
-      const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json";
+      const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json?t=" + new Date().getTime();
       fetch(url)
         .then(response => response.json())
         .then((data) => {
           const feature = data.features[0];
-  const msg = `
+          const msg = `
   ${feature.properties.place}
   Magnitudo : ${feature.properties.mag}
   Kedalaman : ${feature.properties.depth}
@@ -720,7 +706,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               essential: true
             });
 
-            
+
 
             const tg = new TitikGempa(lastGempaKecilId.current, {
               coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
@@ -732,11 +718,11 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               depth: feature.properties.depth || "10 Km",
             });
 
-            
 
 
 
-           
+
+
             igs.current.push(nig)
             setInfoGempas(igs.current);
 
@@ -746,7 +732,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             titikGempaKecil.current = tg;
             // setTitikGempaKecil(tg);
           }
-          
+
           setInfoGempaTerakhir(nig);
         })
         .catch((error) => {
