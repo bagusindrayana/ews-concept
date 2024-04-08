@@ -801,8 +801,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
     };
     const bbox = turf.bbox(geoJsonData.current);
     const randomPosition = turf.randomPosition(bbox);
-    const mag = (Math.random() * 10).toFixed(1);
-    const depth = (Math.random() * 100).toFixed(1) + " Km";
+    const mag = (Math.floor((Math.random() * 10) + 1)).toFixed(1);
+    const depth = (Math.random() * 20).toFixed(1) + " Km";
     const message = "Gempa Bumi Test Pada Lokasi : Lat : " + randomPosition[1] + " Lng : " + randomPosition[0] + " Magnitudo : " + mag + " Kedalaman : " + depth;
     const id = `tg-${new Date().toLocaleTimeString()}`;
     const nig: InfoGempa = {
