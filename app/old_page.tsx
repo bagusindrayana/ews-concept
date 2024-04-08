@@ -3,7 +3,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import mapboxgl from "mapbox-gl";
 import './ui.css';
 import React, { useRef, useEffect, useState } from 'react';
-import WarningAlert from './components/warning_alert/warning_alert';
+// import WarningAlert from './components/warning_alert/warning_alert';
 // import WaveMarker from './components/mapbox_marker/wave_marker';
 import Card from './components/card/card';
 import AnimatedPopup from 'mapbox-gl-animated-popup';
