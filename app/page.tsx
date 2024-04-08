@@ -525,8 +525,7 @@ export default function Home() {
           time: sentTime.toLocaleString()
         };
 
-        setInfoGempaDirasakanTerakhir(nig);
-        console.log(currentTime.toMillis() - sentTime.toMillis());
+        
         //if sent time is less than 5 minutes
         if ((currentTime.toMillis() - sentTime.toMillis()) < 600000) {
 
@@ -538,7 +537,11 @@ export default function Home() {
             depth: data.info.depth,
             message: data.info.description + "\n" + data.info.instruction
           });
-
+          setTimeout(() => {
+            setInfoGempaDirasakanTerakhir(nig);
+          }, 6000);
+        } else {
+          setInfoGempaDirasakanTerakhir(nig);
         }
 
         // getGempaPeriodik();
@@ -796,10 +799,21 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
   function testDemoGempa() {
     const bbox = turf.bbox(geoJsonData.current);
     const randomPosition = turf.randomPosition(bbox);
-    const mag = (Math.random() * 10).toFixed(2);
-    const depth = (Math.random() * 100).toFixed(2);
+    const mag = (Math.random() * 10).toFixed(1);
+    const depth = (Math.random() * 100).toFixed(2) + " Km";
     const message = "Gempa Bumi Test Pada Lokasi : Lat : " + randomPosition[1] + " Lng : " + randomPosition[0] + " Magnitudo : " + mag + " Kedalaman : " + depth;
     const id = `tg-${new Date().toLocaleTimeString()}`;
+    const nig: InfoGempa = {
+      id: id,
+      lng: randomPosition[0],
+      lat: randomPosition[1],
+      mag: parseFloat(mag),
+      depth: depth || "10 Km",
+      message: message,
+      time: new Date().toLocaleTimeString()
+    };
+
+    
     warningHandler({
       id: id,
       lng: randomPosition[0],
@@ -808,6 +822,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       depth: depth,
       message: message
     });
+
+    setTimeout(() => {
+      setInfoGempaDirasakanTerakhir(nig);
+    }, 6000);
 
   }
 
@@ -829,7 +847,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         </div>
       } className='show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/4 lg:w-1/5'>
         <p className='whitespace-pre-wrap text-glow text-xs' style={{
-          fontSize: "10px"
+          fontSize: "12px"
         }}>{stackAlert.message}</p>
         <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
           maxHeight: "40vh",

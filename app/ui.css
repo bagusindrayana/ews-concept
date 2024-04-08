@@ -587,7 +587,7 @@
 
 .card-float .card-content {
     display: block;
-    max-height: 42vh;
+    max-height: 50vh;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -810,6 +810,10 @@ label#internal {
 
     .label#internal .decal {
         width: 40px;
+    }
+
+    .card-header {
+        cursor: pointer;
     }
 }
 
