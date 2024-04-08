@@ -126,7 +126,19 @@ export default function Home() {
     if (socket != null) return;
     fetch('/api/socket')
       .then(() => {
+        
         console.log('Socket is initializing');
+
+        socket = io();
+
+        socket.on('connect', () => {
+          console.log('connected');
+        });
+        socket.on('warning', (v: any) => {
+
+          warningHandler(v);
+        });
+
       })
       .catch((error) => {
         console.error('Error initializing socket:', error);
@@ -163,21 +175,24 @@ export default function Home() {
       .then(data => {
         geoJsonData.current = data;
         map.current!.on('load', () => {
-          map.current!.addSource('wilayah', {
-            type: 'geojson',
-            generateId: true,
-            data: data
-          });
-          map.current!.addLayer({
-            'id': 'outline',
-            'type': 'line',
-            'source': 'wilayah',
-            'layout': {},
-            'paint': {
-              'line-color': '#807a72',
-              'line-width': 1
-            }
-          });
+          if(!map.current!.getSource('wilayah')){
+            map.current!.addSource('wilayah', {
+              type: 'geojson',
+              generateId: true,
+              data: data
+            });
+            map.current!.addLayer({
+              'id': 'outline',
+              'type': 'line',
+              'source': 'wilayah',
+              'layout': {},
+              'paint': {
+                'line-color': '#807a72',
+                'line-width': 1
+              }
+            });
+          }
+          
         });
 
 
@@ -193,17 +208,9 @@ export default function Home() {
 
     socketInitializer();
 
-    socket = io();
 
-    socket.on('connect', () => {
-      console.log('connected');
-    });
-    socket.on('warning', (v: any) => {
 
-      warningHandler(v);
-    });
-
-    if (map.current) return () => {
+    if (map.current && socket) return () => {
       socket!.disconnect();
     };
 
@@ -220,9 +227,9 @@ export default function Home() {
     loadGeoJsonData();
     getTitikGempaJson();
     getGempa();
-    return () => {
+    if (socket) return () => {
       socket!.disconnect();
-    }
+    };
 
 
   }, [alertGempaBumis, infoGempas, stackAlert]);
@@ -230,11 +237,11 @@ export default function Home() {
 
 
   const sendWave = () => {
-   
-    let t : any = [];
+
+    let t: any = [];
     for (let i = 0; i < tgs.current.length; i++) {
       const v = tgs.current[i];
-      if(!v.finish){
+      if (!v.finish) {
         t.push({
           id: v.id,
           center: v.center,
@@ -246,9 +253,9 @@ export default function Home() {
           message: v.description
         })
       }
-      
+
     }
-    if(t.length > 0){
+    if (t.length > 0) {
       worker.current!.postMessage({ type: 'checkMultiHighlightArea', titikGempa: t, id: "wave" });
     }
   }
@@ -299,7 +306,7 @@ export default function Home() {
     // sas.current = alerts;
 
     //get last alert
-    if(alerts.length > 0){
+    if (alerts.length > 0) {
       setStackAlert(alerts.slice(-1).pop()!);
     } else {
       setStackAlert(null);
@@ -326,7 +333,7 @@ export default function Home() {
         new mapboxgl.Marker(markerParent)
           .setLngLat([p[0], p[1]])
           .addTo(map.current!)
-       
+
       } else {
 
         const index = kts.current.findIndex((el) => el.lng == p[0] && el.lat == p[1]);
@@ -365,7 +372,9 @@ export default function Home() {
 
       map.current!.moveLayer('outline');
       for (let tg of tgs.current) {
-        map.current!.moveLayer(tg.id);
+        if(map.current!.getLayer(tg.id)){
+          map.current!.moveLayer(tg.id);
+        }
       }
     }
 
@@ -373,7 +382,7 @@ export default function Home() {
   }
 
   function getTitikGempaJson() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/gempaQL.json";
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/gempaQL.json?t="+new Date().getTime();
     fetch(url)
       .then(response => response.json())
       .then((data) => {
@@ -497,15 +506,15 @@ export default function Home() {
   }
 
   function getGempa() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json";
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t="+new Date().getTime();
     fetch(url)
       .then(response => response.json())
       .then((data) => {
         const coordinates = data.info.point.coordinates.split(",");
         lastGempaId.current = data.identifier;
-        const sentTime = DateTime.fromISO(data.sent.replace("WIB",""), { zone: "Asia/Jakarta" });
+        const sentTime = DateTime.fromISO(data.sent.replace("WIB", ""), { zone: "Asia/Jakarta" });
         const currentTime = DateTime.now().setZone("Asia/Jakarta");
-        
+
         const nig: InfoGempa = {
           id: data.identifier,
           lng: parseFloat(coordinates[0]),
@@ -542,7 +551,7 @@ export default function Home() {
   }
 
   function getGempaKecil() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json";
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json?t="+new Date().getTime();
     fetch(url)
       .then(response => response.json())
       .then((data) => {
@@ -619,7 +628,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
 
   function getGempaPeriodik() {
     setInterval(() => {
-      const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json"
+      const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t="+new Date().getTime()
       //await fetch
       fetch(url)
         .then(response => response.json())
@@ -627,7 +636,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
           if (lastGempaId.current != data.identifier) {
             lastGempaId.current = data.identifier;
             const coordinates = data.info.point.coordinates.split(",");
-            if(parseFloat(data.info.magnitude) > 5){
+            if (parseFloat(data.info.magnitude) > 5) {
               warningHandler({
                 id: data.identifier,
                 lng: parseFloat(coordinates[0]),
@@ -659,7 +668,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
                 titikGempaKecil.current.removeAllRender();
               }
               titikGempaKecil.current = tg;
-              
+
             }
           }
         })
@@ -732,6 +741,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
   }
 
   const selectedPopup = useRef<any>(null);
+  
   function selectEvent(d: InfoGempa) {
     setDetailInfoGempa(d);
     if (selectedPopup.current) {
@@ -783,30 +793,23 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
     }).setDOMContent(placeholder).setLngLat([d.lng, d.lat]).addTo(map.current!);
   }
 
-  // function countdownTime() {
-  //   const timeCuntdownElement = document.querySelectorAll('.time-countdown');
-  //   //loop and countdon in milisecond on data-time
-  //   timeCuntdownElement.forEach((v) => {
-  //     const time = parseInt(v.getAttribute('data-time')!);
-  //     let milisecond = time;
-  //     //format minute : second : milisecond
-  //     const interval = setInterval(() => {
-  //       const seconds = Math.floor(milisecond / 1000);
-  //       const minutes = Math.floor(seconds / 60);
-  //       const remainingSeconds = seconds % 60;
-  //       const remainingMilliseconds = milisecond % 1000;
-  //       v.innerHTML = `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}:${remainingMilliseconds.toString().padStart(2, '0')}`;
-  //       milisecond -= 10;
-  //       if (milisecond < 0) {
-  //         clearInterval(interval);
-  //       }
-  //     }, 10);
+  function testDemoGempa() {
+    const bbox = turf.bbox(geoJsonData.current);
+    const randomPosition = turf.randomPosition(bbox);
+    const mag = (Math.random() * 10).toFixed(2);
+    const depth = (Math.random() * 100).toFixed(2);
+    const message = "Gempa Bumi Test Pada Lokasi : Lat : " + randomPosition[1] + " Lng : " + randomPosition[0] + " Magnitudo : " + mag + " Kedalaman : " + depth;
+    const id = `tg-${new Date().toLocaleTimeString()}`;
+    warningHandler({
+      id: id,
+      lng: randomPosition[0],
+      lat: randomPosition[1],
+      mag: mag,
+      depth: depth,
+      message: message
+    });
 
-  //     v.classList.remove('time-countdown');
-  //   });
-
-  // }
-
+  }
 
 
   return (
@@ -818,35 +821,35 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       <div ref={mapContainer} className="w-full h-screen" />
 
       {stackAlert && <Card title={
-            <div className='overflow-hidden'>
-              <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-              <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
-              </div>
-            </div>
-          } className='show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/4 lg:w-1/5'>
-            <p className='whitespace-pre-wrap text-glow text-xs' style={{
-              fontSize: "10px"
-            }}>{stackAlert.message}</p>
-            <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
-              maxHeight: "40vh",
-            }}>
-              <ul>
-                  {stackAlert.listKotaTerdampak && stackAlert.listKotaTerdampak.map((kota, i) => {
-                    if (kota.hit) {
-                      return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
-                        <ItemKotaTerdampak kota={kota} />
-                      </li>
-                    } else {
-                      return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
-                        <ItemKotaTerdampak kota={kota} />
-                      </li>
-                    }
-                  })}
-                </ul>
-            </div>
-          </Card>}
-      
+        <div className='overflow-hidden'>
+          <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+          <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+            <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+          </div>
+        </div>
+      } className='show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/4 lg:w-1/5'>
+        <p className='whitespace-pre-wrap text-glow text-xs' style={{
+          fontSize: "10px"
+        }}>{stackAlert.message}</p>
+        <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
+          maxHeight: "40vh",
+        }}>
+          <ul>
+            {stackAlert.listKotaTerdampak && stackAlert.listKotaTerdampak.map((kota, i) => {
+              if (kota.hit) {
+                return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
+                  <ItemKotaTerdampak kota={kota} />
+                </li>
+              } else {
+                return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
+                  <ItemKotaTerdampak kota={kota} />
+                </li>
+              }
+            })}
+          </ul>
+        </div>
+      </Card>}
+
 
       <Card title={
         <p className='font-bold text-glow-red text-sm text-center' style={{
@@ -873,7 +876,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               }}
               className='flex flex-col mb-2 list-event cursor-pointer  slide-in-left' style={{
                 animationDelay: `${i * 0.01}s`,
-                transform:'translateX(-110%)'
+                transform: 'translateX(-110%)'
               }}>
               <span className='block mb-1' style={{
                 fontSize: "11px"
@@ -1011,8 +1014,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
 
         className='show-pop-up fixed bottom-6 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/5'>
         <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
-            fontSize: "10px"
-          }}>
+          fontSize: "10px"
+        }}>
           <div className='w-full flex   gap-2' >
             <div>
               <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
@@ -1058,6 +1061,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
           </div>
         </div>
       </Card>}
+
+      <div className='fixed sm:bottom-28 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={()=>{
+        testDemoGempa();
+      }}>
+        Test Gempa
+      </div>
 
       {alertGempaBumis.map((v, i) => {
         return <div className='z-50' key={i}>
