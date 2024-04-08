@@ -577,7 +577,7 @@
 
 .card-float {
     /* width: 30%; */
-
+    transition: all 0.3s ease-in-out;
 }
 
 .card-float .card-content {
@@ -794,7 +794,7 @@ label#internal {
 
     .card-float.open .card-content {
         height: unset;
-        padding: unset;
+        padding: 6px;
     }
 
     .card-float {

@@ -63,7 +63,7 @@ export default function GempaBumiAlert ({props }: {props:GempaBumiAlertProps}){
 
     return (!close && <div className='absolute m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg'>
         
-        <div className='warning scale-100 md:scale-150 flex flex-col justify-center items-center '>
+        <div className='warning scale-75 md:scale-150 flex flex-col justify-center items-center '>
             <div className='long-hex flex flex-col justify-center opacity-0 show-pop-up animation-delay-1'>
                 <div className="flex justify-evenly w-full items-center">
                     <div className='warning-black opacity-0 blink animation-fast animation-delay-2'></div>

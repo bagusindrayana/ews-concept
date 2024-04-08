@@ -824,7 +824,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
                 <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
               </div>
             </div>
-          } className='show-pop-up  fixed top-6 left-6 w-1/2 md:w-1/5'>
+          } className='show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/4 lg:w-1/5'>
             <p className='whitespace-pre-wrap text-glow text-xs' style={{
               fontSize: "10px"
             }}>{stackAlert.message}</p>
