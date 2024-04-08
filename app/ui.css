@@ -582,7 +582,7 @@
 
 .card-float .card-content {
     display: block;
-    height: 40vh;
+    max-height: 42vh;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -693,4 +693,99 @@
 	border-radius: 10px;
 	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
 	background-color: var(--red);
+}
+
+/* slide animation from left to right */
+.slide-in-left {
+    animation: slideInLeft 0.5s forwards;
+}
+
+@keyframes slideInLeft {
+    0% {
+        transform: translateX(-100%);
+    }
+
+    100% {
+        transform: translateX(0);
+    }
+}
+
+label#internal {
+    --decal-width: 50px;
+    --label-corner-size: 3px;
+    --label-gutter-size: 5px;
+    
+}
+.label {
+    overflow: hidden;
+    /* padding: 1px calc(var(--gutter-size) - 3px); */
+    width: 125px;
+    /* display: inline-block; */
+    font: 400 32px 'Roboto Condensed';
+    letter-spacing: -1px;
+    line-height: 1;
+    padding-right: 0px;
+    text-transform: uppercase;
+    user-select: none;
+    white-space: nowrap;
+    --text-glow-color: rgba(var(--glow-rgb), .5);
+    color: var(--text-color);
+    text-shadow: -1px 1px 0 var(--text-glow-color), 1px -1px 0 var(--text-glow-color), -1px -1px 0 var(--text-glow-color), 1px 1px 0 var(--text-glow-color);
+}
+.-bordered {
+    --border-glow-color: rgba(var(--glow-rgb), .7);
+    border-radius: var(--gutter-size);
+    border-style: solid;
+    border-width: 3px;
+    border-color: var(--orange);
+    box-shadow: inset 0 0 0 1px var(--border-glow-color), 0 0 0 1px var(--border-glow-color);
+}
+
+.label#internal .decal {
+    border-radius: calc(var(--label-corner-size) - 1px);
+    display: block;
+    height: 100px;
+    width: 100%;
+}
+
+.-striped {
+    --stripe-color: var(--danger-fill-color);
+    --stripe-size: 15px;
+    --glow-color: rgba(var(--danger-glow-rgb), .8);
+    --glow-size: 3px;
+    background-image: repeating-linear-gradient(
+      -45deg,
+      /* glow boundary */
+      var(--glow-color) calc(-1 * var(--glow-size)),
+      /* fade into foreground */
+      var(--stripe-color) 0,
+      /* fade from foreground */
+      var(--stripe-color) calc(var(--stripe-size) - var(--glow-size) / 2),
+      /* glow boundary */
+      var(--glow-color) calc(var(--stripe-size) + var(--glow-size) / 2),
+      /* fade to background */
+      transparent calc(var(--stripe-size) + var(--glow-size) / 2),
+      /* fade from background */
+      transparent calc(2 * var(--stripe-size)),
+      /* glow boundary */
+      var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size))
+    );
+    box-shadow: inset 0 0 1px calc(var(--glow-size) / 2) var(--shade-3);
+  }
+.-blink {
+    animation-name: blink;
+    animation-duration: var(--blink-duration);
+    animation-iteration-count: infinite;
+    animation-timing-function: steps(1);
+}
+
+@keyframes blink {
+    50% {
+      opacity: 0;
+    }
+  }
+
+.label#internal .text.-characters {
+    font-size: 58px;
+    padding-top: var(--label-gutter-size);
 }

@@ -24,6 +24,7 @@ export default class TitikGempa {
     curTime: number = 0;
     _play: boolean = true;
     gempaMarker: mapboxgl.Marker | null = null;
+    finishWave : boolean = false;
     constructor(id: string, setting?: TitikGempaSetting) {
         this.id = id;
         this.setting = setting;
@@ -33,6 +34,10 @@ export default class TitikGempa {
 
     get description() {
         return this.setting?.description;
+    }
+
+    get finish() {
+        return this.finishWave;
     }
 
     get center() {
@@ -57,6 +62,10 @@ export default class TitikGempa {
                     this.animateWave();
                     this.renderPopup();
                 }, 1000);
+
+                setTimeout(() => {
+                    this.removeAllRender();
+                },(Math.abs(this.mag || 1) * 10000))
             }
         }
     }
@@ -152,7 +161,6 @@ export default class TitikGempa {
         };
 
         if (!this.setting.map?.getSource('wave-source-' + this.id)) {
-            console.log(circles);
             this.setting.map.addSource('wave-source-' + this.id, {
                 type: 'geojson',
                 data: circles
@@ -161,7 +169,7 @@ export default class TitikGempa {
             (this.setting.map?.getSource('wave-source-' + this.id) as mapboxgl.GeoJSONSource).setData(circles);
         }
 
-        if (!this.setting.map.getLayer(this.id)) {
+        if (!this.setting.map.getLayer(this.id) && this.finishWave == false) {
             this.setting.map.addLayer({
                 id: this.id,
                 type: 'circle',
@@ -230,6 +238,7 @@ export default class TitikGempa {
         if (this.setting?.map != null) {
             this.setting.map.removeLayer(this.id);
             this.setting.map.removeSource('wave-source-' + this.id);
+            this.finishWave = true;
         }
     }
 }
