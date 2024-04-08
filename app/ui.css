@@ -70,12 +70,12 @@
 
 .loop-strip {
     animation: loopStrip infinite linear;
-    animation-duration: 5s;
+    animation-duration: 10s;
 }
 
 .loop-strip-reverse {
     animation: loopStrip infinite linear reverse;
-    animation-duration: 5s;
+    animation-duration: 10s;
 }
 
 .anim-duration-10 {
@@ -480,7 +480,12 @@
 }
 
 .overlay-bg {
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(0, 0, 0, 0.8);
+    /* background-image: url("/images/hexagons.png");
+    transform: rotate(90deg);
+    width: 300%;
+    height: 300%;
+    opacity: 0.5; */
 }
 
 .list-event {

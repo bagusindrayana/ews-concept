@@ -640,7 +640,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               var notif = new Audio(smallEarthQuakeSound);
               notif.play();
               map.current!.flyTo({
-                center: [parseFloat(coordinates[1]), parseFloat(coordinates[0])],
+                center: [parseFloat(coordinates[0]), parseFloat(coordinates[1])],
                 zoom: 7,
                 essential: true
               });
@@ -1073,6 +1073,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             } />
         </div>
       })}
+
     </div>
 
   );
