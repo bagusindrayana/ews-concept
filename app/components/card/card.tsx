@@ -15,7 +15,7 @@ export default function Card({
         {title && <div className="card-header red-bordered-bottom">
             {title}
         </div>}
-        <div className="card-content p-2 style-2">
+        <div className="card-content p-2 custom-scrollbar">
             {children}
         </div>
         {footer && <div className="card-footer red-bordered-top">

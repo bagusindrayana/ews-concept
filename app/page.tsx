@@ -158,7 +158,7 @@ export default function Home() {
   }
 
   const loadGeoJsonData = () => {
-    fetch('/all_kabkota_ind.geojson')
+    fetch('/geojson/all_kabkota_ind.geojson')
       .then(response => response.json())
       .then(data => {
         geoJsonData.current = data;
@@ -230,21 +230,7 @@ export default function Home() {
 
 
   const sendWave = () => {
-    // const pWaves = tgs.current.map((v: TitikGempa) => {
-    //   return {
-    //     id: v.id,
-    //     center: v.center,
-    //     radius: v.pWaveRadius
-    //   }
-    // });
-    // const sWaves = tgs.current.map((v: TitikGempa) => {
-    //   return {
-    //     id: v.id,
-    //     center: v.center,
-    //     radius: v.sWaveRadius
-    //   }
-    // });
-
+   
     let t : any = [];
     for (let i = 0; i < tgs.current.length; i++) {
       const v = tgs.current[i];
@@ -340,31 +326,7 @@ export default function Home() {
         new mapboxgl.Marker(markerParent)
           .setLngLat([p[0], p[1]])
           .addTo(map.current!)
-        // const dist = turf.distance(turf.point([p[0], p[1]]), turf.point([element.properties.titikGempa[0], element.properties.titikGempa[1]]));
-        // const time = Math.floor(dist / 3) * 1000;
-        // kts.current.push({
-        //   lng: p[0],
-        //   lat: p[1],
-        //   distance: dist,
-        //   name: element.properties.alt_name,
-        //   hit: false,
-        //   timeArrival: new Date(new Date().getTime() + time)
-        // });
-        // setKotaTerdampak([...kotaTerdampak, ...kts.current]);
-        // countdownTime();
-
-
-
-
-        //animate scroll down for .list-daerah
-        // const listDaerah = document.querySelector('.list-daerah .card-content');
-        // await new Promise(r => setTimeout(r, 100));
-        // if (listDaerah) {
-        //   listDaerah.scrollTop = listDaerah.scrollHeight;
-        // }
-        // if(element.properties.hit){
-        //   (document.getElementById("error") as HTMLAudioElement).play();
-        // }
+       
       } else {
 
         const index = kts.current.findIndex((el) => el.lng == p[0] && el.lat == p[1]);
@@ -376,41 +338,6 @@ export default function Home() {
           // countdownTime();
         }
       }
-
-      // let alerts: InfoGempa[] = [];
-      // if (element.properties.titikGempa) {
-      //   for (let x = 0; x < element.properties.titikGempa.length; x++) {
-      //     const tg = element.properties.titikGempa[x];
-      //     const cek = igs.current.find((el) => el.id == tg.id);
-      //     if (cek) {
-      //       if (!cek.listKotaTerdampak) {
-      //         cek.listKotaTerdampak = [];
-      //       }
-
-      //       const cek_kota = cek.listKotaTerdampak.find((el) => el.lng == p[0] && el.lat == p[1]);
-      //       if (!cek_kota) {
-      //         const dist = turf.distance(turf.point([p[0], p[1]]), turf.point([tg.center[0], tg.center[1]])) - (tg.radius / 1000);
-      //         const time = Math.floor(dist / 3) * 1000;
-      //         cek.listKotaTerdampak.push({
-      //           lng: p[0],
-      //           lat: p[1],
-      //           distance: dist,
-      //           name: element.properties.alt_name,
-      //           hit: element.properties.hit,
-      //           timeArrival: new Date(new Date().getTime() + time)
-      //         });
-      //       } else {
-      //         cek_kota.hit = element.properties.hit;
-      //       }
-      //       alerts.push(cek);
-      //     }
-      //   }
-      // }
-      // console.log(element.properties.titikGempa.length);
-
-      // // setInfoGempas(igs.current);
-      // // sas.current = alerts;
-      // setStackAlerts(alerts);
 
 
     }
@@ -734,24 +661,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               titikGempaKecil.current = tg;
               
             }
-
-            // const nig: InfoGempa = {
-            //   lng: parseFloat(coordinates[0]),
-            //   lat: parseFloat(coordinates[1]),
-            //   mag: parseFloat(data.info.magnitude),
-            //   depth: data.info.depth,
-            //   message: data.info.description + "\n" + data.info.instruction,
-            //   place: data.info.place,
-            //   time: new Date().toLocaleString()
-            // };
-
-            // igs.current.unshift(nig);
-
-            // setAlertGempaBumis([...alertGempaBumis, nig]);
-            // //add data to first infoGempas
-            // setInfoGempas(igs.current);
-            
-
           }
         })
         .catch((error) => {
@@ -905,19 +814,9 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       <audio id="danger" className='hidden'>
         <source src={dangerSound} type="audio/mp3" />
       </audio>
-      {/* <audio id="error" className='hidden'>
-        <source src={errorSound} type="audio/mp3" />
-      </audio> */}
+
       <div ref={mapContainer} className="w-full h-screen" />
-      {/* <GempaBumiAlert
-           
-            props={
-              {
-                magnitudo: 9.0,
-                kedalaman: '10 km',
-                show: true,
-              }
-            } /> */}
+
       {stackAlert && <Card title={
             <div className='overflow-hidden'>
               <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
@@ -929,7 +828,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             <p className='whitespace-pre-wrap text-glow text-xs' style={{
               fontSize: "10px"
             }}>{stackAlert.message}</p>
-            <div className='red-bordered p-2 overflow-y-auto style-2 mt-2' style={{
+            <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
               maxHeight: "40vh",
             }}>
               <ul>
@@ -947,29 +846,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
                 </ul>
             </div>
           </Card>}
-      {/* {kotaTerdampak.length > 0 && <Card title={
-        <p className='font-bold text-glow-red' style={{
-          color: "red"
-        }}>KOTA TERDAMPAK</p>
-      } className='show-pop-up fixed left-6 bottom-6 card-float w-1/2 md:w-1/4 list-daerah'>
-        <ul>
-          {kotaTerdampak.map((v, i) => {
-            if (v.hit) {
-              return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger'>
-                <ItemKotaTerdampak kota={v} />
-              </li>
-            } else {
-              return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah'>
-                <ItemKotaTerdampak kota={v} />
-              </li>
-            }
-          })}
-
-        </ul>
-      </Card>} */}
-
-
-
+      
 
       <Card title={
         <p className='font-bold text-glow-red text-sm' style={{
@@ -979,7 +856,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
         <p className='font-bold text-glow-red'>
 
         </p>
-      } className=' fixed right-6 top-6 card-float w-1/2 md:w-1/5'>
+      } className=' fixed right-6 top-6 card-float w-1/2 md:w-1/5 show-pop-up'>
         <ul >
           {infoGempas.map((v: InfoGempa, i) => {
             let readAbleTime = v.time;
@@ -998,7 +875,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
                 selectEvent(v);
 
               }}
-              className='flex flex-col mb-2 list-event cursor-pointer  show-pop-up'>
+              className='flex flex-col mb-2 list-event cursor-pointer  slide-in-left' style={{
+                animationDelay: `${i * 0.01}s`,
+                transform:'translateX(-110%)'
+              }}>
               <span className='block mb-1' style={{
                 fontSize: "11px"
               }}>{readAbleTime}</span>
@@ -1178,7 +1058,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
 
           </div>
           <div className='mt-2 bordered'>
-            <p className='text-glow p-2'>{infoGempaDirasakanTerakhir.message}</p>
+            <p className='text-glow p-2 break-words'>{infoGempaDirasakanTerakhir.message}</p>
           </div>
         </div>
       </Card>}

@@ -23,7 +23,7 @@
 
 .strip-bar {
 
-    background-image: url("/strip.svg");
+    background-image: url("/images/strip.svg");
     background-size: 17%;
     width: 1915px;
     height: 30px;
@@ -394,7 +394,7 @@
     position: relative;
     height: 150px;
     width: 275px;
-    background-image: url('/long_shape.svg');
+    background-image: url('/images/long_shape.svg');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -404,7 +404,7 @@
     position: relative;
     height: 100px;
     width: 100px;
-    background-image: url('/warning_shape_black.svg');
+    background-image: url('/images/warning_shape_black.svg');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -414,7 +414,7 @@
     position: relative;
     height: 40px;
     width: 40px;
-    background-image: url('/warning_gempa_black.png');
+    background-image: url('/images/warning_gempa_black.png');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -424,7 +424,7 @@
     position: relative;
     height: 100px;
     width: 50px;
-    background-image: url('/warning_gempa_red_yellow.svg');
+    background-image: url('/images/warning_gempa_red_yellow.svg');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -434,7 +434,7 @@
     position: relative;
     height: 100px;
     width: 100px;
-    background-image: url('/hex_shape.svg');
+    background-image: url('/images/hex_shape.svg');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
@@ -675,20 +675,20 @@
     font-family: 'DS-Digital';
 }
 
-.style-2::-webkit-scrollbar-track
+.custom-scrollbar::-webkit-scrollbar-track
 {
 	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,0.3);
 	border-radius: 10px;
 	background-color: rgb(61, 61, 61);
 }
 
-.style-2::-webkit-scrollbar
+.custom-scrollbar::-webkit-scrollbar
 {
 	width: 12px;
 	background-color: rgb(61, 61, 61);
 }
 
-.style-2::-webkit-scrollbar-thumb
+.custom-scrollbar::-webkit-scrollbar-thumb
 {
 	border-radius: 10px;
 	-webkit-box-shadow: inset 0 0 6px rgba(0,0,0,.3);
@@ -732,14 +732,7 @@ label#internal {
     color: var(--text-color);
     text-shadow: -1px 1px 0 var(--text-glow-color), 1px -1px 0 var(--text-glow-color), -1px -1px 0 var(--text-glow-color), 1px 1px 0 var(--text-glow-color);
 }
-.-bordered {
-    --border-glow-color: rgba(var(--glow-rgb), .7);
-    border-radius: var(--gutter-size);
-    border-style: solid;
-    border-width: 3px;
-    border-color: var(--orange);
-    box-shadow: inset 0 0 0 1px var(--border-glow-color), 0 0 0 1px var(--border-glow-color);
-}
+
 
 .label#internal .decal {
     border-radius: calc(var(--label-corner-size) - 1px);
