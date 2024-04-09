@@ -169,25 +169,23 @@ export default function Home() {
       .then(response => response.json())
       .then(data => {
         geoJsonData.current = data;
-        map.current!.on('load', () => {
-          if (!map.current!.getSource('wilayah')) {
-            map.current!.addSource('wilayah', {
-              type: 'geojson',
-              generateId: true,
-              data: data
-            });
-            map.current!.addLayer({
-              'id': 'outline',
-              'type': 'line',
-              'source': 'wilayah',
-              'layout': {},
-              'paint': {
-                'line-color': '#807a72',
-                'line-width': 1
-              }
-            });
-          }
-        });
+        if (!map.current!.getSource('wilayah')) {
+          map.current!.addSource('wilayah', {
+            type: 'geojson',
+            generateId: true,
+            data: data
+          });
+          map.current!.addLayer({
+            'id': 'outline',
+            'type': 'line',
+            'source': 'wilayah',
+            'layout': {},
+            'paint': {
+              'line-color': '#807a72',
+              'line-width': 1
+            }
+          });
+        }
         
         getTitikGempaJson();
         initWorker();
@@ -209,7 +207,9 @@ export default function Home() {
       maxZoom: 22,
     });
 
-    loadGeoJsonData();
+    map.current.on('load', () => {
+      loadGeoJsonData();
+    });
   });
 
   useEffect(() => {
@@ -391,7 +391,7 @@ export default function Home() {
         }
         igs.current = ifg;
         setInfoGempas(igs.current);
-        map.current!.on('load', () => {
+        console.log('load titik gempa 1');
           //check earthquakes layer
           if (map.current!.getLayer('earthquakes-layer')) {
             //update source
@@ -482,8 +482,7 @@ export default function Home() {
             map.current!.getCanvas().style.cursor = '';
           });
 
-
-        });
+        console.log('load titik gempa 2');
 
         getGempa();
         getGempaKecil();
