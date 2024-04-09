@@ -186,9 +186,11 @@ export default function Home() {
             }
           });
         }
-        
+        getTitikStationJson();
         getTitikGempaJson();
         initWorker();
+        const bbox = turf.bbox(geoJsonData.current);
+        console.log(bbox);
 
       }).catch((error) => {
         alert("Failed load geojson data : " + error);
@@ -197,8 +199,8 @@ export default function Home() {
   };
 
 
-  useEffect(()=>{
-    if (map.current) return () => {};
+  useEffect(() => {
+    if (map.current) return () => { };
     map.current = new mapboxgl.Map({
       container: mapContainer.current!,
       style: 'mapbox://styles/mapbox/dark-v11',
@@ -367,96 +369,68 @@ export default function Home() {
     sendWave();
   }
 
-  function getTitikGempaJson() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/gempaQL.json?t=" + new Date().getTime();
-    fetch(url)
-      .then(response => response.json())
-      .then((data) => {
-        geoJsonTitikGempa.current = data;
-        document.getElementById("loading-screen")!.style.display = "none";
-        let ifg: InfoGempa[] = [];
-        for (let index = 0; index < data.features.length; index++) {
-          const feature = data.features[index];
-          const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
-          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
-          ifg.push({
-            id: feature.properties.id,
-            lng: feature.geometry.coordinates[0],
-            lat: feature.geometry.coordinates[1],
-            mag: feature.properties.mag,
-            depth: feature.properties.depth,
-            place: feature.properties.place,
-            time: readAbleTime
+  function getTitikStationJson() {
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/sensor_seismic.json";
+    if (map.current) {
+      map.current.loadImage(
+        '/images/triangle-filled-svgrepo-com.png',
+        (error, image: any) => {
+          if (error) throw error;
+
+          // Add the image to the map style.
+          map.current!.addImage('station-icon', image);
+
+          // Add a data source containing one point feature.
+          map.current!.addSource('station', {
+            'type': 'geojson',
+            'data': url
           });
-        }
-        igs.current = ifg;
-        setInfoGempas(igs.current);
-        console.log('load titik gempa 1');
-          //check earthquakes layer
-          if (map.current!.getLayer('earthquakes-layer')) {
-            //update source
-            (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(data);
-          } else {
-            //add source
-            map.current!.addSource('earthquakes', {
-              type: 'geojson',
-              data: data
-            });
 
-            map.current!.addLayer({
-              'id': 'earthquakes-layer',
-              'type': 'circle',
-              'source': 'earthquakes',
-              'paint': {
-                'circle-radius': ["to-number", ['get', 'mag']],
-                'circle-stroke-width': 2,
+          // Add a layer to use the image to represent the data.
+          map.current!.addLayer({
+            'id': 'stations',
+            'type': 'symbol',
+            'source': 'station', // reference the data source
+            'layout': {
+              'icon-image': 'station-icon', // reference the image
+              'icon-size': 0.05
+            }
+          });
 
-                'circle-color': [
-                  "case",
-                  //depth <= 50 red, depth <= 100 orange, depth <= 250 yellow, depth <= 600 green, depth > 600 blue
-                  ['<=', ["to-number", ['get', 'depth']], 50],
-                  "red",
-                  ['<=', ["to-number", ['get', 'depth']], 100],
-                  "orange",
-                  ['<=', ["to-number", ['get', 'depth']], 250],
-                  "yellow",
-                  ['<=', ["to-number", ['get', 'depth']], 600],
-                  "green",
-                  "blue",
-                ],
-                'circle-stroke-color': 'white'
-              }
-            });
-          }
-
-          map.current!.on('click', 'earthquakes-layer', (e: any) => {
+          map.current!.on('click', 'stations', (e: any) => {
             // Copy coordinates array.
             const coordinates = e.features[0].geometry.coordinates.slice();
             const d = e.features[0].properties;
             const placeholder = document.createElement('div');
             const root = createRoot(placeholder)
             root.render(<Card title={
-              <div className='overflow-hidden'>
-                <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-                <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                  <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
-                </div>
-              </div>
+              <p className='font-bold text-glow-red text-sm text-center' style={{
+                color: "red"
+              }}>SENSOR SEISMIK</p>
             } className='min-h-48 min-w-48 whitespace-pre-wrap' >
-              <ul>
-                <li>
-                  Magnitudo : {d.mag}
-                </li>
-                <li>
-                  Kedalaman : {d.depth}
-                </li>
-                <li>
-                  Waktu : {new Date(d.time!).toLocaleString()}
-                </li>
-                <li>
-                  Lokasi (Lat,Lng) : <br />{coordinates[0]} , {coordinates[1]}
-                </li>
-              </ul>
+              <div className='text-glow text-sm w-full ' style={{
+                fontSize: "10px"
+              }}><table className='w-full'>
+                  <tbody>
+                    <tr>
+                      <td className='flex'>ID</td>
+                      <td className='text-right break-words pl-2'>{d.id}</td>
+                    </tr>
+                    <tr>
+                      <td className='flex'>Stakeholder</td>
+                      <td className='text-right break-words pl-2'>{d.stakeholder}</td>
+                    </tr>
+                    <tr>
+                      <td className='flex'>UPTBMKG</td>
+                      <td className='text-right break-words pl-2'>{d.uptbmkg}</td>
+                    </tr>
+                    <tr>
+                      <td className='flex'>Lokasi (Lat,Lng)</td>
+                      <td className='text-right break-words pl-2'>{coordinates[0]} , {coordinates[1]}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
             </Card>);
 
             new AnimatedPopup({
@@ -473,20 +447,149 @@ export default function Home() {
             }).setDOMContent(placeholder).setLngLat(coordinates).addTo(map.current!);
           });
 
-          map.current!.on('mouseenter', 'earthquakes-layer', () => {
+          map.current!.on('mouseenter', 'stations', () => {
             map.current!.getCanvas().style.cursor = 'pointer';
           });
 
           // Change it back to a pointer when it leaves.
-          map.current!.on('mouseleave', 'earthquakes-layer', () => {
+          map.current!.on('mouseleave', 'stations', () => {
             map.current!.getCanvas().style.cursor = '';
           });
+        }
+      );
+
+    }
+  }
+
+  function getTitikGempaJson() {
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/gempaQL.json?t=" + new Date().getTime();
+    fetch(url)
+      .then(response => response.json())
+      .then((data) => {
+        geoJsonTitikGempa.current = data;
+        document.getElementById("loading-screen")!.style.display = "none";
+        let ifg: InfoGempa[] = [];
+        for (let index = 0; index < data.features.length; index++) {
+          const feature = data.features[index];
+          const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
+          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+          ifg.push({
+            id: feature.properties.id,
+            lng: feature.geometry.coordinates[0],
+            lat: feature.geometry.coordinates[1],
+            mag: feature.properties.mag,
+            depth: feature.properties.depth,
+            place: feature.properties.place,
+            time: readAbleTime
+          });
+        }
+        igs.current = ifg;
+        setInfoGempas(igs.current);
+        console.log('load titik gempa 1');
+        //check earthquakes layer
+        if (map.current!.getLayer('earthquakes-layer')) {
+          //update source
+          (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(data);
+        } else {
+          //add source
+          map.current!.addSource('earthquakes', {
+            type: 'geojson',
+            data: data
+          });
+
+          map.current!.addLayer({
+            'id': 'earthquakes-layer',
+            'type': 'circle',
+            'source': 'earthquakes',
+            'paint': {
+              'circle-radius': ["to-number", ['get', 'mag']],
+              'circle-stroke-width': 2,
+
+              'circle-color': [
+                "case",
+                //depth <= 50 red, depth <= 100 orange, depth <= 250 yellow, depth <= 600 green, depth > 600 blue
+                ['<=', ["to-number", ['get', 'depth']], 50],
+                "red",
+                ['<=', ["to-number", ['get', 'depth']], 100],
+                "orange",
+                ['<=', ["to-number", ['get', 'depth']], 250],
+                "yellow",
+                ['<=', ["to-number", ['get', 'depth']], 600],
+                "green",
+                "blue",
+              ],
+              'circle-stroke-color': 'white'
+            }
+          });
+        }
+
+        map.current!.on('click', 'earthquakes-layer', (e: any) => {
+          // Copy coordinates array.
+          const coordinates = e.features[0].geometry.coordinates.slice();
+          const d = e.features[0].properties;
+          const placeholder = document.createElement('div');
+          const root = createRoot(placeholder)
+          root.render(<Card title={
+            <div className='overflow-hidden'>
+              <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+              <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+              </div>
+            </div>
+          } className='min-h-48 min-w-48 whitespace-pre-wrap' >
+            <div className='text-glow text-sm w-full ' style={{
+                fontSize: "10px"
+              }}><table className='w-full'>
+                  <tbody>
+                    <tr>
+                      <td className='flex'>Magnitudo</td>
+                      <td className='text-right break-words pl-2'>{d.mag}</td>
+                    </tr>
+                    <tr>
+                      <td className='flex'>Kedalaman</td>
+                      <td className='text-right break-words pl-2'>{d.depth}</td>
+                    </tr>
+                    <tr>
+                      <td className='flex'>Waktu</td>
+                      <td className='text-right break-words pl-2'>{new Date(d.time!).toLocaleString()}</td>
+                    </tr>
+                    <tr>
+                      <td className='flex'>Lokasi (Lat,Lng)</td>
+                      <td className='text-right break-words pl-2'>{coordinates[0]} , {coordinates[1]}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+          </Card>);
+
+          new AnimatedPopup({
+            openingAnimation: {
+              duration: 100,
+              easing: 'easeOutSine',
+              transform: 'scale'
+            },
+            closingAnimation: {
+              duration: 100,
+              easing: 'easeInOutSine',
+              transform: 'scale'
+            }
+          }).setDOMContent(placeholder).setLngLat(coordinates).addTo(map.current!);
+        });
+
+        map.current!.on('mouseenter', 'earthquakes-layer', () => {
+          map.current!.getCanvas().style.cursor = 'pointer';
+        });
+
+        // Change it back to a pointer when it leaves.
+        map.current!.on('mouseleave', 'earthquakes-layer', () => {
+          map.current!.getCanvas().style.cursor = '';
+        });
 
         console.log('load titik gempa 2');
 
         getGempa();
         getGempaKecil();
-        
+
       })
       .catch((error) => {
         console.error('Error initializing socket:', error);
@@ -495,7 +598,7 @@ export default function Home() {
   }
 
   function getGempa() {
-    if(lastGempaId.current){
+    if (lastGempaId.current) {
       return
     }
     console.log("getGempa");
@@ -507,6 +610,7 @@ export default function Home() {
         lastGempaId.current = data.identifier;
         const sentTime = DateTime.fromISO(data.sent.replace("WIB", ""), { zone: "Asia/Jakarta" });
         const currentTime = DateTime.now().setZone("Asia/Jakarta");
+        const readAbleTime = sentTime.toLocaleString(DateTime.DATE_SHORT) + " " + sentTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
 
         const nig: InfoGempa = {
           id: data.identifier,
@@ -515,7 +619,7 @@ export default function Home() {
           mag: data.info.magnitude || 9.0,
           depth: data.info.depth || "10 Km",
           message: data.info.description,
-          time: sentTime.toLocaleString()
+          time: readAbleTime
         };
 
 
@@ -529,7 +633,7 @@ export default function Home() {
             mag: parseFloat(data.info.magnitude),
             depth: data.info.depth,
             message: data.info.description + "\n" + data.info.instruction,
-            time: sentTime.toLocaleString(),
+            time: readAbleTime,
           });
           setTimeout(() => {
             setInfoGempaDirasakanTerakhir(nig);
@@ -548,7 +652,7 @@ export default function Home() {
   }
 
   function getGempaKecil() {
-    if(lastGempaKecilId.current){
+    if (lastGempaKecilId.current) {
       return;
     }
     console.log("getGempaKecil");
@@ -569,8 +673,8 @@ Kedalaman : ${feature.properties.depth}
 Lokasi (Lat,Lng) : 
 ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
-const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
-const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+          const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
+          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[0]),
@@ -589,7 +693,7 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
             map.current!.on('load', () => {
               (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
             });
-            
+
             setInfoGempas(igs.current);
           }
 
@@ -621,6 +725,7 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
 
               if (titikGempaKecil.current) {
                 titikGempaKecil.current.removeAllRender();
+                titikGempaKecil.current.removeMarker();
               }
               titikGempaKecil.current = tg;
             }
@@ -700,8 +805,8 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
   Lokasi (Lat,Lng) : 
   ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
-const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
-const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+          const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
+          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[1]),
@@ -745,12 +850,13 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
 
             if (titikGempaKecil.current) {
               titikGempaKecil.current.removeAllRender();
+              titikGempaKecil.current.removeMarker();
             }
             titikGempaKecil.current = tg;
             setInfoGempaTerakhir(nig);
           }
 
-          
+
         })
         .catch((error) => {
           console.error('Error initializing socket:', error);
@@ -824,7 +930,7 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
     const id = `tg-${new Date().getTime()}`;
 
     const dt = DateTime.now().setZone("Asia/Jakarta");
-    const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+    const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
     const nig: InfoGempa = {
       id: id,
       lng: randomPosition[0],
@@ -835,7 +941,7 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
       time: readAbleTime
     };
 
-    
+
     warningHandler({
       id: id,
       lng: randomPosition[0],
@@ -899,7 +1005,7 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
       } className=' fixed right-0  md:right-6 top-1 md:top-6 card-float md:w-1/3 lg:w-1/5 show-pop-up'>
         <ul >
           {infoGempas.map((v: InfoGempa, i) => {
-            
+
             return <li key={i}
               onClick={() => {
                 selectEvent(v);

@@ -252,4 +252,10 @@ export default class TitikGempa {
             this.finishWave = true;
         }
     }
+
+    removeMarker() {
+        if (this.gempaMarker) {
+            this.gempaMarker.remove();
+        }
+    }
 }
