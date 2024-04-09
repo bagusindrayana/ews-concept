@@ -103,7 +103,25 @@ export default class TitikGempa {
                 </div>
             </div>
         } className='min-h-48 min-w-48 whitespace-pre-wrap' >
+            {this.mag && <div className='text-glow text-sm w-full bordered p-1' style={{
+                fontSize: "10px"
+              }}>
+                <table className='w-full'>
+                  <tbody>
+                    <tr>
+                      <td className='flex'>Magnitudo</td>
+                      <td className='text-right break-words pl-2'>{this.mag}</td>
+                    </tr>
+                    <tr>
+                      <td className='flex'>Kedalaman</td>
+                      <td className='text-right break-words pl-2'>{this.depth}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>}
+            <p className="my-2">
             {this.setting?.description}
+            </p>
         </Card>)
 
         if (this.gempaMarker) {

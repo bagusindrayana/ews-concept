@@ -685,17 +685,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             place: feature.properties.place,
             time: readAbleTime
           };
-          setInfoGempaTerakhir(nig);
-          const cek = igs.current.find((v) => v.id == feature.properties.id);
-          if (!cek) {
-            igs.current.unshift(nig);
-            geoJsonTitikGempa.current.features.push(feature);
-            map.current!.on('load', () => {
-              (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
-            });
-
-            setInfoGempas(igs.current);
-          }
+          
 
 
 
@@ -726,11 +716,46 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               if (titikGempaKecil.current) {
                 titikGempaKecil.current.removeAllRender();
                 titikGempaKecil.current.removeMarker();
+                if(igs.current.length > 0){
+                  const ig = igs.current[0]
+                  geoJsonTitikGempa.current.features.push({
+                    "geometry": {
+                        "type": "Point",
+                        "coordinates": [
+                            ig.lng,
+                            ig.lat,
+                            1
+                        ]
+                    },
+                    "type": "Feature",
+                    "properties": {
+                      id:ig.id,
+                      depth:ig.depth,
+                      mag:ig.mag,
+                      time: ig.time,
+                      place: ig.place,
+                    }
+                });
+                  (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+                }
+                
               }
               titikGempaKecil.current = tg;
             }
 
 
+          }
+
+          setInfoGempaTerakhir(nig);
+          const cek = igs.current.find((v) => v.id == feature.properties.id);
+          if (!cek) {
+            igs.current.unshift(nig);
+            geoJsonTitikGempa.current.features.push(feature);
+            map.current!.on('load', () => {
+              (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+            });
+
+            setInfoGempas(igs.current);
           }
 
         }
@@ -829,6 +854,35 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             });
 
 
+            if (titikGempaKecil.current) {
+              titikGempaKecil.current.removeAllRender();
+              titikGempaKecil.current.removeMarker();
+              if(igs.current.length > 0){
+                const ig = igs.current[0]
+                geoJsonTitikGempa.current.features.push({
+                  "geometry": {
+                      "type": "Point",
+                      "coordinates": [
+                          ig.lng,
+                          ig.lat,
+                          1
+                      ]
+                  },
+                  "type": "Feature",
+                  "properties": {
+                    id:ig.id,
+                    depth:ig.depth,
+                    mag:ig.mag,
+                    time: ig.time,
+                    place: ig.place,
+                  }
+              });
+                (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+              }
+            }
+
+            igs.current.push(nig)
+            setInfoGempas(igs.current);
 
             const tg = new TitikGempa(lastGempaKecilId.current, {
               coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
@@ -840,18 +894,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               depth: feature.properties.depth || "10 Km",
             });
 
-
-
-
-
-
-            igs.current.push(nig)
-            setInfoGempas(igs.current);
-
-            if (titikGempaKecil.current) {
-              titikGempaKecil.current.removeAllRender();
-              titikGempaKecil.current.removeMarker();
-            }
             titikGempaKecil.current = tg;
             setInfoGempaTerakhir(nig);
           }
