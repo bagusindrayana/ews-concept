@@ -31,6 +31,7 @@ export default function Home() {
   const [zoom, setZoom] = useState(5);
 
   const geoJsonData = useRef<any>(null);
+  const geoJsonTitikGempa = useRef<any>(null);
   const worker = useRef<Worker | null>(null);
 
 
@@ -378,6 +379,7 @@ export default function Home() {
     fetch(url)
       .then(response => response.json())
       .then((data) => {
+        geoJsonTitikGempa.current = data;
         document.getElementById("loading-screen")!.style.display = "none";
         let ifg: InfoGempa[] = [];
         for (let index = 0; index < data.features.length; index++) {
@@ -573,8 +575,8 @@ const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("A
 const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
-            lng: parseFloat(feature.geometry.coordinates[1]),
-            lat: parseFloat(feature.geometry.coordinates[0]),
+            lng: parseFloat(feature.geometry.coordinates[0]),
+            lat: parseFloat(feature.geometry.coordinates[1]),
             mag: parseFloat(feature.properties.mag) || 9.0,
             depth: feature.properties.depth || "10 Km",
             message: msg,
@@ -585,6 +587,11 @@ const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleStrin
           const cek = igs.current.find((v) => v.id == feature.properties.id);
           if (!cek) {
             igs.current.unshift(nig);
+            geoJsonTitikGempa.current.features.push(feature);
+            map.current!.on('load', () => {
+              (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+            });
+            
             setInfoGempas(igs.current);
           }
 
