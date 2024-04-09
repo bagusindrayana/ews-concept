@@ -528,7 +528,8 @@ export default function Home() {
             lat: parseFloat(coordinates[1]),
             mag: parseFloat(data.info.magnitude),
             depth: data.info.depth,
-            message: data.info.description + "\n" + data.info.instruction
+            message: data.info.description + "\n" + data.info.instruction,
+            time: sentTime.toLocaleString(),
           });
           setTimeout(() => {
             setInfoGempaDirasakanTerakhir(nig);
@@ -693,7 +694,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
-            time: new Date().toLocaleString()
+            time: feature.properties.time
           };
           if (lastGempaKecilId.current != feature.properties.id) {
             lastGempaKecilId.current = feature.properties.id;
@@ -730,10 +731,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               titikGempaKecil.current.removeAllRender();
             }
             titikGempaKecil.current = tg;
-            // setTitikGempaKecil(tg);
+            setInfoGempaTerakhir(nig);
           }
 
-          setInfoGempaTerakhir(nig);
+          
         })
         .catch((error) => {
           console.error('Error initializing socket:', error);
@@ -801,7 +802,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
     };
     const bbox = turf.bbox(geoJsonData.current);
     const randomPosition = turf.randomPosition(bbox);
-    const mag = (Math.floor((Math.random() * 10) + 1)).toFixed(1);
+    const mag = (Math.random() * (10 - 5) + 5).toFixed(1);
     const depth = (Math.random() * 20).toFixed(1) + " Km";
     const message = "Gempa Bumi Test Pada Lokasi : Lat : " + randomPosition[1] + " Lng : " + randomPosition[0] + " Magnitudo : " + mag + " Kedalaman : " + depth;
     const id = `tg-${new Date().toLocaleTimeString()}`;
@@ -812,7 +813,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       mag: parseFloat(mag),
       depth: depth || "10 Km",
       message: message,
-      time: new Date().toLocaleTimeString()
+      time: new Date().toLocaleString()
     };
 
 
@@ -884,7 +885,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               // const date = new Date(v.time);
               // readAbleTime = date.toLocaleString('id-ID');
               const dt = DateTime.fromSQL(v.time, { zone: 'UTC' });
-              readAbleTime = dt.setZone("Asia/Kuala_Lumpur").toLocaleString(DateTime.DATETIME_MED);
+              readAbleTime = dt.setZone("Asia/Jakarta").toLocaleString(DateTime.DATE_SHORT)+" "+dt.setZone("Asia/Jakarta").toLocaleString(DateTime.TIME_24_WITH_SECONDS);
             }
 
 
@@ -901,7 +902,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               <span className='block mb-1' style={{
                 fontSize: "11px"
               }}>{readAbleTime}</span>
-              <div className=' bordered p-2' style={{
+              <div className=' bordered p-2 overflow-hidden' style={{
                 fontSize: "12px"
               }}>
                 {Number(v.mag).toFixed(2)} M - {v.place || "uknown"}
@@ -1006,7 +1007,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               </tr>
               <tr>
                 <td className='text-left'>TIME</td>
-                <td className='text-right'>{DateTime.fromSQL(infoGempaTerakhir.time, { zone: 'UTC' }).setZone("Asia/Kuala_Lumpur").toLocaleString(DateTime.DATETIME_MED)}</td>
+                <td className='text-right' data-time={infoGempaTerakhir.time}>{DateTime.fromSQL(infoGempaTerakhir.time, { zone: 'UTC' }).setZone("Asia/Jakarta").toLocaleString(DateTime.DATE_SHORT)} {DateTime.fromSQL(infoGempaTerakhir.time, { zone: 'UTC' }).setZone("Asia/Jakarta").toLocaleString(DateTime.TIME_24_WITH_SECONDS)}</td>
               </tr>
               <tr>
                 <td className='text-left'>MAG</td>
