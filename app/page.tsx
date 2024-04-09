@@ -402,7 +402,7 @@ export default function Home() {
           //check earthquakes layer
           if (map.current!.getLayer('earthquakes-layer')) {
             //update source
-            (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(url);
+            (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(data);
           } else {
             //add source
             map.current!.addSource('earthquakes', {
