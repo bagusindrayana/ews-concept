@@ -24,7 +24,7 @@ export default class TitikGempa {
     curTime: number = 0;
     _play: boolean = true;
     gempaMarker: mapboxgl.Marker | null = null;
-    finishWave : boolean = false;
+    finishWave: boolean = false;
     constructor(id: string, setting?: TitikGempaSetting) {
         this.id = id;
         this.setting = setting;
@@ -54,9 +54,9 @@ export default class TitikGempa {
 
     init() {
         if (this.setting != null && this.setting.pWaveSpeed != null && this.setting.sWaveSpeed != null) {
-           
+
             if (this.setting.map != null) {
-                
+
                 this.renderMarker();
                 setTimeout(() => {
                     this.animateWave();
@@ -65,7 +65,7 @@ export default class TitikGempa {
 
                 setTimeout(() => {
                     this.removeAllRender();
-                },(Math.abs(this.mag || 1) * 10000))
+                }, (Math.abs(this.mag || 1) * 10000))
             }
         }
     }
@@ -74,16 +74,22 @@ export default class TitikGempa {
         const titikGempa = document.createElement('div');
         //  el.id = 'marker';
         titikGempa.classList.add('marker-gempa');
-        titikGempa.classList.add('blink');
+        // titikGempa.classList.add('blink');
         const rootMarker = createRoot(titikGempa)
-        rootMarker.render(<GiCancel />);
+        rootMarker.render(
+            <div className="circles flex justify-center items-center">
+            <div className="circle1"></div>
+            <div className="circle2"></div>
+            <div className="circle3"></div>
+            <GiCancel className="blink"/>
+        </div>);
 
         // create the marker
         this.gempaMarker = new mapboxgl.Marker(titikGempa)
             .setLngLat([this.center![0], this.center![1]])
             .addTo(this.setting?.map!);
-        
-       
+
+
     }
 
     renderPopup() {
@@ -118,7 +124,7 @@ export default class TitikGempa {
             popup.addTo(this.setting!.map);
             setTimeout(() => {
                 popup.remove();
-            },3000);
+            }, 3000);
         }
     }
 
@@ -198,7 +204,7 @@ export default class TitikGempa {
     }
 
     animateWave() {
-        
+
         const animate = (time: number) => {
             if (!this.curTime) this.curTime = time;
 
@@ -236,11 +242,11 @@ export default class TitikGempa {
 
     removeAllRender() {
         if (this.setting?.map != null) {
-            if(this.setting.map.getLayer(this.id)){
+            if (this.setting.map.getLayer(this.id)) {
                 this.setting.map.removeLayer(this.id);
             }
-            
-            if(this.setting.map.getSource('wave-source-' + this.id)){
+
+            if (this.setting.map.getSource('wave-source-' + this.id)) {
                 this.setting.map.removeSource('wave-source-' + this.id);
             }
             this.finishWave = true;

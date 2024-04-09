@@ -199,20 +199,8 @@ export default function Home() {
   };
 
 
-  useEffect(() => {
-
-
-
-    socketInitializer();
-
-
-
-    if (map.current && socket) return () => {
-      socket!.disconnect();
-    };
-
-    // (document.getElementById("error") as HTMLAudioElement).volume = 0.5;
-
+  useEffect(()=>{
+    if (map.current) return () => {};
     map.current = new mapboxgl.Map({
       container: mapContainer.current!,
       style: 'mapbox://styles/mapbox/dark-v11',
@@ -222,6 +210,11 @@ export default function Home() {
     });
 
     loadGeoJsonData();
+  });
+
+  useEffect(() => {
+
+    socketInitializer();
 
     if (socket) return () => {
       socket!.disconnect();
@@ -503,6 +496,9 @@ export default function Home() {
   }
 
   function getGempa() {
+    if(lastGempaId.current){
+      return
+    }
     console.log("getGempa");
     const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t=" + new Date().getTime();
     fetch(url)
@@ -553,6 +549,9 @@ export default function Home() {
   }
 
   function getGempaKecil() {
+    if(lastGempaKecilId.current){
+      return;
+    }
     console.log("getGempaKecil");
     const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json?t=" + new Date().getTime();
     fetch(url)
