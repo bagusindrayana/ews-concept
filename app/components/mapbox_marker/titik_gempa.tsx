@@ -236,8 +236,13 @@ export default class TitikGempa {
 
     removeAllRender() {
         if (this.setting?.map != null) {
-            this.setting.map.removeLayer(this.id);
-            this.setting.map.removeSource('wave-source-' + this.id);
+            if(this.setting.map.getLayer(this.id)){
+                this.setting.map.removeLayer(this.id);
+            }
+            
+            if(this.setting.map.getSource('wave-source-' + this.id)){
+                this.setting.map.removeSource('wave-source-' + this.id);
+            }
             this.finishWave = true;
         }
     }
