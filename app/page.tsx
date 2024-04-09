@@ -41,10 +41,8 @@ export default function Home() {
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
   const [infoGempas, setInfoGempas] = useState<InfoGempa[]>([]);
   const [stackAlert, setStackAlert] = useState<InfoGempa | null>(null);
-  const sas = useRef<InfoGempa[]>([]);
   const [detailInfoGempa, setDetailInfoGempa] = useState<InfoGempa | null>(null);
 
-  const [kotaTerdampak, setKotaTerdampak] = useState<KotaTerdampak[]>([]);
   const kts = useRef<KotaTerdampak[]>([]);
 
   const igs = useRef<InfoGempa[]>([]);
@@ -69,7 +67,7 @@ export default function Home() {
       depth: data.depth || "10 Km",
       message: data.message,
       place: data.place,
-      time: new Date().toLocaleString()
+      time: data.time || new Date().toLocaleString()
     };
 
     igs.current.unshift(nig);
@@ -83,7 +81,7 @@ export default function Home() {
 
     setAlertGempaBumis([...alertGempaBumis, nig]);
     //add data to first infoGempas
-    setInfoGempas([nig, ...infoGempas]);
+    setInfoGempas(igs.current);
     await new Promise(r => setTimeout(r, 6000));
     if (audioDangerElement) {
       //set volume down
@@ -189,8 +187,7 @@ export default function Home() {
             });
           }
         });
-        getGempa();
-        getGempaKecil();
+        
         getTitikGempaJson();
         initWorker();
 
@@ -385,6 +382,8 @@ export default function Home() {
         let ifg: InfoGempa[] = [];
         for (let index = 0; index < data.features.length; index++) {
           const feature = data.features[index];
+          const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
+          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           ifg.push({
             id: feature.properties.id,
             lng: feature.geometry.coordinates[0],
@@ -392,7 +391,7 @@ export default function Home() {
             mag: feature.properties.mag,
             depth: feature.properties.depth,
             place: feature.properties.place,
-            time: feature.properties.time
+            time: readAbleTime
           });
         }
         igs.current = ifg;
@@ -490,6 +489,9 @@ export default function Home() {
 
 
         });
+
+        getGempa();
+        getGempaKecil();
         
       })
       .catch((error) => {
@@ -499,6 +501,7 @@ export default function Home() {
   }
 
   function getGempa() {
+    console.log("getGempa");
     const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t=" + new Date().getTime();
     fetch(url)
       .then(response => response.json())
@@ -548,6 +551,7 @@ export default function Home() {
   }
 
   function getGempaKecil() {
+    console.log("getGempaKecil");
     const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json?t=" + new Date().getTime();
     fetch(url)
       .then(response => response.json())
@@ -563,7 +567,10 @@ export default function Home() {
 Magnitudo : ${feature.properties.mag}
 Kedalaman : ${feature.properties.depth}
 Lokasi (Lat,Lng) : 
-${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
+${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
+
+const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
+const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[1]),
@@ -572,12 +579,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
-            time: feature.properties.time
+            time: readAbleTime
           };
           setInfoGempaTerakhir(nig);
           const cek = igs.current.find((v) => v.id == feature.properties.id);
           if (!cek) {
-            igs.current.push(nig);
+            igs.current.unshift(nig);
+            setInfoGempas(igs.current);
           }
 
 
@@ -685,7 +693,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
   Magnitudo : ${feature.properties.mag}
   Kedalaman : ${feature.properties.depth}
   Lokasi (Lat,Lng) : 
-  ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
+  ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
+
+const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
+const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[1]),
@@ -694,7 +705,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
-            time: feature.properties.time
+            time: readAbleTime
           };
           if (lastGempaKecilId.current != feature.properties.id) {
             lastGempaKecilId.current = feature.properties.id;
@@ -805,7 +816,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
     const mag = (Math.random() * (10 - 5) + 5).toFixed(1);
     const depth = (Math.random() * 20).toFixed(1) + " Km";
     const message = "Gempa Bumi Test Pada Lokasi : Lat : " + randomPosition[1] + " Lng : " + randomPosition[0] + " Magnitudo : " + mag + " Kedalaman : " + depth;
-    const id = `tg-${new Date().toLocaleTimeString()}`;
+    const id = `tg-${new Date().getTime()}`;
+
+    const dt = DateTime.now().setZone("Asia/Jakarta");
+    const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT)+" "+dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
     const nig: InfoGempa = {
       id: id,
       lng: randomPosition[0],
@@ -813,17 +827,18 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       mag: parseFloat(mag),
       depth: depth || "10 Km",
       message: message,
-      time: new Date().toLocaleString()
+      time: readAbleTime
     };
 
-
+    
     warningHandler({
       id: id,
       lng: randomPosition[0],
       lat: randomPosition[1],
       mag: mag,
       depth: depth,
-      message: message
+      message: message,
+      time: readAbleTime
     });
 
     setTimeout(() => {
@@ -879,17 +894,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
       } className=' fixed right-0  md:right-6 top-1 md:top-6 card-float md:w-1/3 lg:w-1/5 show-pop-up'>
         <ul >
           {infoGempas.map((v: InfoGempa, i) => {
-            let readAbleTime = v.time;
-            //convert 2024-04-03 05:45:04.621973 to d/m/Y H:i:s
-            if (v.time) {
-              // const date = new Date(v.time);
-              // readAbleTime = date.toLocaleString('id-ID');
-              const dt = DateTime.fromSQL(v.time, { zone: 'UTC' });
-              readAbleTime = dt.setZone("Asia/Jakarta").toLocaleString(DateTime.DATE_SHORT)+" "+dt.setZone("Asia/Jakarta").toLocaleString(DateTime.TIME_24_WITH_SECONDS);
-            }
-
-
-
+            
             return <li key={i}
               onClick={() => {
                 selectEvent(v);
@@ -901,7 +906,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               }}>
               <span className='block mb-1' style={{
                 fontSize: "11px"
-              }}>{readAbleTime}</span>
+              }}>{v.time}</span>
               <div className=' bordered p-2 overflow-hidden' style={{
                 fontSize: "12px"
               }}>
@@ -1007,7 +1012,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`
               </tr>
               <tr>
                 <td className='text-left'>TIME</td>
-                <td className='text-right' data-time={infoGempaTerakhir.time}>{DateTime.fromSQL(infoGempaTerakhir.time, { zone: 'UTC' }).setZone("Asia/Jakarta").toLocaleString(DateTime.DATE_SHORT)} {DateTime.fromSQL(infoGempaTerakhir.time, { zone: 'UTC' }).setZone("Asia/Jakarta").toLocaleString(DateTime.TIME_24_WITH_SECONDS)}</td>
+                <td className='text-right' data-time={infoGempaTerakhir.time}>{infoGempaTerakhir.time}</td>
               </tr>
               <tr>
                 <td className='text-left'>MAG</td>
