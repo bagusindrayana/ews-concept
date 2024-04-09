@@ -774,11 +774,11 @@ label#internal {
     animation-timing-function: steps(1);
 }
 
-@keyframes blink {
+/* @keyframes blink {
     50% {
         opacity: 0;
     }
-}
+} */
 
 .label#internal .text.-characters {
     font-size: 3.5rem;
