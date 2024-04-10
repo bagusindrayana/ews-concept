@@ -65,7 +65,7 @@ export default class TitikGempa {
 
                 setTimeout(() => {
                     this.removeAllRender();
-                }, (Math.abs(this.mag || 1) * 10000))
+                }, (Math.abs(this.mag || 1) * 20000))
             }
         }
     }

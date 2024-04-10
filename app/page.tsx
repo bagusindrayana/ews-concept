@@ -1532,7 +1532,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       </div>
 
 
-      <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg' id='loading-screen'>
+      <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg text-center' id='loading-screen'>
         <span className="loader"></span>
         <p className='my-2 red-color'>INI MERUPAKAN DESAIN KONSEP - DATA GEMPA DARI BMKG</p>
       </div>

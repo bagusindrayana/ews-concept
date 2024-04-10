@@ -23,12 +23,32 @@
 
 .strip-bar {
 
-    background-image: url("/images/strip.svg");
-    background-size: 17%;
+    /* background-image: url("/images/strip.svg");
+    background-size: 17%; */
     width: 1915px;
     height: 30px;
     display: inline-block;
     margin-bottom: -5px;
+
+    --stripe-color: orange;
+    --stripe-size: 15px;
+    --glow-color: rgba(255, 94, 0, .8);
+    --glow-size: 3px;
+    background-image: repeating-linear-gradient(-45deg,
+            /* glow boundary */
+            var(--glow-color) calc(-1 * var(--glow-size)),
+            /* fade into foreground */
+            var(--stripe-color) 0,
+            /* fade from foreground */
+            var(--stripe-color) calc(var(--stripe-size) - var(--glow-size) / 2),
+            /* glow boundary */
+            var(--glow-color) calc(var(--stripe-size) + var(--glow-size) / 2),
+            /* fade to background */
+            transparent calc(var(--stripe-size) + var(--glow-size) / 2),
+            /* fade from background */
+            transparent calc(2 * var(--stripe-size)),
+            /* glow boundary */
+            var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size)));
 }
 
 .strip {
