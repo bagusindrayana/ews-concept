@@ -378,7 +378,7 @@ export default function Home() {
                 0.1,
                 0
               ],
-      
+
             }
           });
 
@@ -1089,6 +1089,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     if (selectedPopup.current) {
       selectedPopup.current.remove();
     }
+
     map.current!.flyTo({
       center: [d.lng, d.lat],
       zoom: 7,
@@ -1133,6 +1134,14 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         transform: 'scale'
       }
     }).setDOMContent(placeholder).setLngLat([d.lng, d.lat]).addTo(map.current!);
+    const cekTable = document.querySelector("#histori_tabel tbody");
+    if (cekTable) {
+      console.log(cekTable);
+      cekTable.innerHTML = "<tr></tr>";
+    }
+    setTimeout(() => {
+      readTextFile("https://bmkg-content-inatews.storage.googleapis.com/history." + d.id + ".txt");
+    }, 500);
   }
 
   function testDemoGempa() {
@@ -1174,6 +1183,35 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       setInfoGempaDirasakanTerakhir(nig);
     }, 6000);
 
+  }
+
+  function readTextFile(e: string) {
+
+    var t = new XMLHttpRequest;
+    t.open("GET", e, !1), t.onreadystatechange = function () {
+      if (4 === t.readyState && (200 === t.status || 0 == t.status)) {
+        let u = t.responseText.split("\n");
+        var table = document.getElementById("histori_tabel") as HTMLTableElement;
+        //clear tbody
+
+        let T = u.length - 1;
+        for (let t = 1; t < T; t++) {
+          let T = u[t].split("|");
+          var n = table.insertRow(t),
+            a = n.insertCell(0),
+            l = n.insertCell(1),
+            s = n.insertCell(2),
+            i = n.insertCell(3),
+            o = n.insertCell(4),
+            r = n.insertCell(5),
+            d = n.insertCell(6),
+            m = n.insertCell(7),
+            g = n.insertCell(8),
+            c = n.insertCell(9);
+          a.innerHTML = T[0], l.innerHTML = T[1], s.innerHTML = T[2], i.innerHTML = T[3], o.innerHTML = T[4], r.innerHTML = T[5], d.innerHTML = T[6], m.innerHTML = T[7], g.innerHTML = T[8], c.innerHTML = T[9]
+        }
+      }
+    }, t.send(null)
   }
 
 
@@ -1247,61 +1285,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </Card>
 
-      {detailInfoGempa && <Card title={
-        <div className='w-full flex justify-between'>
-          <p className='font-bold text-glow-red text-sm'>
-            DETAIL EVENT
-          </p>
-          <button onClick={() => {
-            if (selectedPopup.current) {
-              selectedPopup.current.remove();
-            }
-            setDetailInfoGempa(null);
-          }}>X</button>
-        </div>
-      }
-
-        className='right-6 bottom-6 fixed hidden md:block  card-float  show-pop-up '>
-        <div className='text-glow text-sm w-full ' style={{
-          fontSize: "10px"
-        }}>
-          <div className='flex w-full gap-1'>
-            <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + (detailInfoGempa.time?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")) + ".mmi.jpg"} alt="" className='w-52' />
-            <div className='bordered p-2'>
-              <table >
-                <tbody>
-                  <tr>
-                    <td className='text-left flex'>PLACE</td>
-                    <td className='text-right break-words pl-2'>{detailInfoGempa.place}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left flex'>TIME</td>
-                    <td className='text-right break-words pl-2' data-time={detailInfoGempa.time}>{detailInfoGempa.time} WIB</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left flex'>MAG</td>
-                    <td className='text-right break-words pl-2'>{detailInfoGempa.mag}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left flex'>DEPTH</td>
-                    <td className='text-right break-words pl-2'>{parseFloat(detailInfoGempa.depth.replace(" Km", "")).toFixed(2)} KM</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left flex'>LAT</td>
-                    <td className='text-right break-words pl-2'>{detailInfoGempa.lat}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left flex'>LNG</td>
-                    <td className='text-right break-words pl-2'>{detailInfoGempa.lng}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-        </div>
-
-      </Card>}
+      
 
       <div className='fixed  bottom-32 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
         testDemoGempa();
@@ -1412,7 +1396,110 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       </Card>}
 
+      {detailInfoGempa && <Card title={
+        <div className='w-full flex justify-between'>
+          <p className='font-bold text-glow-red text-sm'>
+            DETAIL EVENT
+          </p>
+          <button onClick={() => {
+            if (selectedPopup.current) {
+              selectedPopup.current.remove();
+            }
+            setDetailInfoGempa(null);
+          }}>X</button>
+        </div>
+      }
 
+        className='right-6 bottom-6 fixed hidden md:block  card-float  show-pop-up '>
+        <div className='text-glow text-sm w-full ' style={{
+          fontSize: "10px"
+        }}>
+          <div className='flex flex-col w-full gap-2'>
+            {/* <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + (detailInfoGempa.time?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")) + ".mmi.jpg"} alt="" className='w-52' /> */}
+
+            <div>
+              <div className='bordered p-2'>
+                <table className='w-full'>
+                  <tbody>
+                    <tr>
+                      <td className='text-left flex'>PLACE</td>
+                      <td className='text-right break-words pl-2'>{detailInfoGempa.place}</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left flex'>TIME</td>
+                      <td className='text-right break-words pl-2' data-time={detailInfoGempa.time}>{detailInfoGempa.time} WIB</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left flex'>MAG</td>
+                      <td className='text-right break-words pl-2'>{detailInfoGempa.mag}</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left flex'>DEPTH</td>
+                      <td className='text-right break-words pl-2'>{parseFloat(detailInfoGempa.depth.replace(" Km", "")).toFixed(2)} KM</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left flex'>LAT</td>
+                      <td className='text-right break-words pl-2'>{detailInfoGempa.lat}</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left flex'>LNG</td>
+                      <td className='text-right break-words pl-2'>{detailInfoGempa.lng}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className='bordered p-2'>
+              <table id='histori_tabel' style={{
+                fontSize: "10px"
+              }} className='w-full text-right'>
+                <thead>
+                  <tr>
+                    <th className='p-1'>
+                      Time(UTC)
+                    </th>
+                    <th className='p-1'>
+                      +OT(min)
+                    </th>
+                    <th className='p-1'>
+                      Lat
+                    </th>
+                    <th className='p-1'>
+                      Lng
+                    </th>
+                    <th className='p-1'>
+                      Depth
+                    </th>
+                    <th className='p-1'>
+                      Phase
+                    </th>
+                    <th className='p-1'>
+                      MagType
+                    </th>
+                    <th className='p-1'>
+                      Mag
+                    </th>
+                    <th className='p-1'>
+                      MagCount
+                    </th>
+                    <th className='p-1'>
+                      Status
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td></td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </div>
+
+      </Card>}
 
       {alertGempaBumis.map((v, i) => {
         return <div className='z-50' key={i}>
@@ -1428,6 +1515,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             } />
         </div>
       })}
+
+      
       <div className="fixed bottom-2 md:bottom-1 right-0 md:right-72 left-0 md:left-auto">
         <a title="Link Github" href="https://github.com/bagusindrayana/ews-concept" className='flex gap-1 text-center justify-center  m-auto'>
           <div className='github-icon'></div>
@@ -1439,6 +1528,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg' id='loading-screen'>
         <span className="loader"></span>
       </div>
+      
     </div>
 
   );
