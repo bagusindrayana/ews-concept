@@ -519,7 +519,9 @@ export default function Home() {
       .then(response => response.json())
       .then((data) => {
         geoJsonTitikGempa.current = data;
-        document.getElementById("loading-screen")!.style.display = "none";
+        setTimeout(() => {
+          document.getElementById("loading-screen")!.style.display = "none";
+        }, 1000);
         let ifg: InfoGempa[] = [];
         for (let index = 0; index < data.features.length; index++) {
           const feature = data.features[index];
@@ -1285,7 +1287,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </Card>
 
-      
+
 
       <div className='fixed  bottom-32 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
         testDemoGempa();
@@ -1516,19 +1518,25 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       })}
 
-      
-      <div className="fixed bottom-2 md:bottom-1 right-0 md:right-72 left-0 md:left-auto">
+
+      <div className="fixed bottom-2 md:bottom-1 m-auto right-0 md:right-72 left-0 md:left-auto flex justify-center items-center gap-2 w-36  md:w-auto">
+        <a title="Link Github" href="https://inatews.bmkg.go.id" className='flex gap-1 text-center justify-center  m-auto'>
+          <div className='bmkg-icon'></div>
+          <span>BMKG</span>
+        </a>
         <a title="Link Github" href="https://github.com/bagusindrayana/ews-concept" className='flex gap-1 text-center justify-center  m-auto'>
           <div className='github-icon'></div>
           <span>Github</span>
         </a>
+
       </div>
 
 
       <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg' id='loading-screen'>
         <span className="loader"></span>
+        <p className='my-2 red-color'>INI MERUPAKAN DESAIN KONSEP - DATA GEMPA DARI BMKG</p>
       </div>
-      
+
     </div>
 
   );
