@@ -119,7 +119,7 @@ export default class TitikGempa {
                   </tbody>
                 </table>
               </div>}
-            <p className="my-2">
+            <p className="mt-1">
             {this.setting?.description}
             </p>
         </Card>)

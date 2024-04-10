@@ -13,6 +13,7 @@ import { createRoot } from 'react-dom/client';
 import AnimatedPopup from 'mapbox-gl-animated-popup';
 import ItemKotaTerdampak from './components/ItemKotaTerdampak';
 import { KotaTerdampak, InfoGempa } from "../libs/interface";
+import Jam from './components/Jam';
 const { DateTime } = require("luxon");
 
 
@@ -26,8 +27,8 @@ export default function Home() {
   const smallEarthQuakeSound = "/sounds/wrong-answer-129254.mp3"
   const mapContainer = useRef<HTMLDivElement | null>(null); // Update the type of mapContainer ref
   const map = useRef<mapboxgl.Map | null>(null); // Update the type of the map ref
-  const [lng, setLng] = useState(116.1153781);
-  const [lat, setLat] = useState(0.146658);
+  const [lng, setLng] = useState(123.90146694265115);
+  const [lat, setLat] = useState(-1.370489908625089);
   const [zoom, setZoom] = useState(5);
 
   const geoJsonData = useRef<any>(null);
@@ -164,39 +165,7 @@ export default function Home() {
     });
   }
 
-  const loadGeoJsonData = () => {
-    fetch('/geojson/all_kabkota_ind.geojson')
-      .then(response => response.json())
-      .then(data => {
-        geoJsonData.current = data;
-        if (!map.current!.getSource('wilayah')) {
-          map.current!.addSource('wilayah', {
-            type: 'geojson',
-            generateId: true,
-            data: data
-          });
-          map.current!.addLayer({
-            'id': 'outline',
-            'type': 'line',
-            'source': 'wilayah',
-            'layout': {},
-            'paint': {
-              'line-color': '#807a72',
-              'line-width': 1
-            }
-          });
-        }
-        getTitikStationJson();
-        getTitikGempaJson();
-        initWorker();
-        const bbox = turf.bbox(geoJsonData.current);
-        console.log(bbox);
 
-      }).catch((error) => {
-        alert("Failed load geojson data : " + error);
-        console.error('Error fetching data:', error);
-      });
-  };
 
 
   useEffect(() => {
@@ -368,6 +337,41 @@ export default function Home() {
 
     sendWave();
   }
+
+  function loadGeoJsonData() {
+    fetch('/geojson/all_kabkota_ind.geojson')
+      .then(response => response.json())
+      .then(data => {
+        geoJsonData.current = data;
+        if (!map.current!.getSource('wilayah')) {
+          map.current!.addSource('wilayah', {
+            type: 'geojson',
+            generateId: true,
+            data: data
+          });
+          map.current!.addLayer({
+            'id': 'outline',
+            'type': 'line',
+            'source': 'wilayah',
+            'layout': {},
+            'paint': {
+              'line-color': '#807a72',
+              'line-width': 1
+            }
+          });
+        }
+        // getTitikStationJson();
+        getTitikGempaJson();
+        getTimezoneGeojson();
+        initWorker();
+        const bbox = turf.bbox(geoJsonData.current);
+        console.log(bbox);
+
+      }).catch((error) => {
+        alert("Failed load geojson data : " + error);
+        console.error('Error fetching data:', error);
+      });
+  };
 
   function getTitikStationJson() {
     const url = "https://bmkg-content-inatews.storage.googleapis.com/sensor_seismic.json";
@@ -597,6 +601,131 @@ export default function Home() {
 
   }
 
+  const hoverTimezone = useRef<any>(null);
+  function getTimezoneGeojson() {
+    const url = "/geojson/timezones_wVVG8.geojson";
+    map.current!.addSource('timezone', {
+      'type': 'geojson',
+      'generateId': true,
+      'data': url
+    });
+
+    // Add a layer to use the image to represent the data.
+    map.current!.addLayer({
+      'id': 'timezone-fill',
+      'type': 'fill',
+      'source': 'timezone', // reference the data source
+      'layout': {
+
+      },
+      'paint': {
+        // 'line-color': 'blue',
+        // 'line-width': 1
+        'fill-color': 'red',
+        'fill-opacity': [
+          'case',
+          ['boolean', ['feature-state', 'hover'], false],
+          0.1,
+          0
+        ],
+
+      }
+    });
+
+    map.current!.addLayer({
+      'id': 'timezone-line',
+      'type': 'line',
+      'source': 'timezone', // reference the data source
+      'layout': {
+
+      },
+      'paint': {
+        'line-color': 'orange',
+        'line-width': 1
+      }
+    });
+
+    const markerParent1 = document.createElement('div');
+    const gmt7Marker = createRoot(markerParent1)
+    gmt7Marker.render(
+      <div className='bordered p-1 text-time show-pop-up text-center'>
+        <p className="uppercase text-xl" style={{
+          lineHeight: "1rem"
+        }}>
+          <Jam timeZone="Asia/Jakarta" />
+        </p>
+        <p>WIB / GMT+7</p>
+      </div>
+    );
+
+    new mapboxgl.Marker(markerParent1)
+      .setLngLat([107.4999769225339, 3.4359354227361933])
+      .addTo(map.current!);
+
+
+    const markerParent2 = document.createElement('div');
+    const gmt8Marker = createRoot(markerParent2)
+    gmt8Marker.render(
+      <div className='bordered p-1 text-time show-pop-up text-center'>
+        <p className="uppercase text-xl" style={{
+          lineHeight: "1rem"
+        }}>
+          <Jam timeZone="Asia/Makassar" />
+        </p>
+        <p>WITA / GMT+8</p>
+      </div>
+    );
+    new mapboxgl.Marker(markerParent2)
+      .setLngLat([119.1174733337183, 3.4359354227361933])
+      .addTo(map.current!);
+
+    const markerParent3 = document.createElement('div');
+    const gmt9Marker = createRoot(markerParent3)
+    gmt9Marker.render(
+      <div className='bordered p-1 text-time show-pop-up text-center'>
+        <p className="uppercase text-xl" style={{
+          lineHeight: "1rem"
+        }}>
+          <Jam timeZone="Asia/Jayapura" />
+        </p>
+        <p className='text-xs'>WIT / GMT+9</p>
+      </div>
+    );
+    new mapboxgl.Marker(markerParent3)
+      .setLngLat([131.58387377752751, 3.4359354227361933])
+      .addTo(map.current!)
+
+    // map.current!.on('click', 'timezone-fill', (e: any) => {
+    //   console.log(e);
+    // });
+
+    // map.current!.on('mousemove', 'timezone-fill', (e: any) => {
+    //   if (e.features.length > 0) {
+    //     if (hoverTimezone.current !== null) {
+    //       map.current!.setFeatureState(
+    //         { source: 'timezone', id: hoverTimezone.current },
+    //         { hover: false }
+    //       );
+    //     }
+    //     hoverTimezone.current = e.features[0].id;
+    //     map.current!.setFeatureState(
+    //       { source: 'timezone', id: hoverTimezone.current },
+    //       { hover: true }
+    //     );
+    //   }
+    // });
+
+    // map.current!.on('mouseleave', 'timezone-fill', () => {
+    //   if (hoverTimezone.current !== null) {
+    //     map.current!.setFeatureState(
+    //       { source: 'timezone', id: hoverTimezone.current },
+    //       { hover: false }
+    //     );
+    //   }
+    //   hoverTimezone.current = null;
+    // });
+  }
+
   function getGempa() {
     if (lastGempaId.current) {
       return
@@ -756,7 +885,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           }
 
           setInfoGempaTerakhir(nig);
-          
+
 
         }
         getGempaPeriodik();
@@ -823,12 +952,11 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         .then(response => response.json())
         .then((data) => {
           const feature = data.features[0];
-          const msg = `
-  ${feature.properties.place}
-  Magnitudo : ${feature.properties.mag}
-  Kedalaman : ${feature.properties.depth}
-  Lokasi (Lat,Lng) : 
-  ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
+          const msg = `${feature.properties.place}
+Magnitudo : ${feature.properties.mag}
+Kedalaman : ${feature.properties.depth}
+Lokasi (Lat,Lng) : 
+${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
           const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
           const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
@@ -1059,7 +1187,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               }}>
               <span className='block mb-1' style={{
                 fontSize: "11px"
-              }}>{v.time}</span>
+              }}>{v.time} WIB</span>
               <div className=' bordered p-2 overflow-hidden' style={{
                 fontSize: "12px"
               }}>
@@ -1090,36 +1218,36 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           fontSize: "10px"
         }}>
           <div className='flex w-full gap-1'>
-            <img src={"https://bmkg-content-inatews.storage.googleapis.com/"+(detailInfoGempa.time?.replaceAll("-","").replaceAll(" ","").replaceAll(":",""))+".mmi.jpg"} alt="" className='w-52' />
+            <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + (detailInfoGempa.time?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")) + ".mmi.jpg"} alt="" className='w-52' />
             <div className='bordered p-2'>
-            <table >
-              <tbody>
-                <tr>
-                  <td className='text-left flex'>PLACE</td>
-                  <td className='text-right break-words pl-2'>{detailInfoGempa.place}</td>
-                </tr>
-                <tr>
-                  <td className='text-left flex'>TIME</td>
-                  <td className='text-right break-words pl-2' data-time={detailInfoGempa.time}>{detailInfoGempa.time}</td>
-                </tr>
-                <tr>
-                  <td className='text-left flex'>MAG</td>
-                  <td className='text-right break-words pl-2'>{detailInfoGempa.mag}</td>
-                </tr>
-                <tr>
-                  <td className='text-left flex'>DEPTH</td>
-                  <td className='text-right break-words pl-2'>{parseFloat(detailInfoGempa.depth.replace(" Km", "")).toFixed(2)} KM</td>
-                </tr>
-                <tr>
-                  <td className='text-left flex'>LAT</td>
-                  <td className='text-right break-words pl-2'>{detailInfoGempa.lat}</td>
-                </tr>
-                <tr>
-                  <td className='text-left flex'>LNG</td>
-                  <td className='text-right break-words pl-2'>{detailInfoGempa.lng}</td>
-                </tr>
-              </tbody>
-            </table>
+              <table >
+                <tbody>
+                  <tr>
+                    <td className='text-left flex'>PLACE</td>
+                    <td className='text-right break-words pl-2'>{detailInfoGempa.place}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left flex'>TIME</td>
+                    <td className='text-right break-words pl-2' data-time={detailInfoGempa.time}>{detailInfoGempa.time} WIB</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left flex'>MAG</td>
+                    <td className='text-right break-words pl-2'>{detailInfoGempa.mag}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left flex'>DEPTH</td>
+                    <td className='text-right break-words pl-2'>{parseFloat(detailInfoGempa.depth.replace(" Km", "")).toFixed(2)} KM</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left flex'>LAT</td>
+                    <td className='text-right break-words pl-2'>{detailInfoGempa.lat}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left flex'>LNG</td>
+                    <td className='text-right break-words pl-2'>{detailInfoGempa.lng}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -1142,7 +1270,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       }
 
-        className='show-pop-up fixed bottom-20 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/5'>
+        className='show-pop-up fixed bottom-20 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/6'>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
         }}>
@@ -1154,7 +1282,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               </tr>
               <tr>
                 <td className='text-left'>TIME</td>
-                <td className='text-right' data-time={infoGempaTerakhir.time}>{infoGempaTerakhir.time}</td>
+                <td className='text-right' data-time={infoGempaTerakhir.time}>{infoGempaTerakhir.time} WIB</td>
               </tr>
               <tr>
                 <td className='text-left'>MAG</td>
@@ -1207,7 +1335,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
                   <tr>
                     <td className='text-left'>TIME</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.time}</td>
+                    <td className='text-right'>{infoGempaDirasakanTerakhir.time} WIB</td>
                   </tr>
                   <tr>
                     <td className='text-left'>MAG</td>
