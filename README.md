@@ -3,6 +3,7 @@
 - [x] Informasi Gempa
 - [ ] Informasi Tsunami
 - [ ] Data Geojson Garis Pantai/Pesisir
+- [ ] Reduce Geojson Size
 - [ ] PWA
 - [ ] Push Notification
 - [ ] Broadcast System

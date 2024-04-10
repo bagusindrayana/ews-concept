@@ -272,9 +272,11 @@ export default function Home() {
     const areas = data.area;
 
     // Hapus data array objek yang sama
-    const uniqueData = areas.filter((obj, index, self) =>
-      index === self.findIndex((t) => isEqual(t.properties, obj.properties))
-    );
+    // const uniqueData = areas.filter((obj, index, self) =>
+    //   index === self.findIndex((t) => isEqual(t.properties.mhid, obj.properties.mhid))
+    // );
+
+    const uniqueData = areas;
 
     for (let x = 0; x < uniqueData.length; x++) {
       const element = uniqueData[x];
@@ -338,6 +340,7 @@ export default function Home() {
     sendWave();
   }
 
+  const hoverWilayah = useRef<any>(null);
   function loadGeoJsonData() {
     fetch('/geojson/all_kabkota_ind.geojson')
       .then(response => response.json())
@@ -359,6 +362,51 @@ export default function Home() {
               'line-width': 1
             }
           });
+
+          map.current!.addLayer({
+            'id': 'wilayah-fill',
+            'type': 'fill',
+            'source': 'wilayah',
+            'layout': {
+
+            },
+            'paint': {
+              'fill-color': 'red',
+              'fill-opacity': [
+                'case',
+                ['boolean', ['feature-state', 'hover'], false],
+                0.1,
+                0
+              ],
+      
+            }
+          });
+
+          // map.current!.on('mousemove', 'wilayah-fill', (e: any) => {
+          //   if (e.features.length > 0) {
+          //     if (hoverWilayah.current !== null) {
+          //       map.current!.setFeatureState(
+          //         { source: 'wilayah', id: hoverWilayah.current },
+          //         { hover: false }
+          //       );
+          //     }
+          //     hoverWilayah.current = e.features[0].id;
+          //     map.current!.setFeatureState(
+          //       { source: 'wilayah', id: hoverWilayah.current },
+          //       { hover: true }
+          //     );
+          //   }
+          // });
+
+          // map.current!.on('mouseleave', 'wilayah-fill', () => {
+          //   if (hoverWilayah.current !== null) {
+          //     map.current!.setFeatureState(
+          //       { source: 'wilayah', id: hoverWilayah.current },
+          //       { hover: false }
+          //     );
+          //   }
+          //   hoverWilayah.current = null;
+          // });
         }
         // getTitikStationJson();
         getTitikGempaJson();

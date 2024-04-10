@@ -77,6 +77,7 @@ function checkMultiHighlightArea(titikGempa,id) {
     
     for (let index = 0; index < allPolygon.length; index++) {
         const polygon = allPolygon[index];
+        
         for (let it = 0; it < titikGempa.length; it++) {
             const tg = titikGempa[it];
 
@@ -127,9 +128,10 @@ function checkMultiHighlightArea(titikGempa,id) {
     
             if(radius > 0){
                 var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
-        
-                var intersection = turf.booleanIntersects(polygon, buffer);
+                
+                
                 //var intersection = turf.booleanPointInPolygon(turf.centroid(polygon), buffer);
+                var intersection = turf.booleanIntersects(polygon, buffer);
                 if (intersection) {
                     const item = highlightSelectedArea.find(e => e.properties.mhid === polygon.properties.mhid);
                     if(item){
@@ -138,13 +140,26 @@ function checkMultiHighlightArea(titikGempa,id) {
                     }
                     const at = tg.areaTerdampak.find(e => e.mhid === polygon.properties.mhid);
                     if(at) {
+                        at.distance = turf.distance(turf.point(at.center),turf.point(coordinate));
                         at.color = "red";
                         at.hit = true;
                     }
-                    
-                    
-
                 }
+                // const distance = turf.distance(turf.centroid(polygon),turf.point(coordinate))
+                // if (distance < (radius/1000)) {
+                //     const item = highlightSelectedArea.find(e => e.properties.mhid === polygon.properties.mhid);
+                //     if(item){
+                //         item.properties.color = "red";
+                //         item.properties.hit = true;
+                //     }
+                //     const at = tg.areaTerdampak.find(e => e.mhid === polygon.properties.mhid);
+                //     if(at) {
+                //         at.distance = turf.distance(turf.point(at.center),turf.point(coordinate));
+                //         at.color = "red";
+                //         at.hit = true;
+                        
+                //     }
+                // }
             }
     
             
