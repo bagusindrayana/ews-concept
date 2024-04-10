@@ -15,6 +15,7 @@ import ItemKotaTerdampak from './components/ItemKotaTerdampak';
 import { KotaTerdampak, InfoGempa } from "../libs/interface";
 import Jam from './components/Jam';
 const { DateTime } = require("luxon");
+import { IoLocationSharp } from "react-icons/io5";
 
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
@@ -801,6 +802,35 @@ export default function Home() {
           time: readAbleTime
         };
 
+        const cek = igs.current.find((v) => v.id == data.identifier);
+        if (!cek) {
+          igs.current.push(nig);
+          //sort by time
+          igs.current.sort(function(a:any, b:any) {
+            return new Date(b.time).getTime() - new Date(a.time).getTime();
+            })
+          geoJsonTitikGempa.current.features.push({
+            "geometry": {
+              "type": "Point",
+              "coordinates": [
+                nig.lng,
+                nig.lat,
+                1
+              ]
+            },
+            "type": "Feature",
+            "properties": {
+              id: nig.id,
+              depth: parseFloat(nig.depth.replaceAll(" Km","")).toFixed(2),
+              mag: nig.mag,
+              time: nig.time,
+              place: nig.place,
+            }
+          });
+          (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+
+          setInfoGempas(igs.current);
+        }
 
         //if sent time is less than 5 minutes
         if ((currentTime.toMillis() - sentTime.toMillis()) < 600000) {
@@ -1107,7 +1137,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       </div>
     } className='min-h-48 min-w-48 whitespace-pre-wrap ' >
-      <ul >
+      <ul className='text-glow'>
         <li>
           Magnitudo : {d.mag}
         </li>
@@ -1138,7 +1168,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     }).setDOMContent(placeholder).setLngLat([d.lng, d.lat]).addTo(map.current!);
     const cekTable = document.querySelector("#histori_tabel tbody");
     if (cekTable) {
-      console.log(cekTable);
       cekTable.innerHTML = "<tr></tr>";
     }
     setTimeout(() => {
@@ -1289,10 +1318,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
 
 
-      <div className='fixed  bottom-32 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
+      <div className='fixed  bottom-48 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
         testDemoGempa();
       }}>
-        Test Gempa
+        TEST GEMPA
       </div>
 
       {infoGempaTerakhir && <Card title={
@@ -1303,8 +1332,15 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
         </div>
       }
+      footer={
+        <div className='flex justify-center w-full  cursor-pointer' onClick={()=>{
+          selectEvent(infoGempaTerakhir);
+        }}>
+          <span ><IoLocationSharp /></span>
+        </div>
+      }
 
-        className='show-pop-up fixed bottom-20 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/6'>
+        className='show-pop-up fixed bottom-28 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/6'>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
         }}>
@@ -1345,6 +1381,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             GEMPA DIRASAKAN TERAKHIR
           </p>
 
+        </div>
+      }
+      footer={
+        <div className='flex justify-center w-full cursor-pointer' onClick={()=>{
+          selectEvent(infoGempaDirasakanTerakhir);
+        }}>
+          <span ><IoLocationSharp /></span>
         </div>
       }
 
