@@ -472,7 +472,7 @@ export default function Home() {
         for (let index = 0; index < data.features.length; index++) {
           const feature = data.features[index];
           const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
-          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+          const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           ifg.push({
             id: feature.properties.id,
             lng: feature.geometry.coordinates[0],
@@ -538,28 +538,28 @@ export default function Home() {
             </div>
           } className='min-h-48 min-w-48 whitespace-pre-wrap' >
             <div className='text-glow text-sm w-full ' style={{
-                fontSize: "10px"
-              }}><table className='w-full'>
-                  <tbody>
-                    <tr>
-                      <td className='flex'>Magnitudo</td>
-                      <td className='text-right break-words pl-2'>{d.mag}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>Kedalaman</td>
-                      <td className='text-right break-words pl-2'>{d.depth}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>Waktu</td>
-                      <td className='text-right break-words pl-2'>{new Date(d.time!).toLocaleString()}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>Lokasi (Lat,Lng)</td>
-                      <td className='text-right break-words pl-2'>{coordinates[0]} , {coordinates[1]}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              fontSize: "10px"
+            }}><table className='w-full'>
+                <tbody>
+                  <tr>
+                    <td className='flex'>Magnitudo</td>
+                    <td className='text-right break-words pl-2'>{d.mag}</td>
+                  </tr>
+                  <tr>
+                    <td className='flex'>Kedalaman</td>
+                    <td className='text-right break-words pl-2'>{d.depth}</td>
+                  </tr>
+                  <tr>
+                    <td className='flex'>Waktu</td>
+                    <td className='text-right break-words pl-2'>{new Date(d.time!).toLocaleString()}</td>
+                  </tr>
+                  <tr>
+                    <td className='flex'>Lokasi (Lat,Lng)</td>
+                    <td className='text-right break-words pl-2'>{coordinates[0]} , {coordinates[1]}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </Card>);
 
           new AnimatedPopup({
@@ -610,7 +610,7 @@ export default function Home() {
         lastGempaId.current = data.identifier;
         const sentTime = DateTime.fromISO(data.sent.replace("WIB", ""), { zone: "Asia/Jakarta" });
         const currentTime = DateTime.now().setZone("Asia/Jakarta");
-        const readAbleTime = sentTime.toLocaleString(DateTime.DATE_SHORT) + " " + sentTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+        const readAbleTime = sentTime.toISODate() + " " + sentTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
 
         const nig: InfoGempa = {
           id: data.identifier,
@@ -674,7 +674,7 @@ Lokasi (Lat,Lng) :
 ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
           const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
-          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+          const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[0]),
@@ -685,7 +685,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             place: feature.properties.place,
             time: readAbleTime
           };
-          
+
 
 
 
@@ -716,47 +716,47 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               if (titikGempaKecil.current) {
                 titikGempaKecil.current.removeAllRender();
                 titikGempaKecil.current.removeMarker();
-                if(igs.current.length > 0){
+                if (igs.current.length > 0) {
                   const ig = igs.current[0]
                   geoJsonTitikGempa.current.features.push({
                     "geometry": {
-                        "type": "Point",
-                        "coordinates": [
-                            ig.lng,
-                            ig.lat,
-                            1
-                        ]
+                      "type": "Point",
+                      "coordinates": [
+                        ig.lng,
+                        ig.lat,
+                        1
+                      ]
                     },
                     "type": "Feature",
                     "properties": {
-                      id:ig.id,
-                      depth:ig.depth,
-                      mag:ig.mag,
+                      id: ig.id,
+                      depth: ig.depth,
+                      mag: ig.mag,
                       time: ig.time,
                       place: ig.place,
                     }
-                });
+                  });
                   (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
                 }
-                
+
               }
               titikGempaKecil.current = tg;
             }
 
 
+          } else {
+            const cek = igs.current.find((v) => v.id == feature.properties.id);
+            if (!cek) {
+              igs.current.unshift(nig);
+              geoJsonTitikGempa.current.features.push(feature);
+              (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+
+              setInfoGempas(igs.current);
+            }
           }
 
           setInfoGempaTerakhir(nig);
-          const cek = igs.current.find((v) => v.id == feature.properties.id);
-          if (!cek) {
-            igs.current.unshift(nig);
-            geoJsonTitikGempa.current.features.push(feature);
-            map.current!.on('load', () => {
-              (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
-            });
-
-            setInfoGempas(igs.current);
-          }
+          
 
         }
         getGempaPeriodik();
@@ -831,7 +831,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
   ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
           const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
-          const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+          const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[1]),
@@ -857,26 +857,26 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             if (titikGempaKecil.current) {
               titikGempaKecil.current.removeAllRender();
               titikGempaKecil.current.removeMarker();
-              if(igs.current.length > 0){
+              if (igs.current.length > 0) {
                 const ig = igs.current[0]
                 geoJsonTitikGempa.current.features.push({
                   "geometry": {
-                      "type": "Point",
-                      "coordinates": [
-                          ig.lng,
-                          ig.lat,
-                          1
-                      ]
+                    "type": "Point",
+                    "coordinates": [
+                      ig.lng,
+                      ig.lat,
+                      1
+                    ]
                   },
                   "type": "Feature",
                   "properties": {
-                    id:ig.id,
-                    depth:ig.depth,
-                    mag:ig.mag,
+                    id: ig.id,
+                    depth: ig.depth,
+                    mag: ig.mag,
                     time: ig.time,
                     place: ig.place,
                   }
-              });
+                });
                 (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
               }
             }
@@ -972,7 +972,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     const id = `tg-${new Date().getTime()}`;
 
     const dt = DateTime.now().setZone("Asia/Jakarta");
-    const readAbleTime = dt.toLocaleString(DateTime.DATE_SHORT) + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
+    const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
     const nig: InfoGempa = {
       id: id,
       lng: randomPosition[0],
@@ -1084,58 +1084,47 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           }}>X</button>
         </div>
       }
-        footer={
-          <p className='font-bold text-glow-red '>
 
-          </p>
-        }
-        className='right-6 bottom-6 fixed hidden md:block  card-float w-1/2 md:w-1/5 show-pop-up '>
-        <ul >
-          <li className='flex flex-col mb-2 list-event'>
-            <div className=' bordered p-2' style={{
-              fontSize: "12px"
-            }}>
-              TIME : {detailInfoGempa.time}
+        className='right-6 bottom-6 fixed hidden md:block  card-float  show-pop-up '>
+        <div className='text-glow text-sm w-full ' style={{
+          fontSize: "10px"
+        }}>
+          <div className='flex w-full gap-1'>
+            <img src={"https://bmkg-content-inatews.storage.googleapis.com/"+(detailInfoGempa.time?.replaceAll("-","").replaceAll(" ","").replaceAll(":",""))+".mmi.jpg"} alt="" className='w-52' />
+            <div className='bordered p-2'>
+            <table >
+              <tbody>
+                <tr>
+                  <td className='text-left flex'>PLACE</td>
+                  <td className='text-right break-words pl-2'>{detailInfoGempa.place}</td>
+                </tr>
+                <tr>
+                  <td className='text-left flex'>TIME</td>
+                  <td className='text-right break-words pl-2' data-time={detailInfoGempa.time}>{detailInfoGempa.time}</td>
+                </tr>
+                <tr>
+                  <td className='text-left flex'>MAG</td>
+                  <td className='text-right break-words pl-2'>{detailInfoGempa.mag}</td>
+                </tr>
+                <tr>
+                  <td className='text-left flex'>DEPTH</td>
+                  <td className='text-right break-words pl-2'>{parseFloat(detailInfoGempa.depth.replace(" Km", "")).toFixed(2)} KM</td>
+                </tr>
+                <tr>
+                  <td className='text-left flex'>LAT</td>
+                  <td className='text-right break-words pl-2'>{detailInfoGempa.lat}</td>
+                </tr>
+                <tr>
+                  <td className='text-left flex'>LNG</td>
+                  <td className='text-right break-words pl-2'>{detailInfoGempa.lng}</td>
+                </tr>
+              </tbody>
+            </table>
             </div>
-          </li>
-          <li className='flex flex-col mb-2 list-event'>
-            <div className=' bordered p-2' style={{
-              fontSize: "12px"
-            }}>
-              MAGNITUDE : {Number(detailInfoGempa.mag).toFixed(2)} M
-            </div>
-          </li>
-          <li className='flex flex-col mb-2 list-event'>
-            <div className=' bordered p-2' style={{
-              fontSize: "12px"
-            }}>
-              DEPTH : {Number(detailInfoGempa.depth).toFixed(2)} KM
-            </div>
-          </li>
-          <li className='flex flex-col mb-2 list-event'>
-            <div className=' bordered p-2' style={{
-              fontSize: "12px"
-            }}>
-              PLACE : {detailInfoGempa.place}
-            </div>
-          </li>
-          <li className='flex flex-col mb-2 list-event'>
-            <div className=' bordered p-2' style={{
-              fontSize: "12px"
-            }}>
-              LATITUDE : {detailInfoGempa.lat}
-            </div>
-          </li>
-          <li className='flex flex-col mb-2 list-event'>
-            <div className=' bordered p-2' style={{
-              fontSize: "12px"
-            }}>
-              LONGITUDE : {detailInfoGempa.lng}
-            </div>
-          </li>
+          </div>
 
+        </div>
 
-        </ul>
       </Card>}
 
       <div className='fixed  bottom-32 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
