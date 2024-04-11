@@ -2,6 +2,7 @@
 - [x] UI Concept
 - [x] Informasi Gempa
 - [ ] Informasi Tsunami
+- [ ] Informasi Lokasi User (IP/Geolocation)
 - [ ] Data Geojson Garis Pantai/Pesisir
 - [ ] Reduce Geojson Size
 - [ ] PWA

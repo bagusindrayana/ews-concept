@@ -62,6 +62,36 @@ export default function Home() {
   const warningHandler = async (data: any) => {
     const time = new Date().toLocaleTimeString();
     const id = data.id ?? `tg-${time}`;
+
+    await new Promise(r => setTimeout(r, 1000));
+    if (!map.current) return;
+    map.current.flyTo({
+      center: [data.lng, data.lat],
+      zoom: 7,
+      essential: true
+    });
+
+    const tg = new TitikGempa(id, {
+      coordinates: [data.lng, data.lat],
+      pWaveSpeed: 6000,
+      sWaveSpeed: 3000,
+      map: map.current!,
+      description: data.message,
+      mag: data.mag || 9.0,
+      depth: data.depth || "10 Km",
+      time: data.time || new Date().toLocaleString(),
+      showPopUpInSecond: 5000
+    });
+
+    
+
+    tgs.current.push(tg);
+
+    if (worker.current != null) {
+      adaGempa.current = true;
+      sendWave();
+    }
+
     const nig: InfoGempa = {
       id: id,
       lng: parseFloat(data.lng),
@@ -91,29 +121,7 @@ export default function Home() {
       (audioDangerElement as HTMLAudioElement).volume = 0.5;
     }
 
-    if (!map.current) return;
-    map.current.flyTo({
-      center: [data.lng, data.lat],
-      zoom: 7,
-      essential: true
-    });
-
-    const tg = new TitikGempa(id, {
-      coordinates: [data.lng, data.lat],
-      pWaveSpeed: 6000,
-      sWaveSpeed: 3000,
-      map: map.current!,
-      description: data.message,
-      mag: data.mag || 9.0,
-      depth: data.depth || "10 Km",
-    });
-
-    tgs.current.push(tg);
-
-    if (worker.current != null) {
-      adaGempa.current = true;
-      sendWave();
-    }
+   
 
     await new Promise(r => setTimeout(r, 4000));
     //setStackAlerts([...stackAlerts, data]);
@@ -134,6 +142,10 @@ export default function Home() {
         socket.on('warning', (v: any) => {
 
           warningHandler(v);
+        });
+        socket.on('message', (v: any) => {
+
+          console.log(v);
         });
 
       })
@@ -918,6 +930,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 description: msg,
                 mag: parseFloat(feature.properties.mag) || 9.0,
                 depth: feature.properties.depth || "10 Km",
+                time:readAbleTime
               });
 
 
@@ -985,6 +998,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           if (lastGempaId.current != data.identifier) {
             lastGempaId.current = data.identifier;
             const coordinates = data.info.point.coordinates.split(",");
+            const sentTime = DateTime.fromISO(data.sent.replace("WIB", ""), { zone: "Asia/Jakarta" });
+            const readAbleTime = sentTime.toISODate() + " " + sentTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
             if (parseFloat(data.info.magnitude) > 5) {
               warningHandler({
                 id: data.identifier,
@@ -992,7 +1007,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 lat: parseFloat(coordinates[1]),
                 mag: parseFloat(data.info.magnitude),
                 depth: data.info.depth,
-                message: data.info.description + "\n" + data.info.instruction
+                message: data.info.description + "\n" + data.info.instruction,
+                time:readAbleTime
               });
             } else {
               var notif = new Audio(smallEarthQuakeSound);
@@ -1011,6 +1027,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 description: data.info.description + "\n" + data.info.instruction,
                 mag: parseFloat(data.info.magnitude) || 9.0,
                 depth: data.info.depth || "10 Km",
+                time:readAbleTime
               });
 
               if (titikGempaKecil.current) {
@@ -1100,6 +1117,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               description: msg,
               mag: Number(feature.properties.mag) || 9.0,
               depth: feature.properties.depth || "10 Km",
+              time:readAbleTime
             });
 
             titikGempaKecil.current = tg;
@@ -1555,7 +1573,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 magnitudo: v.mag || 9.0,
                 kedalaman: v.depth || '0 km',
                 show: true,
-                closeInSecond: 5
+                closeInSecond: 4
               }
             } />
         </div>

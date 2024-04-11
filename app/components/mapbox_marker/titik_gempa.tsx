@@ -9,9 +9,11 @@ type TitikGempaSetting = {
     mag?: number,
     depth?: number,
     map?: mapboxgl.Map,
+    time?: string,
     sWaveSpeed?: number,
     pWaveSpeed?: number,
     description?: string;
+    showPopUpInSecond?:number
 
 }
 
@@ -25,6 +27,8 @@ export default class TitikGempa {
     _play: boolean = true;
     gempaMarker: mapboxgl.Marker | null = null;
     finishWave: boolean = false;
+    initalPWaveRadius: number = 0;
+    initalSWaveRadius: number = 0;
     constructor(id: string, setting?: TitikGempaSetting) {
         this.id = id;
         this.setting = setting;
@@ -54,18 +58,40 @@ export default class TitikGempa {
 
     init() {
         if (this.setting != null && this.setting.pWaveSpeed != null && this.setting.sWaveSpeed != null) {
+            
 
             if (this.setting.map != null) {
-
+                if(this.setting.time != null){
+                    const d = new Date(this.setting.time);
+                    const now = new Date();
+                    const diff = now.getTime() - d.getTime();
+                    //initial radius
+                    this.initalPWaveRadius = (diff / 1000) * this.setting.pWaveSpeed;
+                    this.initalSWaveRadius = (diff / 1000) * this.setting.sWaveSpeed;
+    
+                    setTimeout(() => {
+                        this.removeAllRender();
+                    }, (Math.abs(this.mag || 1) * 20000 - diff))
+                }
                 this.renderMarker();
                 setTimeout(() => {
                     this.animateWave();
-                    this.renderPopup();
+                    
                 }, 1000);
 
-                setTimeout(() => {
-                    this.removeAllRender();
-                }, (Math.abs(this.mag || 1) * 20000))
+                if(this.setting.showPopUpInSecond){
+                    setTimeout(() => {
+                        this.renderPopup();
+                        
+                    }, this.setting.showPopUpInSecond * 1000);
+                } else {
+                    setTimeout(() => {
+                        this.renderPopup();
+                        
+                    }, 1000);
+                }
+
+                
             }
         }
     }
@@ -108,6 +134,10 @@ export default class TitikGempa {
               }}>
                 <table className='w-full'>
                   <tbody>
+                    <tr>
+                      <td className='flex'>Time</td>
+                      <td className='text-right break-words pl-2'>{this.setting?.time}</td>
+                    </tr>
                     <tr>
                       <td className='flex'>Magnitudo</td>
                       <td className='text-right break-words pl-2'>{this.mag}</td>
@@ -229,8 +259,8 @@ export default class TitikGempa {
 
             const deltaTime = time - this.curTime;
             if (this.setting != null && this._play) {
-                this.pWaveRadius = ((deltaTime / 1000) * this.setting.pWaveSpeed!);
-                this.sWaveRadius = ((deltaTime / 1000) * this.setting.sWaveSpeed!);
+                this.pWaveRadius = this.initalPWaveRadius + ((deltaTime / 1000) * this.setting.pWaveSpeed!);
+                this.sWaveRadius = this.initalSWaveRadius + ((deltaTime / 1000) * this.setting.sWaveSpeed!);
             }
 
 

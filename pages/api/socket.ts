@@ -9,6 +9,7 @@ const SocketHandler = (req:any, res:any) => {
       const io = new Server(res.socket.server)
       res.socket.server.io = io
       io.on("connection", (socket) => {
+        io.emit('message', 'Hello, everyone!');
         const clientId = socket.id;
         console.log("A client connected");
         console.log(`A client connected. ID: ${clientId}`);
