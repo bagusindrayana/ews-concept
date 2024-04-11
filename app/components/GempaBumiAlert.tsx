@@ -23,7 +23,7 @@ export default function GempaBumiAlert({ props }: { props: GempaBumiAlertProps }
             setTimeout(() => {
                 console.log('close');
                 setClose(true);
-            }, 2000);
+            }, 1000);
         } else {
             allPopUp.forEach((v) => {
                 v.classList.remove('close-pop-up');
@@ -56,7 +56,7 @@ export default function GempaBumiAlert({ props }: { props: GempaBumiAlertProps }
                 });
                 setTimeout(() => {
                     setClose(true);
-                }, 2000);
+                }, 1000);
             }, props.closeInSecond * 1000);
         }
     }, [props.closeInSecond]);

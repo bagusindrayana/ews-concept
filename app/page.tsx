@@ -194,6 +194,8 @@ export default function Home() {
     map.current.on('load', () => {
       loadGeoJsonData();
     });
+
+    
   });
 
   useEffect(() => {
@@ -210,7 +212,6 @@ export default function Home() {
 
 
   const sendWave = () => {
-    console.log('sendWave 1');
     let t: any = [];
     for (let i = 0; i < tgs.current.length; i++) {
       const v = tgs.current[i];
@@ -229,7 +230,6 @@ export default function Home() {
 
     }
     if (t.length > 0) {
-      console.log('sendWave 2');
       worker.current!.postMessage({ type: 'checkMultiHighlightArea', titikGempa: t, id: "wave" });
     }
   }
@@ -356,7 +356,7 @@ export default function Home() {
 
   const hoverWilayah = useRef<any>(null);
   function loadGeoJsonData() {
-    fetch('/geojson/all_kabkota_ind.geojson')
+    fetch('/geojson/all_kabkota_ind_reduce.geojson')
       .then(response => response.json())
       .then(data => {
         geoJsonData.current = data;
@@ -373,7 +373,8 @@ export default function Home() {
             'layout': {},
             'paint': {
               'line-color': '#807a72',
-              'line-width': 1
+              'line-width': 1,
+              'line-opacity':0.7
             }
           });
 
@@ -425,10 +426,8 @@ export default function Home() {
         // getTitikStationJson();
         getTitikGempaJson();
         getTimezoneGeojson();
+        getFaultLineGeojson();
         initWorker();
-        const bbox = turf.bbox(geoJsonData.current);
-        console.log(bbox);
-
       }).catch((error) => {
         alert("Failed load geojson data : " + error);
         console.error('Error fetching data:', error);
@@ -675,26 +674,26 @@ export default function Home() {
     });
 
     // Add a layer to use the image to represent the data.
-    map.current!.addLayer({
-      'id': 'timezone-fill',
-      'type': 'fill',
-      'source': 'timezone', // reference the data source
-      'layout': {
+    // map.current!.addLayer({
+    //   'id': 'timezone-fill',
+    //   'type': 'fill',
+    //   'source': 'timezone', // reference the data source
+    //   'layout': {
 
-      },
-      'paint': {
-        // 'line-color': 'blue',
-        // 'line-width': 1
-        'fill-color': 'red',
-        'fill-opacity': [
-          'case',
-          ['boolean', ['feature-state', 'hover'], false],
-          0.1,
-          0
-        ],
+    //   },
+    //   'paint': {
+    //     // 'line-color': 'blue',
+    //     // 'line-width': 1
+    //     'fill-color': 'red',
+    //     'fill-opacity': [
+    //       'case',
+    //       ['boolean', ['feature-state', 'hover'], false],
+    //       0.1,
+    //       0
+    //     ],
 
-      }
-    });
+    //   }
+    // });
 
     map.current!.addLayer({
       'id': 'timezone-line',
@@ -705,7 +704,8 @@ export default function Home() {
       },
       'paint': {
         'line-color': 'orange',
-        'line-width': 1
+        'line-width': 1,
+        'line-opacity': 0.5
       }
     });
 
@@ -788,6 +788,41 @@ export default function Home() {
     //   }
     //   hoverTimezone.current = null;
     // });
+  }
+
+  function getFaultLineGeojson() {
+    const url = "/geojson/indo_faults_lines.geojson";
+    map.current!.addSource('indo_faults_lines', {
+      'type': 'geojson',
+      'generateId': true,
+      'data': url
+    });
+
+    // Add a layer to use the image to represent the data.
+    map.current!.addLayer({
+      'id': 'indo_faults_line_layer',
+      'type': 'line',
+      'source': 'indo_faults_lines', // reference the data source
+      'layout': {
+
+      },
+      'paint': {
+        'line-color': 'red',
+        'line-width': 1,
+        'line-opacity': 0.5
+        // 'fill-color': 'red',
+        // 'fill-opacity': [
+        //   'case',
+        //   ['boolean', ['feature-state', 'hover'], false],
+        //   0.1,
+        //   0
+        // ],
+
+      }
+    });
+
+
+    
   }
 
   function getGempa() {
@@ -1574,7 +1609,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 magnitudo: v.mag || 9.0,
                 kedalaman: v.depth || '0 km',
                 show: true,
-                closeInSecond: 4
+                closeInSecond: 6
               }
             } />
         </div>

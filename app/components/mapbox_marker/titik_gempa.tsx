@@ -68,7 +68,6 @@ export default class TitikGempa {
                     //initial radius
                     this.initalPWaveRadius = (diff / 1000) * this.setting.pWaveSpeed;
                     this.initalSWaveRadius = (diff / 1000) * this.setting.sWaveSpeed;
-                    console.log(diff);
                     setTimeout(() => {
                         this.removeAllRender();
                     }, ((Math.abs(this.mag || 1) * 20000) - diff))
