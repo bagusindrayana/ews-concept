@@ -63,11 +63,11 @@ export default function Home() {
 
 
     if (!map.current) return;
-    map.current.flyTo({
-      center: [data.lng, data.lat],
-      zoom: 7,
-      essential: true
-    });
+    // map.current.flyTo({
+    //   center: [data.lng, data.lat],
+    //   zoom: 7,
+    //   essential: true
+    // });
 
     const nig: InfoGempa = {
       id: id,
@@ -88,10 +88,11 @@ export default function Home() {
       showMarker:true,
       description: data.message,
       showPopup:true,
-      showPopUpInSecond: 6
+      showPopUpInSecond: 6,
+      zoomToPosition:true
     });
-    tgs.current.unshift(tg);
-    titikGempaBaru.current.unshift(tg);
+    tgs.current.push(tg);
+    titikGempaBaru.current.push(tg);
 
     
     setAlertGempaBumis([...alertGempaBumis,nig]);
@@ -222,6 +223,8 @@ export default function Home() {
     }
     if (t.length > 0) {
       worker.current!.postMessage({ type: 'checkMultiHighlightArea', titikGempa: t, id: "wave" });
+    } else {
+      console.log("Not Send Wave");
     }
   }
 
@@ -844,7 +847,27 @@ export default function Home() {
         };
 
         const cek = tgs.current.find((v) => v.id == data.identifier);
-        if (!cek) {
+        if ((currentTime.toMillis() - sentTime.toMillis()) < 600000) {
+          warningHandler({
+            id: data.identifier,
+            lng: parseFloat(coordinates[0]),
+            lat: parseFloat(coordinates[1]),
+            mag: parseFloat(data.info.magnitude),
+            depth: data.info.depth,
+            message: data.info.description + "\n" + data.info.instruction,
+            time: readAbleTime,
+          });
+          const ntg = new TitikGempa(nig.id, nig, {
+            map: map.current!,
+            showMarker:true
+          });
+          
+          setTimeout(() => {
+
+            // setAlertGempaBumi(ntg);
+            setGempaDirasakan(ntg);
+          }, 6000);
+        } else if (!cek) {
           tgs.current.push(new TitikGempa(nig.id, nig));
           //sort by time
           tgs.current.sort(function (a: any, b: any) {
@@ -871,26 +894,6 @@ export default function Home() {
           (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
           setEvents(tgs.current);
           
-        } else if ((currentTime.toMillis() - sentTime.toMillis()) < 600000) {
-          warningHandler({
-            id: data.identifier,
-            lng: parseFloat(coordinates[0]),
-            lat: parseFloat(coordinates[1]),
-            mag: parseFloat(data.info.magnitude),
-            depth: data.info.depth,
-            message: data.info.description + "\n" + data.info.instruction,
-            time: readAbleTime,
-          });
-          const ntg = new TitikGempa(nig.id, nig, {
-            map: map.current!,
-            showMarker:true
-          });
-          
-          setTimeout(() => {
-
-            // setAlertGempaBumi(ntg);
-            setGempaDirasakan(ntg);
-          }, 6000);
         }
 
         const ntg = new TitikGempa(nig.id, nig, {
@@ -1543,7 +1546,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           }}>X</button>
         </div>
       }
-        className='right-6 bottom-6 fixed hidden md:block  card-float  show-pop-up '>
+        className='right-6 bottom-10 md:bottom-6 fixed  card-float  show-pop-up '>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
         }}>

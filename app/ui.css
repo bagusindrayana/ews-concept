@@ -607,7 +607,7 @@
 
 .card-float .card-content {
     display: block;
-    max-height: 50vh;
+    max-height: 45vh;
     overflow-y: auto;
     overflow-x: hidden;
 }
