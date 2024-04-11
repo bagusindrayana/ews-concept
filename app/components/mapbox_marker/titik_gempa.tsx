@@ -3,13 +3,13 @@ import AnimatedPopup from 'mapbox-gl-animated-popup';
 import { createRoot } from 'react-dom/client';
 import { GiCancel } from 'react-icons/gi';
 import Card from "../card/card";
+import { InfoGempa } from "@/libs/interface";
 
 type TitikGempaSetting = {
-    coordinates: number[],
-    mag?: number,
-    depth?: number,
-    map?: mapboxgl.Map,
-    time?: string,
+    map: mapboxgl.Map,
+    showMarker?: boolean,
+    showPopup?: boolean,
+    zoomToPosition?: boolean,
     sWaveSpeed?: number,
     pWaveSpeed?: number,
     description?: string;
@@ -19,6 +19,7 @@ type TitikGempaSetting = {
 
 export default class TitikGempa {
     id: string;
+    infoGempa: InfoGempa;
     setting?: TitikGempaSetting;
 
     pWaveRadius: number = 0;
@@ -29,8 +30,9 @@ export default class TitikGempa {
     finishWave: boolean = false;
     initalPWaveRadius: number = 0;
     initalSWaveRadius: number = 0;
-    constructor(id: string, setting?: TitikGempaSetting) {
+    constructor(id: string,infoGempa: InfoGempa, setting?: TitikGempaSetting) {
         this.id = id;
+        this.infoGempa = infoGempa;
         this.setting = setting;
 
         this.init();
@@ -45,24 +47,58 @@ export default class TitikGempa {
     }
 
     get center() {
-        return this.setting?.coordinates;
+        return [this.infoGempa.lng, this.infoGempa.lat];
     }
 
     get mag() {
-        return this.setting?.mag;
+        return this.infoGempa.mag;
     }
 
     get depth() {
-        return this.setting?.depth;
+        return this.infoGempa.depth;
+    }
+
+    get time(){
+        return this.infoGempa.time;
+    }
+    
+    get timeDiff() {
+        if(this.infoGempa.time != null){
+            const d = new Date(this.infoGempa.time);
+            const now = new Date();
+            return new Date(now.getTime() - d.getTime()).toLocaleTimeString();
+        }
+        return "-";
+    }
+
+    get readableMag() {
+        if(this.mag != null){
+            return parseFloat(this.mag.toString()).toFixed(1);
+        }
+        return 0;
+    }
+
+    get readableDepth() {
+        if(this.infoGempa.depth){
+            return parseFloat(this.infoGempa.depth.replace(" Km", "")).toFixed(2);
+        }
+        return 0;
+    }
+
+    get readableTime() {
+        if(this.infoGempa.time != null){
+            return new Date(this.infoGempa.time).toLocaleString();
+        }
+        return "-"
     }
 
     init() {
-        if (this.setting != null && this.setting.pWaveSpeed != null && this.setting.sWaveSpeed != null) {
+        if (this.setting != null ) {
             
 
             if (this.setting.map != null) {
-                if(this.setting.time != null){
-                    const d = new Date(this.setting.time);
+                if(this.infoGempa.time != null && this.setting.pWaveSpeed != null && this.setting.sWaveSpeed != null){
+                    const d = new Date(this.infoGempa.time);
                     const now = new Date();
                     const diff = now.getTime() - d.getTime();
                     //initial radius
@@ -70,25 +106,36 @@ export default class TitikGempa {
                     this.initalSWaveRadius = (diff / 1000) * this.setting.sWaveSpeed;
                     setTimeout(() => {
                         this.removeAllRender();
-                    }, ((Math.abs(this.mag || 1) * 20000) - diff))
-                }
-                this.renderMarker();
-                setTimeout(() => {
-                    
-                    this.animateWave();
-                    
-                }, 1000);
+                    }, ((Math.abs(this.mag || 1) * 20000) - diff));
 
-                if(this.setting.showPopUpInSecond){
                     setTimeout(() => {
-                        this.renderPopup();
-                        
-                    }, this.setting.showPopUpInSecond * 1000);
-                } else {
-                    setTimeout(() => {
-                        this.renderPopup();
+                    
+                        this.animateWave();
                         
                     }, 1000);
+                }
+                
+                if(this.setting.showMarker){
+                    this.renderMarker();
+                }
+
+                if(this.setting.zoomToPosition){
+                    this.flyTo();
+                }
+                
+
+                if(this.setting.showPopup){
+                    if(this.setting.showPopUpInSecond){
+                        setTimeout(() => {
+                            this.renderPopup();
+                            
+                        }, this.setting.showPopUpInSecond * 1000);
+                    } else {
+                        setTimeout(() => {
+                            this.renderPopup();
+                            
+                        }, 1000);
+                    }
                 }
 
                 
@@ -136,7 +183,7 @@ export default class TitikGempa {
                   <tbody>
                     <tr>
                       <td className='flex'>Time</td>
-                      <td className='text-right break-words pl-2'>{this.setting?.time}</td>
+                      <td className='text-right break-words pl-2'>{this.infoGempa.time}</td>
                     </tr>
                     <tr>
                       <td className='flex'>Magnitudo</td>
@@ -167,7 +214,7 @@ export default class TitikGempa {
                     easing: 'easeInOutSine',
                     transform: 'scale'
                 }
-            }).setDOMContent(placeholder).setLngLat(this.setting?.coordinates!);
+            }).setDOMContent(placeholder).setLngLat(this.center);
             this.gempaMarker.setPopup(popup);
             popup.addTo(this.setting!.map);
             setTimeout(() => {
@@ -186,12 +233,12 @@ export default class TitikGempa {
                     type: 'Feature',
                     geometry: {
                         type: 'Point',
-                        coordinates: this.setting?.coordinates // Koordinat pusat circle
+                        coordinates: this.center // Koordinat pusat circle
                     },
                     properties: {
                         id: 'p-wave',
                         radius: this.pWaveRadius,
-                        lat: parseFloat(this.setting?.coordinates[1].toString()),
+                        lat: parseFloat(this.center[1].toString()),
                         color: 'orange',
                         titikGempa: this.center
                     }
@@ -200,12 +247,12 @@ export default class TitikGempa {
                     type: 'Feature',
                     geometry: {
                         type: 'Point',
-                        coordinates: this.setting?.coordinates // Koordinat pusat circle
+                        coordinates: this.center // Koordinat pusat circle
                     },
                     properties: {
                         id: 's-wave',
                         radius: this.sWaveRadius,
-                        lat: parseFloat(this.setting?.coordinates[1].toString()),
+                        lat: parseFloat(this.center[1].toString()),
                         color: 'red',
                         titikGempa: this.center
                     }
@@ -252,8 +299,8 @@ export default class TitikGempa {
     }
 
     animateWave() {
-        if(this.setting != null && this.setting.time != null){
-            const d = new Date(this.setting.time);
+        if(this.setting != null && this.infoGempa.time != null){
+            const d = new Date(this.infoGempa.time);
             const now = new Date();
             const diff = now.getTime() - d.getTime();
             //initial radius
@@ -283,6 +330,15 @@ export default class TitikGempa {
 
         //     this.renderWave();
         // }, 1000);
+    }
+
+    flyTo() {
+        if (this.setting?.map != null) {
+            this.setting.map.flyTo({
+                center:[this.infoGempa.lng, this.infoGempa.lat],
+                zoom: 8
+            });
+        }
     }
 
 
