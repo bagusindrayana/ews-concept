@@ -63,7 +63,7 @@ export default function Home() {
     const time = new Date().toLocaleTimeString();
     const id = data.id ?? `tg-${time}`;
 
-    await new Promise(r => setTimeout(r, 1000));
+   
     if (!map.current) return;
     map.current.flyTo({
       center: [data.lng, data.lat],
@@ -80,18 +80,14 @@ export default function Home() {
       mag: data.mag || 9.0,
       depth: data.depth || "10 Km",
       time: data.time || new Date().toLocaleString(),
-      showPopUpInSecond: 5000
+      showPopUpInSecond: 6
     });
 
     
 
     tgs.current.push(tg);
 
-    if (worker.current != null) {
-      adaGempa.current = true;
-      sendWave();
-    }
-
+    
     const nig: InfoGempa = {
       id: id,
       lng: parseFloat(data.lng),
@@ -106,7 +102,7 @@ export default function Home() {
     igs.current.unshift(nig);
     const audioDangerElement = document.getElementById('danger');
     setTimeout(() => {
-
+      
       if (audioDangerElement) {
         (audioDangerElement as HTMLAudioElement).play();
       }
@@ -116,6 +112,10 @@ export default function Home() {
     //add data to first infoGempas
     setInfoGempas(igs.current);
     await new Promise(r => setTimeout(r, 6000));
+    if (worker.current != null) {
+      adaGempa.current = true;
+      sendWave();
+    }  
     if (audioDangerElement) {
       //set volume down
       (audioDangerElement as HTMLAudioElement).volume = 0.5;
@@ -123,7 +123,7 @@ export default function Home() {
 
    
 
-    await new Promise(r => setTimeout(r, 4000));
+    // await new Promise(r => setTimeout(r, 4000));
     //setStackAlerts([...stackAlerts, data]);
   }
 
@@ -210,7 +210,7 @@ export default function Home() {
 
 
   const sendWave = () => {
-
+    console.log('sendWave 1');
     let t: any = [];
     for (let i = 0; i < tgs.current.length; i++) {
       const v = tgs.current[i];
@@ -229,6 +229,7 @@ export default function Home() {
 
     }
     if (t.length > 0) {
+      console.log('sendWave 2');
       worker.current!.postMessage({ type: 'checkMultiHighlightArea', titikGempa: t, id: "wave" });
     }
   }
@@ -1205,7 +1206,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     const message = "Gempa Bumi Test Pada Lokasi : Lat : " + randomPosition[1] + " Lng : " + randomPosition[0] + " Magnitudo : " + mag + " Kedalaman : " + depth;
     const id = `tg-${new Date().getTime()}`;
 
-    const dt = DateTime.now().setZone("Asia/Jakarta");
+    const dt = DateTime.now();
     const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
     const nig: InfoGempa = {
       id: id,

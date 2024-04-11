@@ -68,13 +68,14 @@ export default class TitikGempa {
                     //initial radius
                     this.initalPWaveRadius = (diff / 1000) * this.setting.pWaveSpeed;
                     this.initalSWaveRadius = (diff / 1000) * this.setting.sWaveSpeed;
-    
+                    console.log(diff);
                     setTimeout(() => {
                         this.removeAllRender();
-                    }, (Math.abs(this.mag || 1) * 20000 - diff))
+                    }, ((Math.abs(this.mag || 1) * 20000) - diff))
                 }
                 this.renderMarker();
                 setTimeout(() => {
+                    
                     this.animateWave();
                     
                 }, 1000);
@@ -252,7 +253,14 @@ export default class TitikGempa {
     }
 
     animateWave() {
-
+        if(this.setting != null && this.setting.time != null){
+            const d = new Date(this.setting.time);
+            const now = new Date();
+            const diff = now.getTime() - d.getTime();
+            //initial radius
+            this.initalPWaveRadius = (diff / 1000) * this.setting.pWaveSpeed!;
+            this.initalSWaveRadius = (diff / 1000) * this.setting.sWaveSpeed!;
+        }
         const animate = (time: number) => {
             if (!this.curTime) this.curTime = time;
 
