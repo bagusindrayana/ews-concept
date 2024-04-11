@@ -304,6 +304,15 @@ export default class TitikGempa {
             if (this.setting.map.getSource('wave-source-' + this.id)) {
                 this.setting.map.removeSource('wave-source-' + this.id);
             }
+            if (this.setting.map!.getLayer('hightlight-wave-layer')) {
+                this.setting.map!.removeLayer('hightlight-wave-layer');
+                this.setting.map!.removeSource('hightlight-wave');
+                const markers = document.querySelectorAll('.marker-daerah');
+                //get parent and remove
+                markers.forEach((v) => {
+                  v.parentElement!.remove();
+                });
+              }
             this.finishWave = true;
         }
     }

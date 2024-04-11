@@ -73,6 +73,8 @@ export default function Home() {
       essential: true
     });
 
+    
+
     const tg = new TitikGempa(id, {
       coordinates: [data.lng, data.lat],
       pWaveSpeed: 6000,
@@ -116,6 +118,7 @@ export default function Home() {
     await new Promise(r => setTimeout(r, 6000));
     if (worker.current != null) {
       adaGempa.current = true;
+      console.log("Send Wave");
       sendWave();
     }  
     if (audioDangerElement) {
@@ -896,6 +899,7 @@ export default function Home() {
             time: readAbleTime,
           });
           setTimeout(() => {
+            setStackAlert(nig);
             setInfoGempaDirasakanTerakhir(nig);
           }, 6000);
         } else {
@@ -939,7 +943,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[0]),
             lat: parseFloat(feature.geometry.coordinates[1]),
-            mag: parseFloat(feature.properties.mag) || 9.0,
+            mag: parseFloat(parseFloat(feature.properties.mag).toFixed(1)) || 9.0,
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
@@ -1039,43 +1043,53 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             lastGempaId.current = data.identifier;
             const coordinates = data.info.point.coordinates.split(",");
             const sentTime = DateTime.fromISO(data.sent.replace("WIB", ""), { zone: "Asia/Jakarta" });
-            const readAbleTime = sentTime.toISODate() + " " + sentTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
-            if (parseFloat(data.info.magnitude) > 5) {
-              warningHandler({
-                id: data.identifier,
-                lng: parseFloat(coordinates[0]),
-                lat: parseFloat(coordinates[1]),
-                mag: parseFloat(data.info.magnitude),
-                depth: data.info.depth,
-                message: data.info.description + "\n" + data.info.instruction,
-                time:readAbleTime
-              });
-            } else {
-              var notif = new Audio(smallEarthQuakeSound);
-              notif.play();
-              map.current!.flyTo({
-                center: [parseFloat(coordinates[0]), parseFloat(coordinates[1])],
-                zoom: 7,
-                essential: true
-              });
+            const readAbleTime = sentTime.toISODate() + " " + sentTime.toLocaleString(DateTime.TIME_24_WITH_SECONDS);
 
-              const tg = new TitikGempa(data.identifier, {
-                coordinates: [coordinates[0], coordinates[1]],
-                pWaveSpeed: 6000,
-                sWaveSpeed: 3000,
-                map: map.current!,
-                description: data.info.description + "\n" + data.info.instruction,
-                mag: parseFloat(data.info.magnitude) || 9.0,
-                depth: data.info.depth || "10 Km",
-                time:readAbleTime
-              });
+            warningHandler({
+              id: data.identifier,
+              lng: parseFloat(coordinates[0]),
+              lat: parseFloat(coordinates[1]),
+              mag: parseFloat(data.info.magnitude),
+              depth: data.info.depth,
+              message: data.info.description + "\n" + data.info.instruction,
+              time:readAbleTime
+            });
+            // if (parseFloat(data.info.magnitude) > 5) {
+            //   warningHandler({
+            //     id: data.identifier,
+            //     lng: parseFloat(coordinates[0]),
+            //     lat: parseFloat(coordinates[1]),
+            //     mag: parseFloat(data.info.magnitude),
+            //     depth: data.info.depth,
+            //     message: data.info.description + "\n" + data.info.instruction,
+            //     time:readAbleTime
+            //   });
+            // } else {
+            //   var notif = new Audio(smallEarthQuakeSound);
+            //   notif.play();
+            //   map.current!.flyTo({
+            //     center: [parseFloat(coordinates[0]), parseFloat(coordinates[1])],
+            //     zoom: 7,
+            //     essential: true
+            //   });
 
-              if (titikGempaKecil.current) {
-                titikGempaKecil.current.removeAllRender();
-              }
-              titikGempaKecil.current = tg;
+            //   const tg = new TitikGempa(data.identifier, {
+            //     coordinates: [coordinates[0], coordinates[1]],
+            //     pWaveSpeed: 6000,
+            //     sWaveSpeed: 3000,
+            //     map: map.current!,
+            //     description: data.info.description + "\n" + data.info.instruction,
+            //     mag: parseFloat(data.info.magnitude) || 9.0,
+            //     depth: data.info.depth || "10 Km",
+            //     time:readAbleTime
+            //   });
 
-            }
+            //   if (titikGempaKecil.current) {
+            //     titikGempaKecil.current.removeAllRender();
+            //   }
+            //   titikGempaKecil.current = tg;
+
+            // }
           }
         })
         .catch((error) => {
@@ -1147,6 +1161,9 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             }
 
             igs.current.push(nig)
+            igs.current.sort(function(a:any, b:any) {
+              return new Date(b.time).getTime() - new Date(a.time).getTime();
+              });
             setInfoGempas(igs.current);
             setStackAlert(nig);
 
@@ -1269,9 +1286,9 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       time: readAbleTime
     });
 
-    setTimeout(() => {
-      setInfoGempaDirasakanTerakhir(nig);
-    }, 6000);
+    // setTimeout(() => {
+    //   setInfoGempaDirasakanTerakhir(nig);
+    // }, 6000);
 
   }
 
@@ -1328,7 +1345,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             <div>
               <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
                 <div className="flex flex-col items-center p-1 ">
-                  <div className="text -characters">{stackAlert.mag.toFixed(1)}</div>
+                  <div className="text -characters">{stackAlert.mag}</div>
                   <div className="text">MAG</div>
                 </div>
                 <div className="decal -blink -striped"></div>
@@ -1369,7 +1386,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           </div>
         </div>
         {stackAlert.mag >= 5 &&  <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
-          maxHeight: "25vh",
+          maxHeight: "20vh",
         }}>
           <ul>
             {stackAlert.listKotaTerdampak && stackAlert.listKotaTerdampak.map((kota, i) => {
