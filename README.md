@@ -1,10 +1,11 @@
 ## Todo
 - [x] UI Concept
 - [x] Informasi Gempa
+- [x] Update UI Mobile
 - [ ] Informasi Tsunami
 - [ ] Informasi Lokasi User (IP/Geolocation)
 - [ ] Data Geojson Garis Pantai/Pesisir
-- [ ] Reduce Geojson Size
+- [x] Reduce Geojson Size
 - [ ] PWA
 - [ ] Push Notification
 - [ ] Broadcast System

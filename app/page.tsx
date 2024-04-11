@@ -58,6 +58,8 @@ export default function Home() {
   const [infoGempaTerakhir, setInfoGempaTerakhir] = useState<InfoGempa | null>(null);
   const [infoGempaDirasakanTerakhir, setInfoGempaDirasakanTerakhir] = useState<InfoGempa | null>(null);
 
+  const [loadingScreen, setLoadingScreen] = useState<boolean>(true);
+
 
   const warningHandler = async (data: any) => {
     const time = new Date().toLocaleTimeString();
@@ -534,6 +536,7 @@ export default function Home() {
         geoJsonTitikGempa.current = data;
         setTimeout(() => {
           document.getElementById("loading-screen")!.style.display = "none";
+          setLoadingScreen(false);
         }, 1000);
         let ifg: InfoGempa[] = [];
         for (let index = 0; index < data.features.length; index++) {
@@ -1144,6 +1147,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
             igs.current.push(nig)
             setInfoGempas(igs.current);
+            setStackAlert(nig);
 
             const tg = new TitikGempa(lastGempaKecilId.current, {
               coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
@@ -1308,19 +1312,63 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       <div ref={mapContainer} className="w-full h-screen" />
 
-      {stackAlert && <Card title={
+      {!loadingScreen && stackAlert && <Card title={
         <div className='overflow-hidden'>
           <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
           <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
             <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
           </div>
         </div>
-      } className='show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/4 lg:w-1/5'>
-        <p className='whitespace-pre-wrap text-glow text-xs' style={{
-          fontSize: "12px"
-        }}>{stackAlert.message}</p>
-        <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
-          maxHeight: "40vh",
+      } className='hidden md:block show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
+        <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+          fontSize: "10px"
+        }}>
+          <div className='w-full flex   gap-2' >
+            <div>
+              <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
+                <div className="flex flex-col items-center p-1 ">
+                  <div className="text -characters">{stackAlert.mag}</div>
+                  <div className="text">MAG</div>
+                </div>
+                <div className="decal -blink -striped"></div>
+              </div>
+              <p className='text-glow font-bold'>DEPTH : {parseFloat(stackAlert.depth.replace(" Km", "")).toFixed(2)} KM</p>
+            </div>
+            <div className="bordered p-2 w-full">
+              <table className='w-full'>
+                <tbody>
+
+                  <tr>
+                    <td className='text-left'>TIME</td>
+                    <td className='text-right'>{stackAlert.time} WIB</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>MAG</td>
+                    <td className='text-right'>{stackAlert.mag}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>DEPTH</td>
+                    <td className='text-right'>{stackAlert.depth}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>LAT</td>
+                    <td className='text-right'>{stackAlert.lat}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>LNG</td>
+                    <td className='text-right'>{stackAlert.lng}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+          <div className='mt-2 bordered'>
+            <p className='text-glow p-2 break-words'>{stackAlert.message}</p>
+          </div>
+        </div>
+        {stackAlert.mag >= 5 &&  <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
+          maxHeight: "25vh",
         }}>
           <ul>
             {stackAlert.listKotaTerdampak && stackAlert.listKotaTerdampak.map((kota, i) => {
@@ -1335,11 +1383,18 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               }
             })}
           </ul>
-        </div>
+        </div>}
       </Card>}
 
 
-      <Card title={
+      <div className='fixed  top-12 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
+        testDemoGempa();
+      }}>
+        TEST GEMPA
+      </div>
+
+
+      {!loadingScreen && <Card title={
         <p className='font-bold text-glow-red text-sm text-center' style={{
           color: "red"
         }}>EVENT LOG</p>
@@ -1368,17 +1423,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           })}
         </ul>
 
-      </Card>
+      </Card>}
 
 
 
-      <div className='fixed  bottom-48 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
-        testDemoGempa();
-      }}>
-        TEST GEMPA
-      </div>
+      
 
-      {infoGempaTerakhir && <Card title={
+      {!loadingScreen && infoGempaTerakhir && <Card title={
         <div className='w-full flex justify-center text-center'>
           <p className='font-bold text-glow-red text-sm '>
             GEMPA TERDETEKSI TERAKHIR
@@ -1394,7 +1445,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       }
 
-        className='show-pop-up fixed bottom-28 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/6'>
+        className='hidden md:block show-pop-up fixed bottom-28 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/6'>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
         }}>
@@ -1429,7 +1480,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       </Card>}
 
-      {infoGempaDirasakanTerakhir && <Card title={
+      {!loadingScreen && infoGempaDirasakanTerakhir && <Card title={
         <div className='w-full flex justify-center text-center'>
           <p className='font-bold text-glow-red text-sm '>
             GEMPA DIRASAKAN TERAKHIR
@@ -1445,7 +1496,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       }
 
-        className='show-pop-up fixed bottom-10 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/5'>
+        className='hidden md:block show-pop-up fixed bottom-10 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
         <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
           fontSize: "10px"
         }}>
@@ -1495,7 +1546,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       </Card>}
 
-      {detailInfoGempa && <Card title={
+      {!loadingScreen && detailInfoGempa && <Card title={
         <div className='w-full flex justify-between'>
           <p className='font-bold text-glow-red text-sm'>
             DETAIL EVENT
@@ -1508,7 +1559,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           }}>X</button>
         </div>
       }
-
         className='right-6 bottom-6 fixed hidden md:block  card-float  show-pop-up '>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
@@ -1600,7 +1650,65 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </Card>}
 
-      {alertGempaBumis.map((v, i) => {
+      {!loadingScreen && stackAlert && infoGempaDirasakanTerakhir && <Card title={
+        <div className='overflow-hidden'>
+          <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+          <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+            <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+          </div>
+        </div>
+      } className='block md:hidden show-pop-up  fixed bottom-10 md:top-6 left-0 card-warning right-0 md:left-6 md:w-1/4 lg:w-1/5'>
+        <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+          fontSize: "10px"
+        }}>
+          <div className='w-full flex   gap-2' >
+            <div>
+              <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
+                <div className="flex flex-col items-center p-1 ">
+                  <div className="text -characters">{infoGempaDirasakanTerakhir.mag}</div>
+                  <div className="text">MAG</div>
+                </div>
+                <div className="decal -blink -striped"></div>
+              </div>
+              <p className='text-glow font-bold'>DEPTH : {parseFloat(infoGempaDirasakanTerakhir.depth.replace(" Km", "")).toFixed(2)} KM</p>
+            </div>
+            <div className="bordered p-2 w-full">
+              <table className='w-full'>
+                <tbody>
+
+                  <tr>
+                    <td className='text-left'>TIME</td>
+                    <td className='text-right'>{infoGempaDirasakanTerakhir.time} WIB</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>MAG</td>
+                    <td className='text-right'>{infoGempaDirasakanTerakhir.mag}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>DEPTH</td>
+                    <td className='text-right'>{infoGempaDirasakanTerakhir.depth}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>LAT</td>
+                    <td className='text-right'>{infoGempaDirasakanTerakhir.lat}</td>
+                  </tr>
+                  <tr>
+                    <td className='text-left'>LNG</td>
+                    <td className='text-right'>{infoGempaDirasakanTerakhir.lng}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+          </div>
+          <div className='mt-2 bordered'>
+            <p className='text-glow p-2 break-words'>{infoGempaDirasakanTerakhir.message}</p>
+          </div>
+        </div>
+        
+      </Card>}
+
+      {!loadingScreen && alertGempaBumis.map((v, i) => {
         return <div className='z-50' key={i}>
           <GempaBumiAlert
             key={i}
