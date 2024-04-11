@@ -1004,6 +1004,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               titikGempaKecil.current = tg;
             }
 
+            setStackAlert(nig);
 
           } else {
             const cek = igs.current.find((v) => v.id == feature.properties.id);
@@ -1327,7 +1328,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             <div>
               <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
                 <div className="flex flex-col items-center p-1 ">
-                  <div className="text -characters">{stackAlert.mag}</div>
+                  <div className="text -characters">{stackAlert.mag.toFixed(1)}</div>
                   <div className="text">MAG</div>
                 </div>
                 <div className="decal -blink -striped"></div>
