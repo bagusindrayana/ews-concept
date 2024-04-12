@@ -33,6 +33,7 @@ export default function Home() {
   const [zoom, setZoom] = useState(5);
 
   const geoJsonData = useRef<any>(null);
+  const geoJsonCoastline = useRef<any>(null);
   const geoJsonTitikGempa = useRef<any>(null);
   const worker = useRef<Worker | null>(null);
   const adaGempa = useRef<boolean>(false);
@@ -160,7 +161,7 @@ export default function Home() {
       { type: 'module' }
     );
 
-    worker.current.postMessage({ type: 'geoJsonData', data: geoJsonData.current });
+    worker.current.postMessage({ type: 'geoJsonData', data: geoJsonData.current,coastline:geoJsonCoastline.current });
 
     worker.current.addEventListener('message', (event: any) => {
       const data = event.data;
@@ -184,7 +185,8 @@ export default function Home() {
     });
 
     map.current.on('load', () => {
-      loadGeoJsonData();
+      // loadGeoJsonData();
+      loadGeoJsonCoastline();
     });
 
     
@@ -317,39 +319,80 @@ export default function Home() {
 
     }
 
-    if (map.current!.getSource('hightlight-wave')) {
-      (map.current!.getSource('hightlight-wave') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": uniqueData });
+    // if (map.current!.getSource('hightlight-wave')) {
+    //   (map.current!.getSource('hightlight-wave') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": uniqueData });
+    // } else {
+    //   map.current!.addSource('hightlight-wave', {
+    //     'type': 'geojson',
+    //     'data': { "type": "FeatureCollection", "features": uniqueData }
+    //   });
+    // }
+
+    // if (!map.current!.getLayer('hightlight-wave-layer')) {
+    //   map.current!.addLayer({
+    //     'id': 'hightlight-wave-layer',
+    //     'type': 'fill',
+    //     'source': 'hightlight-wave',
+    //     'layout': {},
+    //     'paint': {
+    //       'fill-color': ['get', 'color'],
+    //       'fill-opacity': 0.8
+    //     }
+    //   });
+
+    //   map.current!.moveLayer('outline');
+    //   for (let tg of tgs.current) {
+    //     if (map.current!.getLayer(tg.id)) {
+    //       map.current!.moveLayer(tg.id);
+    //     }
+    //   }
+    // }
+
+    if (map.current!.getSource('coastline')) {
+      (map.current!.getSource('coastline') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": data.line });
     } else {
-      map.current!.addSource('hightlight-wave', {
+      map.current!.addSource('coastline', {
         'type': 'geojson',
-        'data': { "type": "FeatureCollection", "features": uniqueData }
+        'data': { "type": "FeatureCollection", "features": data.line }
       });
-    }
-
-    if (!map.current!.getLayer('hightlight-wave-layer')) {
-      map.current!.addLayer({
-        'id': 'hightlight-wave-layer',
-        'type': 'fill',
-        'source': 'hightlight-wave',
-        'layout': {},
-        'paint': {
-          'fill-color': ['get', 'color'],
-          'fill-opacity': 0.8
-        }
-      });
-
-      map.current!.moveLayer('outline');
-      for (let tg of tgs.current) {
-        if (map.current!.getLayer(tg.id)) {
-          map.current!.moveLayer(tg.id);
-        }
-      }
     }
 
     sendWave();
   }
 
   const hoverWilayah = useRef<any>(null);
+
+  function loadGeoJsonCoastline() {
+    fetch('/geojson/garis_pantai.geojson')
+      .then(response => response.json())
+      .then(data => {
+        geoJsonCoastline.current = data;
+        if (!map.current!.getSource('coastline')) {
+          map.current!.addSource('coastline', {
+            type: 'geojson',
+            generateId: true,
+            data: data
+          });
+          map.current!.addLayer({
+            'id': 'outline-coastline',
+            'type': 'line',
+            'source': 'coastline',
+            'layout': {},
+            'paint': {
+              'line-color': ['get', 'color'],
+              'line-width': 1,
+              'line-opacity': 0.7
+            }
+          });
+
+        }
+        loadGeoJsonData();
+      }).catch((error) => {
+        alert("Failed load geojson data : " + error);
+        console.error('Error fetching data:', error);
+      });
+  };
+
   function loadGeoJsonData() {
     fetch('/geojson/all_kabkota_ind_reduce.geojson')
       .then(response => response.json())
