@@ -857,6 +857,8 @@ label#internal {
     border-radius: 50%;
     background-image: url('https://cdn.jsdelivr.net/gh/devicons/devicon/icons/github/github-original.svg');
     background-color: white;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .bmkg-icon {
@@ -865,6 +867,8 @@ label#internal {
     border-radius: 50%;
     background-image: url('/images/logo-bmkg.webp');
     background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
 }
 
 .loader {
