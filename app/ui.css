@@ -25,7 +25,7 @@
 
     /* background-image: url("/images/strip.svg");
     background-size: 17%; */
-    width: 1915px;
+    width: 200vw;
     height: 30px;
     display: inline-block;
     margin-bottom: -5px;
@@ -55,7 +55,7 @@
 
     /* background-image: url("/images/strip.svg");
     background-size: 17%; */
-    width: 1915px;
+    width: 200vw;
     height: 30px;
     display: inline-block;
     margin-bottom: -5px;
@@ -83,7 +83,7 @@
 
 
 .strip-bar-vertical {
-    height: 1915px;
+    height: 200vw;
     transform: translate3d(0, 0, 0);
     --stripe-color: var(--orange);
     --stripe-size: 15px;
@@ -100,7 +100,7 @@
 }
 
 .strip-bar-red-vertical {
-    height: 1915px;
+    height: 200vw;
     transform: translate3d(0, 0, 0);
     --stripe-color: var(--red);
     --stripe-size: 15px;
@@ -180,7 +180,7 @@
 }
 
 .strip-wrapper {
-    width: 1915px;
+    width: 200vw;
     overflow: hidden;
     white-space: nowrap;
 }
