@@ -76,6 +76,8 @@ export default function Home() {
 
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
 
+  const [alertTsunami, setAlertTsunami] = useState<boolean>(false);
+
 
   const warningHandler = async (data: any) => {
     console.log("WARNING!!!");
@@ -149,7 +151,34 @@ export default function Home() {
   }
 
   const warningTsunamiHanlde = async (data: any) => {
+    setAlertTsunami(true);
+    setTimeout(() => {
+      const tsunamiWarning: HTMLDivElement = document.querySelector("#tsunami-warning") as HTMLDivElement;
+      //find div inside bg-tsunami
+      if (tsunamiWarning) {
+        const divs = tsunamiWarning.querySelectorAll(".show-pop-up");
+        //loop and add class close-pop-up
+        divs.forEach((v) => {
+          v.classList.add("close-pop-up");
+        });
+      }
+    }, 9000);
+    setTimeout(() => {
 
+
+      const bgTsunami: HTMLDivElement = document.querySelector("#bg-tsunami .hex-bg") as HTMLDivElement;
+      //find div inside bg-tsunami
+      if (bgTsunami) {
+        const divs = bgTsunami.querySelectorAll("div");
+        //loop and add class close-pop-up
+        divs.forEach((v) => {
+          v.classList.add("close-pop-up");
+        });
+      }
+      setTimeout(() => {
+        setAlertTsunami(false);
+      }, 1000);
+    }, 10000);
   }
 
   const socketInitializer = () => {
@@ -217,7 +246,6 @@ export default function Home() {
   });
 
   useEffect(() => {
-
 
     socketInitializer();
 
@@ -1298,6 +1326,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
   }
 
+  function testDemoTsunami() {
+    warningTsunamiHanlde(null);
+  }
+
   function readTextFile(e: string) {
 
     var t = new XMLHttpRequest;
@@ -1423,12 +1455,20 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>}
       </Card>}
 
+      <div className='fixed  top-12 w-28 md:bottom-auto md:top-2 left-0 right-0 m-auto flex flex-col justify-center items-center gap-2'>
+        <div className=' bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
+          testDemoGempa();
+        }}>
+          TEST GEMPA
+        </div>
 
-      <div className='fixed  top-12 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
-        testDemoGempa();
-      }}>
-        TEST GEMPA
+        <div className=' bordered w-28 text-sm text-center bg-black cursor-pointer' onClick={() => {
+          testDemoTsunami();
+        }}>
+          TEST TSUNAMI
+        </div>
       </div>
+
 
 
       {!loadingScreen && <Card title={
@@ -1783,12 +1823,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </div>
 
-      {!loadingScreen && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center'>
+      {!loadingScreen && alertTsunami && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center' id="tsunami-warning">
 
         <div className='w-full h-full absolute -rotate-90'>
-          <div className="main ">
+          <div className="main " id='bg-tsunami'>
             <div className="hex-bg">
-              {generateDiv(window.screen.width+(window.screen.width/3))}
+              {generateDiv(window.screen.width + (window.screen.width / 3))}
 
             </div>
           </div>
@@ -1834,14 +1874,14 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 </div>
                 <Card title={
                   <div className='overflow-hidden relative'>
-                  <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-                  <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                    <p className='p-1 bg-black font-bold text-xs text-glow uppercase'>Warning Tsunami PD-3.1</p>
+                    <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+                    <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                      <p className='p-1 bg-black font-bold text-xs text-glow uppercase'>Warning Tsunami PD-3.1</p>
+                    </div>
                   </div>
-                </div>
                 } className='w-full h-auto'>
                   <p className='text-xs'>
-                  Pemutakhiran Peringatan Dini, Tsunami akibat gempa dengan kekuatan:7.8, lokasi: 261 km Tenggara KEPANJEN-MALANG-JATIM, waktu:11-Jul-18 11:04:25 WIB
+                    Pemutakhiran Peringatan Dini, Tsunami akibat gempa dengan kekuatan:7.8, lokasi: 261 km Tenggara KEPANJEN-MALANG-JATIM, waktu:11-Jul-18 11:04:25 WIB
                   </p>
                 </Card>
               </div>
@@ -1849,13 +1889,73 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             </div>
           </div>
 
-          
+
 
         </div>
-        <div className='z-20 absolute top-16 left-16'>
-        <div className="warning-yellow -mt-28 ml-6 opacity-0 blink animation-delay-2 "></div>
+        <div className='absolute top-0 bottom-0 left-0 right-0 '>
+          <div className='z-20 absolute top-28 left-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up animation-delay-2'>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute bottom-28 left-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "2.5s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute top-28 right-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "3s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+
+          <div className='z-20 absolute bottom-28 right-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "3.5s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute h-28 block m-auto bottom-0 top-0 right-16 md:right-1/4 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "2s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute h-28 block m-auto bottom-0 top-0 left-16 md:left-1/4 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up del' style={{
+              animationDelay: "2.5s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow "></div>
+              </div>
+            </div>
+          </div>
+
+
+
         </div>
-        
+
 
 
       </div>}

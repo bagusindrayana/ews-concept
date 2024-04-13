@@ -563,13 +563,24 @@
 
 .warning-yellow {
     position: relative;
-    height: 100px;
+    height: 80px;
     width: 50px;
     background-image: url('/images/warning_gempa_red_yellow.svg');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
 }
+
+.warning-tsunami-yellow {
+    position: relative;
+    height: 80px;
+    width: 50px;
+    background-image: url('/images/warning_tsunami_yellow.png');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 
 .basic-hex {
     position: relative;
