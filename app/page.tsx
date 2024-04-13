@@ -16,6 +16,20 @@ import { KotaTerdampak, InfoGempa } from "../libs/interface";
 import Jam from './components/Jam';
 const { DateTime } = require("luxon");
 import { IoLocationSharp } from "react-icons/io5";
+// import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex, GridGenerator, HexUtils } from 'react-hexgrid';
+// import { css } from "@emotion/react"
+
+// const initialConfig: any = {
+//   width: 1000,
+//   height: 800,
+//   layout: { width: 8, height: 8, flat: false, spacing: 1.02 },
+//   origin: { x: 0, y: 0 },
+//   map: "parallelogram",
+//   mapProps: [10],
+// }
+// const generator = GridGenerator.getGenerator(initialConfig.map)
+
+// const initialHexagons: Hex[] = generator(initialConfig.mapProps)
 
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
@@ -24,6 +38,12 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5b
 
 let socket;
 export default function Home() {
+  // const [hexagons, setHexagons] = React.useState(initialHexagons)
+  // const [config, setConfig] = React.useState<any>(initialConfig)
+
+  // const layout = config.layout
+  // const size = { x: layout.width, y: layout.height }
+
   const dangerSound = "/sounds/siren-alarm-96503.mp3"
   const smallEarthQuakeSound = "/sounds/wrong-answer-129254.mp3"
   const mapContainer = useRef<HTMLDivElement | null>(null); // Update the type of mapContainer ref
@@ -79,26 +99,26 @@ export default function Home() {
       message: data.message,
       place: data.place,
       time: data.time || new Date().toLocaleString(),
-      listKotaTerdampak:[]
+      listKotaTerdampak: []
     };
 
     const tg = new TitikGempa(id, nig, {
       pWaveSpeed: 6000,
       sWaveSpeed: 3000,
       map: map.current!,
-      showMarker:true,
+      showMarker: true,
       description: data.message,
-      showPopup:true,
+      showPopup: true,
       showPopUpInSecond: 6,
-      zoomToPosition:true
+      zoomToPosition: true
     });
     tgs.current.push(tg);
     titikGempaBaru.current.push(tg);
 
-    
-    setAlertGempaBumis([...alertGempaBumis,nig]);
 
-  
+    setAlertGempaBumis([...alertGempaBumis, nig]);
+
+
     // tgs.current.push(tg);
     // tgs.current.sort(function (a: any, b: any) {
     //   return new Date(b.time).getTime() - new Date(a.time).getTime();
@@ -112,9 +132,9 @@ export default function Home() {
       }
     }, 2000);
 
-    
+
     await new Promise(r => setTimeout(r, 6000));
-    
+
     setEvents(tgs.current);
     if (worker.current != null) {
       adaGempa.current = true;
@@ -125,6 +145,10 @@ export default function Home() {
       //set volume down
       (audioDangerElement as HTMLAudioElement).volume = 0.5;
     }
+
+  }
+
+  const warningTsunamiHanlde = async (data: any) => {
 
   }
 
@@ -161,7 +185,7 @@ export default function Home() {
       { type: 'module' }
     );
 
-    worker.current.postMessage({ type: 'geoJsonData', data: geoJsonData.current,coastline:geoJsonCoastline.current });
+    worker.current.postMessage({ type: 'geoJsonData', data: geoJsonData.current, coastline: geoJsonCoastline.current });
 
     worker.current.addEventListener('message', (event: any) => {
       const data = event.data;
@@ -189,12 +213,12 @@ export default function Home() {
       loadGeoJsonCoastline();
     });
 
-    
+
   });
 
   useEffect(() => {
 
-    
+
     socketInitializer();
 
     if (socket) return () => {
@@ -275,7 +299,7 @@ export default function Home() {
     //get last alert
     if (alerts.length > 0) {
       const fig = alerts.slice(-1).pop()!;
-      setAlertGempaBumi(new TitikGempa(fig.id,fig));
+      setAlertGempaBumi(new TitikGempa(fig.id, fig));
     } else {
       setAlertGempaBumi(null);
     }
@@ -319,43 +343,43 @@ export default function Home() {
 
     }
 
-    // if (map.current!.getSource('hightlight-wave')) {
-    //   (map.current!.getSource('hightlight-wave') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": uniqueData });
-    // } else {
-    //   map.current!.addSource('hightlight-wave', {
-    //     'type': 'geojson',
-    //     'data': { "type": "FeatureCollection", "features": uniqueData }
-    //   });
-    // }
-
-    // if (!map.current!.getLayer('hightlight-wave-layer')) {
-    //   map.current!.addLayer({
-    //     'id': 'hightlight-wave-layer',
-    //     'type': 'fill',
-    //     'source': 'hightlight-wave',
-    //     'layout': {},
-    //     'paint': {
-    //       'fill-color': ['get', 'color'],
-    //       'fill-opacity': 0.8
-    //     }
-    //   });
-
-    //   map.current!.moveLayer('outline');
-    //   for (let tg of tgs.current) {
-    //     if (map.current!.getLayer(tg.id)) {
-    //       map.current!.moveLayer(tg.id);
-    //     }
-    //   }
-    // }
-
-    if (map.current!.getSource('coastline')) {
-      (map.current!.getSource('coastline') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": data.line });
+    if (map.current!.getSource('hightlight-wave')) {
+      (map.current!.getSource('hightlight-wave') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": uniqueData });
     } else {
-      map.current!.addSource('coastline', {
+      map.current!.addSource('hightlight-wave', {
         'type': 'geojson',
-        'data': { "type": "FeatureCollection", "features": data.line }
+        'data': { "type": "FeatureCollection", "features": uniqueData }
       });
     }
+
+    if (!map.current!.getLayer('hightlight-wave-layer')) {
+      map.current!.addLayer({
+        'id': 'hightlight-wave-layer',
+        'type': 'fill',
+        'source': 'hightlight-wave',
+        'layout': {},
+        'paint': {
+          'fill-color': ['get', 'color'],
+          'fill-opacity': 0.8
+        }
+      });
+
+      map.current!.moveLayer('outline');
+      for (let tg of tgs.current) {
+        if (map.current!.getLayer(tg.id)) {
+          map.current!.moveLayer(tg.id);
+        }
+      }
+    }
+
+    // if (map.current!.getSource('coastline')) {
+    //   (map.current!.getSource('coastline') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": data.line });
+    // } else {
+    //   map.current!.addSource('coastline', {
+    //     'type': 'geojson',
+    //     'data': { "type": "FeatureCollection", "features": data.line }
+    //   });
+    // }
 
     sendWave();
   }
@@ -902,9 +926,9 @@ export default function Home() {
           });
           const ntg = new TitikGempa(nig.id, nig, {
             map: map.current!,
-            showMarker:true
+            showMarker: true
           });
-          
+
           setTimeout(() => {
 
             // setAlertGempaBumi(ntg);
@@ -936,7 +960,7 @@ export default function Home() {
           });
           (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
           setEvents(tgs.current);
-          
+
         }
 
         const ntg = new TitikGempa(nig.id, nig, {
@@ -981,7 +1005,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[0]),
             lat: parseFloat(feature.geometry.coordinates[1]),
-            mag: parseFloat(parseFloat(feature.properties.mag).toFixed(1)) || 9.0,
+            mag: parseFloat(feature.properties.mag),
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
@@ -1008,19 +1032,19 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 sWaveSpeed: 3000,
                 map: map.current!,
                 description: msg,
-                zoomToPosition:true,
-                showMarker:true,
-                showPopup:true,
-                showPopUpInSecond:1,
+                zoomToPosition: true,
+                showMarker: true,
+                showPopup: true,
+                showPopUpInSecond: 1,
               });
-              
+
               setGempaTerakhir(tg);
               setAlertGempaBumi(new TitikGempa(feature.properties.id, nig));
 
             }
 
 
-           
+
 
           } else {
             setGempaTerakhir(new TitikGempa(feature.properties.id, nig));
@@ -1028,18 +1052,18 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
           const cek = tgs.current.find((v) => v.id == feature.properties.id);
           if (!cek) {
-            
+
             tgs.current.unshift(new TitikGempa(feature.properties.id, nig));
             geoJsonTitikGempa.current.features.push(feature);
             (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
 
-            
+
           }
-          
+
 
           setEvents(tgs.current);
 
-          
+
 
 
         }
@@ -1072,42 +1096,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               message: data.info.description + "\n" + data.info.instruction,
               time: readAbleTime
             });
-            // if (parseFloat(data.info.magnitude) > 5) {
-            //   warningHandler({
-            //     id: data.identifier,
-            //     lng: parseFloat(coordinates[0]),
-            //     lat: parseFloat(coordinates[1]),
-            //     mag: parseFloat(data.info.magnitude),
-            //     depth: data.info.depth,
-            //     message: data.info.description + "\n" + data.info.instruction,
-            //     time:readAbleTime
-            //   });
-            // } else {
-            //   var notif = new Audio(smallEarthQuakeSound);
-            //   notif.play();
-            //   map.current!.flyTo({
-            //     center: [parseFloat(coordinates[0]), parseFloat(coordinates[1])],
-            //     zoom: 7,
-            //     essential: true
-            //   });
 
-            //   const tg = new TitikGempa(data.identifier, {
-            //     coordinates: [coordinates[0], coordinates[1]],
-            //     pWaveSpeed: 6000,
-            //     sWaveSpeed: 3000,
-            //     map: map.current!,
-            //     description: data.info.description + "\n" + data.info.instruction,
-            //     mag: parseFloat(data.info.magnitude) || 9.0,
-            //     depth: data.info.depth || "10 Km",
-            //     time:readAbleTime
-            //   });
-
-            //   if (titikGempaKecil.current) {
-            //     titikGempaKecil.current.removeAllRender();
-            //   }
-            //   titikGempaKecil.current = tg;
-
-            // }
           }
         })
         .catch((error) => {
@@ -1144,11 +1133,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             var notif = new Audio(smallEarthQuakeSound);
             notif.play();
             if (!map.current) return;
-            // map.current.flyTo({
-            //   center: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
-            //   zoom: 7,
-            //   essential: true
-            // });
 
 
             if (gempaTerakhir != null && gempaTerakhir.setting != null && gempaTerakhir.setting.map != null) {
@@ -1178,18 +1162,18 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               }
             }
 
-            tgs.current.push(new TitikGempa(nig.id,nig,{
-              map:map.current!,
-              zoomToPosition:true,
-              showMarker:true,
-              showPopup:true,
-              showPopUpInSecond:1
+            tgs.current.push(new TitikGempa(nig.id, nig, {
+              map: map.current!,
+              zoomToPosition: true,
+              showMarker: true,
+              showPopup: true,
+              showPopUpInSecond: 1
             }))
             tgs.current.sort(function (a: any, b: any) {
               return new Date(b.time).getTime() - new Date(a.time).getTime();
             });
             setEvents(tgs.current);
-            setAlertGempaBumi(new TitikGempa(nig.id,nig))
+            setAlertGempaBumi(new TitikGempa(nig.id, nig))
 
             const tg = new TitikGempa(lastGempaKecilId.current, nig, {
               pWaveSpeed: 6000,
@@ -1199,7 +1183,17 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             });
 
             // titikGempaKecil.current = tg;
-            setGempaTerakhir(new TitikGempa(nig.id,nig));
+            setGempaTerakhir(new TitikGempa(nig.id, nig));
+          } else {
+            const cek = tgs.current.find((v) => v.id == feature.properties.id);
+            if (cek && cek.infoGempa.mag != parseFloat(feature.properties.mag)) {
+              console.log(cek.infoGempa.mag, parseFloat(feature.properties.mag))
+              setGempaTerakhir(new TitikGempa(nig.id, nig));
+              setAlertGempaBumi(new TitikGempa(nig.id, nig));
+              const indextgs = tgs.current.findIndex((v) => v.id == feature.properties.id);
+              tgs.current[indextgs].infoGempa = nig;
+
+            }
           }
 
 
@@ -1220,7 +1214,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
     map.current!.flyTo({
       center: [d.lng, d.lat],
-      zoom: 7,
+      zoom: 6,
       essential: true
     });
     const placeholder = document.createElement('div');
@@ -1331,6 +1325,19 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         }
       }
     }, t.send(null)
+  }
+
+  function generateDiv(max) {
+    let arrayDivs: any = [];
+    for (let index = 0; index < max; index++) {
+      arrayDivs.push(<div key={index} style={{
+        animationDelay: `${index * 0.001}s`
+      }}>
+        <img src="/images/warning_hex_red.png" alt="" />
+      </div>);
+    }
+
+    return arrayDivs;
   }
 
 
@@ -1753,7 +1760,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       })}
 
-{/* {!loadingScreen && alertGempaBumi && <GempaBumiAlert key={alertGempaBumi.id}
+      {/* {!loadingScreen && alertGempaBumi && <GempaBumiAlert key={alertGempaBumi.id}
             props={
               {
                 magnitudo: alertGempaBumi.mag || 9.0,
@@ -1775,6 +1782,83 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </a>
 
       </div>
+
+      {!loadingScreen && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center'>
+
+        <div className='w-full h-full absolute -rotate-90'>
+          <div className="main ">
+            <div className="hex-bg">
+              {generateDiv(window.screen.width+(window.screen.width/3))}
+
+            </div>
+          </div>
+        </div>
+
+        <div className='w-full flex flex-col items-center justify-center '>
+          <div className='warning scale-75 md:scale-150 flex flex-col justify-center items-center'>
+            <div className='long-hex flex flex-col justify-center opacity-0 show-pop-up animation-delay-1'>
+              <div className="flex justify-evenly w-full items-center">
+                <div className='warning-black opacity-0 blink animation-fast animation-delay-2'></div>
+                <div className='flex flex-col font-bold text-center text-black'>
+                  <span className='text-xl'>TSUNAMI</span>
+                  <span className='text-xs'>Peringatan Dini Tsunami</span>
+                </div>
+                <div className='warning-black opacity-0 blink animation-fast animation-delay-2'></div>
+              </div>
+            </div>
+            <div className=' w-3/4 overflow-hidden bg-black relative rounded flex justify-center items-center opacity-0 show-pop-up animation-delay-2'>
+
+              <div className='absolute w-full h-2 m-auto top-0 left-0 right-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red strip-animation'></div>
+              </div>
+              <div className='absolute w-full h-2 m-auto bottom-0 left-0 right-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red strip-animation-reverse'></div>
+              </div>
+              <div className='absolute w-2 h-full m-auto top-0 bottom-0 left-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red-vertical strip-animation-vertical-reverse'></div>
+
+              </div>
+
+              <div className='absolute w-2 h-full m-auto top-0 bottom-0 right-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red-vertical strip-animation-vertical'></div>
+
+              </div>
+              <div className='w-full h-full p-6'>
+                <div className="red-bordered p-2 text-center w-full mb-2">
+                  <div className='overflow-hidden relative'>
+                    <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+                    <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                      <p className='p-1 bg-black font-bold text-xs text-glow'>POTENSI TSUNAMI</p>
+                    </div>
+                  </div>
+                </div>
+                <Card title={
+                  <div className='overflow-hidden relative'>
+                  <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+                  <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                    <p className='p-1 bg-black font-bold text-xs text-glow uppercase'>Warning Tsunami PD-3.1</p>
+                  </div>
+                </div>
+                } className='w-full h-auto'>
+                  <p className='text-xs'>
+                  Pemutakhiran Peringatan Dini, Tsunami akibat gempa dengan kekuatan:7.8, lokasi: 261 km Tenggara KEPANJEN-MALANG-JATIM, waktu:11-Jul-18 11:04:25 WIB
+                  </p>
+                </Card>
+              </div>
+
+            </div>
+          </div>
+
+          
+
+        </div>
+        <div className='z-20 absolute top-16 left-16'>
+        <div className="warning-yellow -mt-28 ml-6 opacity-0 blink animation-delay-2 "></div>
+        </div>
+        
+
+
+      </div>}
 
 
       <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg text-center' id='loading-screen'>

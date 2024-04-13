@@ -336,7 +336,7 @@ export default class TitikGempa {
         if (this.setting?.map != null) {
             this.setting.map.flyTo({
                 center:[this.infoGempa.lng, this.infoGempa.lat],
-                zoom: 8
+                zoom: 6
             });
         }
     }
