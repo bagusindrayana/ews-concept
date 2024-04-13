@@ -46,6 +46,7 @@ export default function Home() {
 
   const dangerSound = "/sounds/siren-alarm-96503.mp3"
   const smallEarthQuakeSound = "/sounds/wrong-answer-129254.mp3"
+  const tsunamiAlertSound = "sounds/security-alarm-80493.mp3"
   const mapContainer = useRef<HTMLDivElement | null>(null); // Update the type of mapContainer ref
   const map = useRef<mapboxgl.Map | null>(null); // Update the type of the map ref
   const [lng, setLng] = useState(123.90146694265115);
@@ -152,6 +153,8 @@ export default function Home() {
 
   const warningTsunamiHanlde = async (data: any) => {
     setAlertTsunami(true);
+    var notif = new Audio(tsunamiAlertSound);
+    notif.play();
     setTimeout(() => {
       const tsunamiWarning: HTMLDivElement = document.querySelector("#tsunami-warning") as HTMLDivElement;
       //find div inside bg-tsunami
@@ -1881,7 +1884,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                   </div>
                 } className='w-full h-auto'>
                   <p className='text-xs'>
-                    Pemutakhiran Peringatan Dini, Tsunami akibat gempa dengan kekuatan:7.8, lokasi: 261 km Tenggara KEPANJEN-MALANG-JATIM, waktu:11-Jul-18 11:04:25 WIB
+                    Pemutakhiran Peringatan Dini, Tsunami akibat gempa dengan kekuatan:-, lokasi: - km - -, waktu:- - WIB
                   </p>
                 </Card>
               </div>
