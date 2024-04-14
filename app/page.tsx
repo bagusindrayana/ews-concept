@@ -16,6 +16,8 @@ import { KotaTerdampak, InfoGempa } from "../libs/interface";
 import Jam from './components/Jam';
 const { DateTime } = require("luxon");
 import { IoLocationSharp } from "react-icons/io5";
+import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
+
 // import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex, GridGenerator, HexUtils } from 'react-hexgrid';
 // import { css } from "@emotion/react"
 
@@ -63,6 +65,7 @@ export default function Home() {
 
   const kts = useRef<KotaTerdampak[]>([]);
   const markerDaerahs = useRef<any[]>([]);
+  const daerahTsunami = useRef<any[]>([]);
 
   const lastGempaId = useRef<string>('');
   const lastGempaKecilId = useRef<string>('');
@@ -78,6 +81,7 @@ export default function Home() {
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
 
   const [alertTsunami, setAlertTsunami] = useState<boolean>(false);
+  const blinkInterval = useRef<any>(null);
 
 
   const warningHandler = async (data: any) => {
@@ -151,7 +155,99 @@ export default function Home() {
 
   }
 
-  const warningTsunamiHanlde = async (data: any) => {
+  function blinkCoastline() {
+    if(blinkInterval.current){
+      clearInterval(blinkInterval.current);
+    }
+    blinkInterval.current = setInterval(()=>{
+      const visibility = map.current!.getLayoutProperty(
+        'outline-coastline',
+        'visibility'
+      );
+      map.current!.setLayoutProperty(
+        'outline-coastline',
+        'visibility',
+        visibility == 'visible' ? 'none' : 'visible'
+      );
+    },1000);
+    
+  }
+
+  const warningTsunamiHandler = async (data: any) => {
+    if(blinkInterval.current){
+      clearInterval(blinkInterval.current);
+    }
+    const results: any = [];
+    daerahTsunami.current = [];
+    for (let x = 0; x < geoJsonCoastline.current.features.length; x++) {
+      const feature = geoJsonCoastline.current.features[x];
+      const cek = data.wzarea.find((w) => w.district.replaceAll("-", " ").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", "") == feature.properties.alt_name.replaceAll("KABUPATEN ", "").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", ""));
+      if (cek) {
+        let color = "yellow";
+        if(cek.level == "SIAGA"){
+          color = "orange";
+        } else if(cek.level == "AWAS") {
+          color = "red";
+        }
+        feature.properties.color = color;
+        results.push(feature);
+      } else {
+        // console.log(info.wzarea);
+      }
+
+    }
+    daerahTsunami.current = results;
+    if (results.length > 0) {
+      if (map.current!.getSource('coastline')) {
+        (map.current!.getSource('coastline') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": results });
+      } else {
+        map.current!.addSource('coastline', {
+          'type': 'geojson',
+          'data': { "type": "FeatureCollection", "features": results }
+        });
+      }
+      console.log(results);
+      map.current!.setLayoutProperty(
+        'outline-coastline',
+        'visibility',
+        'visible'
+      );
+     
+    } else {
+      testDemoTsunami();
+      return;
+    }
+
+    const coordinates = data.point.coordinates.split(",");
+
+    
+
+    if (!map.current) return;
+    // map.current.flyTo({
+    //   center: [coordinates[0], coordinates[1]],
+    //   zoom: 7,
+    //   essential: true
+    // });
+
+    const nt = new TitikGempa("tsunami-"+new Date().toLocaleTimeString(), {
+      id: "tsunami-"+new Date().toLocaleTimeString(),
+      lng: coordinates[0],
+      lat: coordinates[1],
+      mag: parseFloat(data.magnitude),
+      depth: data.depth,
+      place: data.area,
+      time: new Date().toLocaleString(),
+    },{
+      map: map.current!,
+      showMarker: true,
+      zoomToPosition: true,
+    })
+    blinkCoastline();
+
+    // tgs.current.push(nt);
+    // setEvents(tgs.current);
+
+    console.log("WARNING TSUNAMI!!!");
     setAlertTsunami(true);
     var notif = new Audio(tsunamiAlertSound);
     notif.play();
@@ -391,7 +487,7 @@ export default function Home() {
         'layout': {},
         'paint': {
           'fill-color': ['get', 'color'],
-          'fill-opacity': 0.8
+          'fill-opacity': 0.5
         }
       });
 
@@ -432,11 +528,13 @@ export default function Home() {
             'id': 'outline-coastline',
             'type': 'line',
             'source': 'coastline',
-            'layout': {},
+            'layout': {
+              'visibility': 'none',
+            },
             'paint': {
               'line-color': ['get', 'color'],
-              'line-width': 1,
-              'line-opacity': 0.7
+              'line-width': 10,
+              'line-opacity': 1
             }
           });
 
@@ -1128,6 +1226,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               time: readAbleTime
             });
 
+            if(data.info.wzarea != undefined && data.info.wzarea.length > 0){
+              warningTsunamiHandler(data.info);
+            }
+
           }
         })
         .catch((error) => {
@@ -1330,7 +1432,33 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
   }
 
   function testDemoTsunami() {
-    warningTsunamiHanlde(null);
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/last30tsunamievent.xml";
+    //fecth and parse xml
+    fetch(url)
+      .then(response => response.text())
+      .then(data => {
+        const parser = new XMLParser();
+        let jObj = parser.parse(data);
+        var infos = jObj.alert.info;
+        infos = infos.filter((v) => v.wzarea != undefined)
+        var randInfo = infos[(Math.random() * infos.length) | 0]
+        console.log(randInfo);
+
+
+
+        // for (let i = 0; i < infos.length; i++) {
+        //   const info = infos[i];
+
+
+        // }
+        warningTsunamiHandler(randInfo);
+
+      }).catch((error) => {
+        alert("Failed load geojson data : " + error);
+        console.error('Error fetching data:', error);
+      });
+
+    //warningTsunamiHandler(null);
   }
 
   function readTextFile(e: string) {

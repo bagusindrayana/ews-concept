@@ -87,8 +87,29 @@ function checkMultiHighlightArea(titikGempa,id) {
                 var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
                 var intersection = turf.booleanIntersects(coastline, buffer);
                 coastline.properties.color = "orange";
+                coastline.properties.hit = false;
                 if (intersection) {
                     highlightLine.push(coastline);
+                }
+            }
+
+            const sRadius = tg.sWaveRadius;
+    
+            if(sRadius > 0){
+                var buffer = turf.buffer(turf.point(coordinate), sRadius, { units: 'meters' });
+                var intersection = turf.booleanIntersects(coastline, buffer);
+                if (intersection) {
+                    const item = highlightLine.find(e => e.properties.mhid === coastline.properties.mhid);
+                    if(item){
+                        item.properties.color = "red";
+                        item.properties.hit = true;
+                    }
+                    const at = tg.areaTerdampak.find(e => e.mhid === coastline.properties.mhid);
+                    if(at) {
+                        at.distance = turf.distance(turf.point(at.center),turf.point(coordinate));
+                        at.color = "red";
+                        at.hit = true;
+                    }
                 }
             }
         }
