@@ -2068,7 +2068,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
         </div>
         <div className='absolute top-0 bottom-0 left-0 right-0 '>
-          <div className='z-20 absolute top-28 left-28 scale-150'>
+          <div className='z-20 absolute top-8 left-8 md:top-28 md:left-28 scale-150'>
             <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up animation-delay-2'>
               <div className='p-1 red-bordered'>
                 <div className="warning-tsunami-yellow"></div>
@@ -2076,7 +2076,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             </div>
           </div>
 
-          <div className='z-20 absolute bottom-28 left-28 scale-150'>
+          <div className='z-20 absolute bottom-8 left-8 md:bottom-28 md:left-28 scale-150'>
             <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
               animationDelay: "2.5s"
             }}>
@@ -2086,7 +2086,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             </div>
           </div>
 
-          <div className='z-20 absolute top-28 right-28 scale-150'>
+          <div className='z-20 absolute top-8 right-8 md:top-28 md:right-28 scale-150'>
             <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
               animationDelay: "3s"
             }}>
@@ -2097,7 +2097,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           </div>
 
 
-          <div className='z-20 absolute bottom-28 right-28 scale-150'>
+          <div className='z-20 absolute bottom-8 right-8 md:bottom-28 md:right-28 scale-150'>
             <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
               animationDelay: "3.5s"
             }}>
@@ -2107,7 +2107,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             </div>
           </div>
 
-          <div className='z-20 absolute h-28 block m-auto bottom-0 top-0 right-16 md:right-1/4 scale-150'>
+          <div className='z-20 absolute h-28 m-auto bottom-0 top-0 right-16 md:right-1/4 hidden md:block scale-150'>
             <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
               animationDelay: "2s"
             }}>
@@ -2117,7 +2117,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             </div>
           </div>
 
-          <div className='z-20 absolute h-28 block m-auto bottom-0 top-0 left-16 md:left-1/4 scale-150'>
+          <div className='z-20 absolute h-28 m-auto bottom-0 top-0 left-16 md:left-1/4 hidden md:block scale-150'>
             <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up del' style={{
               animationDelay: "2.5s"
             }}>
@@ -2138,7 +2138,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg text-center' id='loading-screen'>
         <span className="loader"></span>
-        <p className='my-2 red-color'>INI MERUPAKAN DESAIN KONSEP - DATA GEMPA DARI BMKG</p>
+        <p className='my-2 red-color p-2'>INI MERUPAKAN DESAIN KONSEP - DATA GEMPA DARI BMKG</p>
       </div>
 
     </div>
