@@ -519,7 +519,7 @@ export default function Home() {
         'layout': {},
         'paint': {
           'fill-color': ['get', 'color'],
-          'fill-opacity': 0.5
+          'fill-opacity': 0.8
         }
       });
 
