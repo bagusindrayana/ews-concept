@@ -30,7 +30,7 @@
     display: inline-block;
     margin-bottom: -5px;
 
-    --stripe-color: orange;
+    --stripe-color: var(--orange);
     --stripe-size: 15px;
     --glow-color: rgba(255, 94, 0, .8);
     --glow-size: 3px;
@@ -49,6 +49,123 @@
             transparent calc(2 * var(--stripe-size)),
             /* glow boundary */
             var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size)));
+}
+
+.strip-bar-red {
+
+    /* background-image: url("/images/strip.svg");
+    background-size: 17%; */
+    width: 200vw;
+    height: 30px;
+    display: inline-block;
+    margin-bottom: -5px;
+
+    --stripe-color: var(--red);
+    --stripe-size: 15px;
+    --glow-color: rgba(255, 17, 0, 0.8);
+    --glow-size: 3px;
+    background-image: repeating-linear-gradient(-45deg,
+            /* glow boundary */
+            var(--glow-color) calc(-1 * var(--glow-size)),
+            /* fade into foreground */
+            var(--stripe-color) 0,
+            /* fade from foreground */
+            var(--stripe-color) calc(var(--stripe-size) - var(--glow-size) / 2),
+            /* glow boundary */
+            var(--glow-color) calc(var(--stripe-size) + var(--glow-size) / 2),
+            /* fade to background */
+            transparent calc(var(--stripe-size) + var(--glow-size) / 2),
+            /* fade from background */
+            transparent calc(2 * var(--stripe-size)),
+            /* glow boundary */
+            var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size)));
+}
+
+
+.strip-bar-vertical {
+    height: 200vw;
+    transform: translate3d(0, 0, 0);
+    --stripe-color: var(--orange);
+    --stripe-size: 15px;
+    --glow-color: rgba(255, 94, 0, .8);
+    --glow-size: 3px;
+    background-image: repeating-linear-gradient(45deg,
+            var(--glow-color) calc(-1 * var(--glow-size)),
+            var(--stripe-color) 0,
+            var(--stripe-color) calc(var(--stripe-size) - var(--glow-size) / 2),
+            var(--glow-color) calc(var(--stripe-size) + var(--glow-size) / 2),
+            transparent calc(var(--stripe-size) + var(--glow-size) / 2),
+            transparent calc(2 * var(--stripe-size)),            var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size)));
+            
+}
+
+.strip-bar-red-vertical {
+    height: 200vw;
+    transform: translate3d(0, 0, 0);
+    --stripe-color: var(--red);
+    --stripe-size: 15px;
+    --glow-color: rgba(255, 17, 0, 0.8);
+    --glow-size: 3px;
+    background-image: repeating-linear-gradient(45deg,
+            var(--glow-color) calc(-1 * var(--glow-size)),
+            var(--stripe-color) 0,
+            var(--stripe-color) calc(var(--stripe-size) - var(--glow-size) / 2),
+            var(--glow-color) calc(var(--stripe-size) + var(--glow-size) / 2),
+            transparent calc(var(--stripe-size) + var(--glow-size) / 2),
+            transparent calc(2 * var(--stripe-size)),            var(--glow-color) calc(2 * var(--stripe-size) - var(--glow-size)));
+            
+}
+
+@keyframes slideinBg {
+    from {background-position: top; }
+    to {background-position: -100px 0px;}
+    
+    }
+    
+
+.strip-animation-vertical {
+    
+    animation: stripAnimationVertical 15s infinite linear;
+
+}
+
+.strip-animation-vertical-reverse {
+    animation: stripAnimationVertical 15s infinite linear reverse;
+
+}
+
+.strip-animation {
+    
+    animation: stripAnimation 10s infinite linear;
+
+}
+
+.strip-animation-reverse {
+    animation: stripAnimation 10s infinite linear reverse;
+
+}
+
+
+@keyframes stripAnimationVertical {
+
+
+    100% {
+        /* background-position: 0px 100px; */
+        transform: translateY(-66%);
+    }
+    
+    
+}
+
+@keyframes stripAnimation {
+
+
+    100% {
+        /* background-position: 0px 100px; */
+        transform: translateX(-66%);
+    }
+    
+    
 }
 
 .strip {
@@ -121,6 +238,10 @@
 .show-pop-up {
     animation: showPopUp 0.3s ease-in-out forwards;
 }
+
+/* g.hexagon {
+    fill: transparent;
+} */
 
 
 
@@ -442,13 +563,24 @@
 
 .warning-yellow {
     position: relative;
-    height: 100px;
+    height: 80px;
     width: 50px;
     background-image: url('/images/warning_gempa_red_yellow.svg');
     background-size: contain;
     background-position: center;
     background-repeat: no-repeat;
 }
+
+.warning-tsunami-yellow {
+    position: relative;
+    height: 80px;
+    width: 50px;
+    background-image: url('/images/warning_tsunami_yellow.png');
+    background-size: contain;
+    background-position: center;
+    background-repeat: no-repeat;
+}
+
 
 .basic-hex {
     position: relative;
@@ -607,7 +739,7 @@
 
 .card-float .card-content {
     display: block;
-    max-height: 50vh;
+    max-height: 45vh;
     overflow-y: auto;
     overflow-x: hidden;
 }
@@ -954,3 +1086,119 @@ label#internal {
         transform: scale(1);
     }
 }
+
+.main {
+    width: calc(max(120vh,120vw) + 100px);
+    margin-left: -35vh;
+    transform: translateY(min(-29vw,-40vw));
+    display: grid;
+    grid-template-columns: repeat(auto-fit,calc(var(--s) + 2*var(--mh)));
+    justify-content:center;
+    --s: 80px; /* size */
+    --r: 1.15; /* ratio */
+    /* clip-path */
+    --h: 0.5;  
+    --v: 0.25; 
+    --hc:calc(clamp(0,var(--h),0.5) * var(--s)) ;
+    --vc:calc(clamp(0,var(--v),0.5) * var(--s) * var(--r)); 
+    
+    /*margin */
+    --mv: 1px; /* vertical */
+    --mh: calc(var(--mv) + (var(--s) - 2*var(--hc))/2); /* horizontal */
+    /* for the float*/
+    --f: calc(2*var(--s)*var(--r) + 4*var(--mv)  - 2*var(--vc) - 2px);
+  }
+  
+  .hex-bg {
+    
+
+    grid-column: 1/-1;
+    /* width: 110vh;
+    height: 100vw; */
+    margin:0 auto;
+    font-size: 0; /*disable white space between inline block element */
+    position:relative;
+    /* padding-bottom:50px; */
+    /* filter:drop-shadow(2px 2px 1px #333) */
+  }
+  
+  .hex-bg div {
+    width: var(--s);
+    margin: var(--mv) var(--mh);
+    height: calc(var(--s)*var(--r)); 
+    display: inline-block;
+    font-size:initial;
+    /* clip-path: polygon(var(--hc) 0, calc(100% - var(--hc)) 0,100% var(--vc),100% calc(100% - var(--vc)), calc(100% - var(--hc)) 100%,var(--hc) 100%,0 calc(100% - var(--vc)),0 var(--vc)); */
+    margin-bottom: calc(var(--mv) - var(--vc)); 
+  }
+  
+  .hex-bg::before{
+    content: "";
+    width: calc(var(--s)/2 + var(--mh));
+    float: left;
+    height: 100%;
+    shape-outside: repeating-linear-gradient(     
+                     transparent 0 calc(var(--f) - 2px),      
+                     #fff        0 var(--f));
+  }
+
+  .hex-bg div {
+    /* background-color: var(--red); */
+    justify-content: center;
+    align-items: center;
+    font-weight:bold;
+    text-align:center;
+    
+    
+  }
+
+  .hex-bg div p {
+    text-align: center;
+    margin-top: 20px;
+    color: black;
+    font-size: 10px;
+    transform: rotate(90deg);
+  }
+
+  .hex-bg img {
+
+    display: block;
+    position: relative;
+    transform: rotate(90deg) scale(1.2);
+  }
+  
+  
+  .hex-bg div::before {
+    /* padding-top:80px; */
+    /* content:"DANGER"; */
+    /* font-size:75px; */
+    /* font-family:sans-serif; */
+    position:absolute;
+    display: flex;
+    /* background-color: var(--red); */
+    /* background-image: url("/images/warning_hex_red.png");
+    background-position: center 5px;
+    background-repeat: no-repeat;
+    background-size: 50px; */
+    /* inset:0; */
+  }
+  
+  .hex-bg div {
+    /* animation:show 5s ease-in-out; */
+    animation:showPopUp 0.3s ease-in-out forwards;
+    opacity:0;
+    transform: scale(0.5);
+  }
+  
+  
+  @keyframes show{
+    10% {
+       opacity:1;
+       transform: scale(1);
+    }
+    90% {
+       opacity:1;
+       transform: scale(1);
+    }
+  }
+  

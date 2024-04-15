@@ -2,6 +2,7 @@ import * as turf from '@turf/turf'
 // import polylabel from 'polylabel';
 
 let allPolygon = [];
+let allCoastline = [];
 const installEvent = () => {
     self.addEventListener('install', () => {
         console.log('service worker installed');
@@ -56,6 +57,7 @@ function checkHighlightArea(center,size,id) {
 
 function checkMultiHighlightArea(titikGempa,id) {
     let highlightSelectedArea = [];
+    let highlightLine = [];
     // for (let i = 0; i < pWave.centers.length; i++) {
     //     const coordinate = pWave.centers[i];
     //     const radius = pWave.sizes[i];
@@ -74,6 +76,44 @@ function checkMultiHighlightArea(titikGempa,id) {
         
     // }
     
+    for (let index = 0; index < allCoastline.length; index++) {
+        const coastline = allCoastline[index];
+        for (let it = 0; it < titikGempa.length; it++) {
+            const tg = titikGempa[it];
+
+            const coordinate = tg.center;
+            const radius = tg.pWaveRadius;
+            if(radius > 0) {
+                var buffer = turf.buffer(turf.point(coordinate), radius, { units: 'meters' });
+                var intersection = turf.booleanIntersects(coastline, buffer);
+                coastline.properties.color = "orange";
+                coastline.properties.hit = false;
+                if (intersection) {
+                    highlightLine.push(coastline);
+                }
+            }
+
+            const sRadius = tg.sWaveRadius;
+    
+            if(sRadius > 0){
+                var buffer = turf.buffer(turf.point(coordinate), sRadius, { units: 'meters' });
+                var intersection = turf.booleanIntersects(coastline, buffer);
+                if (intersection) {
+                    const item = highlightLine.find(e => e.properties.mhid === coastline.properties.mhid);
+                    if(item){
+                        item.properties.color = "red";
+                        item.properties.hit = true;
+                    }
+                    const at = tg.areaTerdampak.find(e => e.mhid === coastline.properties.mhid);
+                    if(at) {
+                        at.distance = turf.distance(turf.point(at.center),turf.point(coordinate));
+                        at.color = "red";
+                        at.hit = true;
+                    }
+                }
+            }
+        }
+    }
     
     for (let index = 0; index < allPolygon.length; index++) {
         const polygon = allPolygon[index];
@@ -221,7 +261,7 @@ function checkMultiHighlightArea(titikGempa,id) {
     // highlightSelectedArea = highlightSelectedArea.filter((v,i,a)=>a.findIndex(t=>(t.properties.kabkot_id === v.properties.kabkot_id))===i);
     
 
-    self.postMessage({id: id, type: "checkMultiHighlightArea", area:highlightSelectedArea,titikGempa:titikGempa});
+    self.postMessage({id: id, type: "checkMultiHighlightArea", area:highlightSelectedArea,line:highlightLine,titikGempa:titikGempa});
 }
 
 self.addEventListener('message', function(ev) {
@@ -254,6 +294,21 @@ self.addEventListener('message', function(ev) {
                 allPolygon.push(turf.polygon(feature.geometry.coordinates, feature.properties))
             } else if (feature.geometry.type == 'MultiPolygon') {
                 allPolygon.push(turf.multiPolygon(feature.geometry.coordinates, feature.properties))
+            }
+        }
+
+        if(data.coastline){
+            const coastline = data.coastline;
+            for (let index = 0; index < coastline.features.length; index++) {
+                const feature = coastline.features[index];
+                if (!feature.geometry) {
+                    continue;
+                }
+                if (feature.geometry.type == 'LineString') {
+                    allCoastline.push(turf.lineString(feature.geometry.coordinates, feature.properties))
+                } else if (feature.geometry.type == 'MultiLineString') {
+                    allCoastline.push(turf.multiLineString(feature.geometry.coordinates, feature.properties))
+                }
             }
         }
         

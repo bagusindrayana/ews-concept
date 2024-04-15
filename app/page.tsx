@@ -16,6 +16,22 @@ import { KotaTerdampak, InfoGempa } from "../libs/interface";
 import Jam from './components/Jam';
 const { DateTime } = require("luxon");
 import { IoLocationSharp } from "react-icons/io5";
+import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
+
+// import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex, GridGenerator, HexUtils } from 'react-hexgrid';
+// import { css } from "@emotion/react"
+
+// const initialConfig: any = {
+//   width: 1000,
+//   height: 800,
+//   layout: { width: 8, height: 8, flat: false, spacing: 1.02 },
+//   origin: { x: 0, y: 0 },
+//   map: "parallelogram",
+//   mapProps: [10],
+// }
+// const generator = GridGenerator.getGenerator(initialConfig.map)
+
+// const initialHexagons: Hex[] = generator(initialConfig.mapProps)
 
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
@@ -24,8 +40,15 @@ mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5b
 
 let socket;
 export default function Home() {
+  // const [hexagons, setHexagons] = React.useState(initialHexagons)
+  // const [config, setConfig] = React.useState<any>(initialConfig)
+
+  // const layout = config.layout
+  // const size = { x: layout.width, y: layout.height }
+
   const dangerSound = "/sounds/siren-alarm-96503.mp3"
   const smallEarthQuakeSound = "/sounds/wrong-answer-129254.mp3"
+  const tsunamiAlertSound = "sounds/security-alarm-80493.mp3"
   const mapContainer = useRef<HTMLDivElement | null>(null); // Update the type of mapContainer ref
   const map = useRef<mapboxgl.Map | null>(null); // Update the type of the map ref
   const [lng, setLng] = useState(123.90146694265115);
@@ -33,103 +56,260 @@ export default function Home() {
   const [zoom, setZoom] = useState(5);
 
   const geoJsonData = useRef<any>(null);
+  const geoJsonCoastline = useRef<any>(null);
   const geoJsonTitikGempa = useRef<any>(null);
   const worker = useRef<Worker | null>(null);
-
-
   const adaGempa = useRef<boolean>(false);
-  // const [titikGempas, setTitikGempas] = useState<TitikGempa[]>([]);
-
   const tgs = useRef<TitikGempa[]>([]);
-  const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
-  const [infoGempas, setInfoGempas] = useState<InfoGempa[]>([]);
-  const [stackAlert, setStackAlert] = useState<InfoGempa | null>(null);
-  const [detailInfoGempa, setDetailInfoGempa] = useState<InfoGempa | null>(null);
+  const titikGempaBaru = useRef<TitikGempa[]>([]);
 
   const kts = useRef<KotaTerdampak[]>([]);
-
-  const igs = useRef<InfoGempa[]>([]);
   const markerDaerahs = useRef<any[]>([]);
+  const daerahTsunami = useRef<any[]>([]);
 
   const lastGempaId = useRef<string>('');
   const lastGempaKecilId = useRef<string>('');
 
-  const titikGempaKecil = useRef<TitikGempa | null>(null);
-  const [infoGempaTerakhir, setInfoGempaTerakhir] = useState<InfoGempa | null>(null);
-  const [infoGempaDirasakanTerakhir, setInfoGempaDirasakanTerakhir] = useState<InfoGempa | null>(null);
-
+  const [detailInfoGempa, setDetailInfoGempa] = useState<InfoGempa | null>(null);
   const [loadingScreen, setLoadingScreen] = useState<boolean>(true);
+
+  const [gempaDirasakan, setGempaDirasakan] = useState<TitikGempa | null>(null);
+  const [gempaTerakhir, setGempaTerakhir] = useState<TitikGempa | null>(null);
+  const [events, setEvents] = useState<TitikGempa[]>([]);
+  const [alertGempaBumi, setAlertGempaBumi] = useState<TitikGempa | null>(null);
+
+  const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
+
+  const [alertTsunami, setAlertTsunami] = useState<boolean>(false);
+  const [infoTsunami, setInfoTsunami] = useState<any>(null);
+  const blinkInterval = useRef<any>(null);
 
 
   const warningHandler = async (data: any) => {
+    console.log("WARNING!!!");
     const time = new Date().toLocaleTimeString();
     const id = data.id ?? `tg-${time}`;
 
-   
+
     if (!map.current) return;
-    map.current.flyTo({
-      center: [data.lng, data.lat],
-      zoom: 7,
-      essential: true
-    });
+    // map.current.flyTo({
+    //   center: [data.lng, data.lat],
+    //   zoom: 7,
+    //   essential: true
+    // });
 
-    
-
-    const tg = new TitikGempa(id, {
-      coordinates: [data.lng, data.lat],
-      pWaveSpeed: 6000,
-      sWaveSpeed: 3000,
-      map: map.current!,
-      description: data.message,
-      mag: data.mag || 9.0,
-      depth: data.depth || "10 Km",
-      time: data.time || new Date().toLocaleString(),
-      showPopUpInSecond: 6
-    });
-
-    
-
-    tgs.current.push(tg);
-
-    
     const nig: InfoGempa = {
       id: id,
       lng: parseFloat(data.lng),
       lat: parseFloat(data.lat),
-      mag: data.mag || 9.0,
+      mag: parseFloat(data.mag || 9.0),
       depth: data.depth || "10 Km",
       message: data.message,
       place: data.place,
-      time: data.time || new Date().toLocaleString()
+      time: data.time || new Date().toLocaleString(),
+      listKotaTerdampak: []
     };
 
-    igs.current.unshift(nig);
+    const tg = new TitikGempa(id, nig, {
+      pWaveSpeed: 6000,
+      sWaveSpeed: 3000,
+      map: map.current!,
+      showMarker: true,
+      description: data.message,
+      showPopup: true,
+      showPopUpInSecond: 6,
+      zoomToPosition: true
+    });
+    tgs.current.push(tg);
+    titikGempaBaru.current.push(tg);
+
+
+    setAlertGempaBumis([...alertGempaBumis, nig]);
+
+
+    // tgs.current.push(tg);
+    // tgs.current.sort(function (a: any, b: any) {
+    //   return new Date(b.time).getTime() - new Date(a.time).getTime();
+    // });
+
     const audioDangerElement = document.getElementById('danger');
     setTimeout(() => {
-      
+
       if (audioDangerElement) {
         (audioDangerElement as HTMLAudioElement).play();
       }
     }, 2000);
 
-    setAlertGempaBumis([...alertGempaBumis, nig]);
-    //add data to first infoGempas
-    setInfoGempas(igs.current);
+
     await new Promise(r => setTimeout(r, 6000));
+
+    setEvents(tgs.current);
     if (worker.current != null) {
       adaGempa.current = true;
       console.log("Send Wave");
       sendWave();
-    }  
+    }
     if (audioDangerElement) {
       //set volume down
       (audioDangerElement as HTMLAudioElement).volume = 0.5;
     }
 
-   
+  }
 
-    // await new Promise(r => setTimeout(r, 4000));
-    //setStackAlerts([...stackAlerts, data]);
+  function blinkCoastline() {
+    if(blinkInterval.current){
+      clearInterval(blinkInterval.current);
+    }
+    blinkInterval.current = setInterval(()=>{
+      const visibility = map.current!.getLayoutProperty(
+        'outline-coastline',
+        'visibility'
+      );
+      map.current!.setLayoutProperty(
+        'outline-coastline',
+        'visibility',
+        visibility == 'visible' ? 'none' : 'visible'
+      );
+    },1000);
+    
+  }
+
+  const warningTsunamiHandler = async (data: any) => {
+    setInfoTsunami(data);
+    if(blinkInterval.current){
+      clearInterval(blinkInterval.current);
+    }
+    const results: any = [];
+    daerahTsunami.current = [];
+    // for (let x = 0; x < geoJsonCoastline.current.features.length; x++) {
+    //   const feature = geoJsonCoastline.current.features[x];
+    //   const cek = data.wzarea.find((w) => w.district.replaceAll("-", " ").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", "") == feature.properties.alt_name.replaceAll("KABUPATEN ", "").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", ""));
+    //   if (cek) {
+    //     let color = "yellow";
+    //     if(cek.level == "SIAGA"){
+    //       color = "orange";
+    //     } else if(cek.level == "AWAS") {
+    //       color = "red";
+    //     }
+    //     feature.properties.color = color;
+    //     results.push(feature);
+    //   } else {
+    //     // console.log(info.wzarea);
+    //   }
+
+    // }
+    for (let x = 0; x < data.wzarea.length; x++) {
+      const wz = data.wzarea[x];
+      const cek = geoJsonCoastline.current.features.find((f) => 
+        wz.district.replaceAll("-", " ")
+        .replaceAll("PULAU ", "")
+        .replaceAll("KEPULAUAN ", "")
+        .replaceAll(" BAGIAN UTARA", "")
+        .replaceAll(" BAGIAN BARAT", "")
+        .replaceAll(" BAGIAN SELATAN", "")
+        .replaceAll(" BAGIAN TIMUR", "")
+        == 
+        f.properties.alt_name.replaceAll("KABUPATEN ", "")
+        .replaceAll("PULAU ", "")
+        .replaceAll("KEPULAUAN ", ""));
+      if (cek) {
+        let color = "yellow";
+        if(wz.level == "SIAGA"){
+          color = "orange";
+        } else if(wz.level == "AWAS") {
+          color = "red";
+        }
+        cek.properties.color = color;
+        results.push(cek);
+      } else {
+        // console.log(info.wzarea);
+        console.log(wz);
+      }
+
+    }
+    daerahTsunami.current = results;
+    if (results.length > 0) {
+      if (map.current!.getSource('coastline')) {
+        (map.current!.getSource('coastline') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": results });
+      } else {
+        map.current!.addSource('coastline', {
+          'type': 'geojson',
+          'data': { "type": "FeatureCollection", "features": results }
+        });
+      }
+      console.log(results);
+      map.current!.setLayoutProperty(
+        'outline-coastline',
+        'visibility',
+        'visible'
+      );
+     
+    } else {
+      testDemoTsunami();
+      return;
+    }
+
+    const coordinates = data.point.coordinates.split(",");
+
+    
+
+    if (!map.current) return;
+    // map.current.flyTo({
+    //   center: [coordinates[0], coordinates[1]],
+    //   zoom: 7,
+    //   essential: true
+    // });
+
+    const nt = new TitikGempa("tsunami-"+new Date().toLocaleTimeString(), {
+      id: "tsunami-"+new Date().toLocaleTimeString(),
+      lng: coordinates[0],
+      lat: coordinates[1],
+      mag: parseFloat(data.magnitude),
+      depth: data.depth,
+      place: data.area,
+      time: new Date().toLocaleString(),
+    },{
+      map: map.current!,
+      showMarker: true,
+      zoomToPosition: true,
+    })
+    blinkCoastline();
+    map.current!.moveLayer('outline-coastline');
+
+    // tgs.current.push(nt);
+    // setEvents(tgs.current);
+
+    console.log("WARNING TSUNAMI!!!");
+    setAlertTsunami(true);
+    var notif = new Audio(tsunamiAlertSound);
+    notif.play();
+    setTimeout(() => {
+      const tsunamiWarning: HTMLDivElement = document.querySelector("#tsunami-warning") as HTMLDivElement;
+      //find div inside bg-tsunami
+      if (tsunamiWarning) {
+        const divs = tsunamiWarning.querySelectorAll(".show-pop-up");
+        //loop and add class close-pop-up
+        divs.forEach((v) => {
+          v.classList.add("close-pop-up");
+        });
+      }
+    }, 9000);
+    setTimeout(() => {
+
+
+      const bgTsunami: HTMLDivElement = document.querySelector("#bg-tsunami .hex-bg") as HTMLDivElement;
+      //find div inside bg-tsunami
+      if (bgTsunami) {
+        const divs = bgTsunami.querySelectorAll("div");
+        //loop and add class close-pop-up
+        divs.forEach((v) => {
+          v.classList.add("close-pop-up");
+        });
+      }
+      setTimeout(() => {
+        setAlertTsunami(false);
+      }, 1000);
+    }, 10000);
   }
 
   const socketInitializer = () => {
@@ -165,18 +345,10 @@ export default function Home() {
       { type: 'module' }
     );
 
-    worker.current.postMessage({ type: 'geoJsonData', data: geoJsonData.current });
+    worker.current.postMessage({ type: 'geoJsonData', data: geoJsonData.current, coastline: geoJsonCoastline.current });
 
     worker.current.addEventListener('message', (event: any) => {
       const data = event.data;
-      // if (data.type == "checkMultiHighlightArea" && data.id == "s-wave") {
-      //   recieveSWave(data);
-      // }
-
-      // if (data.type == "checkMultiHighlightArea" && data.id == "p-wave") {
-      //   recievePWave(data);
-      // }
-
       if (data.type == "checkMultiHighlightArea" && data.id == "wave") {
         recieveWave(data);
       }
@@ -197,10 +369,11 @@ export default function Home() {
     });
 
     map.current.on('load', () => {
-      loadGeoJsonData();
+      // loadGeoJsonData();
+      loadGeoJsonCoastline();
     });
 
-    
+
   });
 
   useEffect(() => {
@@ -211,15 +384,14 @@ export default function Home() {
       socket!.disconnect();
     };
 
-
-  }, [alertGempaBumis, infoGempas, stackAlert]);
+  });
 
 
 
   const sendWave = () => {
     let t: any = [];
-    for (let i = 0; i < tgs.current.length; i++) {
-      const v = tgs.current[i];
+    for (let i = 0; i < titikGempaBaru.current.length; i++) {
+      const v = titikGempaBaru.current[i];
       if (!v.finish) {
         t.push({
           id: v.id,
@@ -236,6 +408,8 @@ export default function Home() {
     }
     if (t.length > 0) {
       worker.current!.postMessage({ type: 'checkMultiHighlightArea', titikGempa: t, id: "wave" });
+    } else {
+      console.log("Not Send Wave");
     }
   }
 
@@ -283,9 +457,10 @@ export default function Home() {
 
     //get last alert
     if (alerts.length > 0) {
-      setStackAlert(alerts.slice(-1).pop()!);
+      const fig = alerts.slice(-1).pop()!;
+      setAlertGempaBumi(new TitikGempa(fig.id, fig));
     } else {
-      setStackAlert(null);
+      setAlertGempaBumi(null);
     }
 
     const areas = data.area;
@@ -344,11 +519,12 @@ export default function Home() {
         'layout': {},
         'paint': {
           'fill-color': ['get', 'color'],
-          'fill-opacity': 0.8
+          'fill-opacity': 0.5
         }
       });
 
       map.current!.moveLayer('outline');
+      map.current!.moveLayer('outline-coastline');
       for (let tg of tgs.current) {
         if (map.current!.getLayer(tg.id)) {
           map.current!.moveLayer(tg.id);
@@ -356,10 +532,53 @@ export default function Home() {
       }
     }
 
+    // if (map.current!.getSource('coastline')) {
+    //   (map.current!.getSource('coastline') as mapboxgl.GeoJSONSource).setData({ "type": "FeatureCollection", "features": data.line });
+    // } else {
+    //   map.current!.addSource('coastline', {
+    //     'type': 'geojson',
+    //     'data': { "type": "FeatureCollection", "features": data.line }
+    //   });
+    // }
+
     sendWave();
   }
 
   const hoverWilayah = useRef<any>(null);
+
+  function loadGeoJsonCoastline() {
+    fetch('/geojson/garis_pantai.geojson')
+      .then(response => response.json())
+      .then(data => {
+        geoJsonCoastline.current = data;
+        if (!map.current!.getSource('coastline')) {
+          map.current!.addSource('coastline', {
+            type: 'geojson',
+            generateId: true,
+            data: data
+          });
+          map.current!.addLayer({
+            'id': 'outline-coastline',
+            'type': 'line',
+            'source': 'coastline',
+            'layout': {
+              'visibility': 'none',
+            },
+            'paint': {
+              'line-color': ['get', 'color'],
+              'line-width': 5,
+              'line-opacity': 1
+            }
+          });
+
+        }
+        loadGeoJsonData();
+      }).catch((error) => {
+        alert("Failed load geojson data : " + error);
+        console.error('Error fetching data:', error);
+      });
+  };
+
   function loadGeoJsonData() {
     fetch('/geojson/all_kabkota_ind_reduce.geojson')
       .then(response => response.json())
@@ -379,7 +598,7 @@ export default function Home() {
             'paint': {
               'line-color': '#807a72',
               'line-width': 1,
-              'line-opacity':0.7
+              'line-opacity': 0.7
             }
           });
 
@@ -541,12 +760,12 @@ export default function Home() {
           document.getElementById("loading-screen")!.style.display = "none";
           setLoadingScreen(false);
         }, 1000);
-        let ifg: InfoGempa[] = [];
+        let ntg: TitikGempa[] = [];
         for (let index = 0; index < data.features.length; index++) {
           const feature = data.features[index];
           const dt = DateTime.fromSQL(feature.properties.time, { zone: 'UTC' }).setZone("Asia/Jakarta");
           const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
-          ifg.push({
+          ntg.push(new TitikGempa(feature.properties.id, {
             id: feature.properties.id,
             lng: feature.geometry.coordinates[0],
             lat: feature.geometry.coordinates[1],
@@ -554,10 +773,10 @@ export default function Home() {
             depth: feature.properties.depth,
             place: feature.properties.place,
             time: readAbleTime
-          });
+          }));
         }
-        igs.current = ifg;
-        setInfoGempas(igs.current);
+        tgs.current = ntg;
+        setEvents(tgs.current);
         console.log('load titik gempa 1');
         //check earthquakes layer
         if (map.current!.getLayer('earthquakes-layer')) {
@@ -828,7 +1047,7 @@ export default function Home() {
     });
 
 
-    
+
   }
 
   function getGempa() {
@@ -856,13 +1075,33 @@ export default function Home() {
           time: readAbleTime
         };
 
-        const cek = igs.current.find((v) => v.id == data.identifier);
-        if (!cek) {
-          igs.current.push(nig);
+        const cek = tgs.current.find((v) => v.id == data.identifier);
+        if ((currentTime.toMillis() - sentTime.toMillis()) < 600000) {
+          warningHandler({
+            id: data.identifier,
+            lng: parseFloat(coordinates[0]),
+            lat: parseFloat(coordinates[1]),
+            mag: parseFloat(data.info.magnitude),
+            depth: data.info.depth,
+            message: data.info.description + "\n" + data.info.instruction,
+            time: readAbleTime,
+          });
+          const ntg = new TitikGempa(nig.id, nig, {
+            map: map.current!,
+            showMarker: true
+          });
+
+          setTimeout(() => {
+
+            // setAlertGempaBumi(ntg);
+            setGempaDirasakan(ntg);
+          }, 6000);
+        } else if (!cek) {
+          tgs.current.push(new TitikGempa(nig.id, nig));
           //sort by time
-          igs.current.sort(function(a:any, b:any) {
+          tgs.current.sort(function (a: any, b: any) {
             return new Date(b.time).getTime() - new Date(a.time).getTime();
-            })
+          })
           geoJsonTitikGempa.current.features.push({
             "geometry": {
               "type": "Point",
@@ -875,36 +1114,21 @@ export default function Home() {
             "type": "Feature",
             "properties": {
               id: nig.id,
-              depth: parseFloat(nig.depth.replaceAll(" Km","")).toFixed(2),
+              depth: parseFloat(nig.depth.replaceAll(" Km", "")).toFixed(2),
               mag: nig.mag,
               time: nig.time,
               place: nig.place,
             }
           });
           (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+          setEvents(tgs.current);
 
-          setInfoGempas(igs.current);
         }
 
-        //if sent time is less than 5 minutes
-        if ((currentTime.toMillis() - sentTime.toMillis()) < 600000) {
-
-          warningHandler({
-            id: data.identifier,
-            lng: parseFloat(coordinates[0]),
-            lat: parseFloat(coordinates[1]),
-            mag: parseFloat(data.info.magnitude),
-            depth: data.info.depth,
-            message: data.info.description + "\n" + data.info.instruction,
-            time: readAbleTime,
-          });
-          setTimeout(() => {
-            setStackAlert(nig);
-            setInfoGempaDirasakanTerakhir(nig);
-          }, 6000);
-        } else {
-          setInfoGempaDirasakanTerakhir(nig);
-        }
+        const ntg = new TitikGempa(nig.id, nig, {
+          map: map.current!
+        });
+        setGempaDirasakan(ntg);
 
         // getGempaPeriodik();
       })
@@ -943,7 +1167,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             id: feature.properties.id,
             lng: parseFloat(feature.geometry.coordinates[0]),
             lat: parseFloat(feature.geometry.coordinates[1]),
-            mag: parseFloat(parseFloat(feature.properties.mag).toFixed(1)) || 9.0,
+            mag: parseFloat(feature.properties.mag),
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
@@ -959,69 +1183,49 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             if (map.current) {
               var notif = new Audio(smallEarthQuakeSound);
               notif.play();
-              map.current!.flyTo({
-                center: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
-                zoom: 7,
-                essential: true
-              });
+              // map.current!.flyTo({
+              //   center: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
+              //   zoom: 7,
+              //   essential: true
+              // });
 
-              const tg = new TitikGempa(feature.properties.id, {
-                coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
+              const tg = new TitikGempa(feature.properties.id, nig, {
                 pWaveSpeed: 6000,
                 sWaveSpeed: 3000,
                 map: map.current!,
                 description: msg,
-                mag: parseFloat(feature.properties.mag) || 9.0,
-                depth: feature.properties.depth || "10 Km",
-                time:readAbleTime
+                zoomToPosition: true,
+                showMarker: true,
+                showPopup: true,
+                showPopUpInSecond: 1,
               });
 
+              setGempaTerakhir(tg);
+              setAlertGempaBumi(new TitikGempa(feature.properties.id, nig));
 
-
-              if (titikGempaKecil.current) {
-                titikGempaKecil.current.removeAllRender();
-                titikGempaKecil.current.removeMarker();
-                if (igs.current.length > 0) {
-                  const ig = igs.current[0]
-                  geoJsonTitikGempa.current.features.push({
-                    "geometry": {
-                      "type": "Point",
-                      "coordinates": [
-                        ig.lng,
-                        ig.lat,
-                        1
-                      ]
-                    },
-                    "type": "Feature",
-                    "properties": {
-                      id: ig.id,
-                      depth: ig.depth,
-                      mag: ig.mag,
-                      time: ig.time,
-                      place: ig.place,
-                    }
-                  });
-                  (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
-                }
-
-              }
-              titikGempaKecil.current = tg;
             }
 
-            setStackAlert(nig);
+
+
 
           } else {
-            const cek = igs.current.find((v) => v.id == feature.properties.id);
-            if (!cek) {
-              igs.current.unshift(nig);
-              geoJsonTitikGempa.current.features.push(feature);
-              (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
-
-              setInfoGempas(igs.current);
-            }
+            setGempaTerakhir(new TitikGempa(feature.properties.id, nig));
           }
 
-          setInfoGempaTerakhir(nig);
+          const cek = tgs.current.find((v) => v.id == feature.properties.id);
+          if (!cek) {
+
+            tgs.current.unshift(new TitikGempa(feature.properties.id, nig));
+            geoJsonTitikGempa.current.features.push(feature);
+            (map.current!.getSource('earthquakes') as mapboxgl.GeoJSONSource).setData(geoJsonTitikGempa.current);
+
+
+          }
+
+
+          setEvents(tgs.current);
+
+
 
 
         }
@@ -1049,47 +1253,27 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               id: data.identifier,
               lng: parseFloat(coordinates[0]),
               lat: parseFloat(coordinates[1]),
-              mag: parseFloat(data.info.magnitude),
+              mag: parseFloat(parseFloat(data.info.magnitude).toFixed(1)),
               depth: data.info.depth,
               message: data.info.description + "\n" + data.info.instruction,
-              time:readAbleTime
+              time: readAbleTime
             });
-            // if (parseFloat(data.info.magnitude) > 5) {
-            //   warningHandler({
-            //     id: data.identifier,
-            //     lng: parseFloat(coordinates[0]),
-            //     lat: parseFloat(coordinates[1]),
-            //     mag: parseFloat(data.info.magnitude),
-            //     depth: data.info.depth,
-            //     message: data.info.description + "\n" + data.info.instruction,
-            //     time:readAbleTime
-            //   });
-            // } else {
-            //   var notif = new Audio(smallEarthQuakeSound);
-            //   notif.play();
-            //   map.current!.flyTo({
-            //     center: [parseFloat(coordinates[0]), parseFloat(coordinates[1])],
-            //     zoom: 7,
-            //     essential: true
-            //   });
 
-            //   const tg = new TitikGempa(data.identifier, {
-            //     coordinates: [coordinates[0], coordinates[1]],
-            //     pWaveSpeed: 6000,
-            //     sWaveSpeed: 3000,
-            //     map: map.current!,
-            //     description: data.info.description + "\n" + data.info.instruction,
-            //     mag: parseFloat(data.info.magnitude) || 9.0,
-            //     depth: data.info.depth || "10 Km",
-            //     time:readAbleTime
-            //   });
+            if(data.info.wzarea != undefined && data.info.wzarea.length > 0){
+              if(data.info.subject == "Warning Tsunami PD-4"){
+                //delete outline-costline layer
+                try {
+                  map.current!.removeLayer('outline-coastline');
+                  map.current!.removeLayer('outline');
+                } catch (error) {
+                  
+                }
+              } else if (data.info.subject.includes("Warning Tsunami")){
+                warningTsunamiHandler(data.info);
+              }
+              
+            }
 
-            //   if (titikGempaKecil.current) {
-            //     titikGempaKecil.current.removeAllRender();
-            //   }
-            //   titikGempaKecil.current = tg;
-
-            // }
           }
         })
         .catch((error) => {
@@ -1113,9 +1297,9 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           const readAbleTime = dt.toISODate() + " " + dt.toLocaleString(DateTime.TIME_24_WITH_SECONDS)
           const nig: InfoGempa = {
             id: feature.properties.id,
-            lng: parseFloat(feature.geometry.coordinates[1]),
-            lat: parseFloat(feature.geometry.coordinates[0]),
-            mag: parseFloat(feature.properties.mag) || 9.0,
+            lng: parseFloat(feature.geometry.coordinates[0]),
+            lat: parseFloat(feature.geometry.coordinates[1]),
+            mag: parseFloat(feature.properties.mag),
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
@@ -1126,18 +1310,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             var notif = new Audio(smallEarthQuakeSound);
             notif.play();
             if (!map.current) return;
-            map.current.flyTo({
-              center: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
-              zoom: 7,
-              essential: true
-            });
 
 
-            if (titikGempaKecil.current) {
-              titikGempaKecil.current.removeAllRender();
-              titikGempaKecil.current.removeMarker();
-              if (igs.current.length > 0) {
-                const ig = igs.current[0]
+            if (gempaTerakhir != null && gempaTerakhir.setting != null && gempaTerakhir.setting.map != null) {
+              gempaTerakhir.removeAllRender();
+              gempaTerakhir.removeMarker();
+              if (tgs.current.length > 0) {
+                const ig = tgs.current[0].infoGempa
                 geoJsonTitikGempa.current.features.push({
                   "geometry": {
                     "type": "Point",
@@ -1160,26 +1339,38 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               }
             }
 
-            igs.current.push(nig)
-            igs.current.sort(function(a:any, b:any) {
+            tgs.current.push(new TitikGempa(nig.id, nig, {
+              map: map.current!,
+              zoomToPosition: true,
+              showMarker: true,
+              showPopup: true,
+              showPopUpInSecond: 1
+            }))
+            tgs.current.sort(function (a: any, b: any) {
               return new Date(b.time).getTime() - new Date(a.time).getTime();
-              });
-            setInfoGempas(igs.current);
-            setStackAlert(nig);
+            });
+            setEvents(tgs.current);
+            setAlertGempaBumi(new TitikGempa(nig.id, nig))
 
-            const tg = new TitikGempa(lastGempaKecilId.current, {
-              coordinates: [feature.geometry.coordinates[0], feature.geometry.coordinates[1]],
+            const tg = new TitikGempa(lastGempaKecilId.current, nig, {
               pWaveSpeed: 6000,
               sWaveSpeed: 3000,
               map: map.current!,
               description: msg,
-              mag: Number(feature.properties.mag) || 9.0,
-              depth: feature.properties.depth || "10 Km",
-              time:readAbleTime
             });
 
-            titikGempaKecil.current = tg;
-            setInfoGempaTerakhir(nig);
+            // titikGempaKecil.current = tg;
+            setGempaTerakhir(new TitikGempa(nig.id, nig));
+          } else {
+            const cek = tgs.current.find((v) => v.id == feature.properties.id);
+            if (cek && cek.infoGempa.mag != parseFloat(feature.properties.mag)) {
+              console.log(cek.infoGempa.mag, parseFloat(feature.properties.mag))
+              setGempaTerakhir(new TitikGempa(nig.id, nig));
+              setAlertGempaBumi(new TitikGempa(nig.id, nig));
+              const indextgs = tgs.current.findIndex((v) => v.id == feature.properties.id);
+              tgs.current[indextgs].infoGempa = nig;
+
+            }
           }
 
 
@@ -1200,7 +1391,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
     map.current!.flyTo({
       center: [d.lng, d.lat],
-      zoom: 7,
+      zoom: 6,
       essential: true
     });
     const placeholder = document.createElement('div');
@@ -1276,20 +1467,42 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     };
 
 
-    warningHandler({
-      id: id,
-      lng: randomPosition[0],
-      lat: randomPosition[1],
-      mag: mag,
-      depth: depth,
-      message: message,
-      time: readAbleTime
-    });
+    warningHandler(nig);
 
     // setTimeout(() => {
     //   setInfoGempaDirasakanTerakhir(nig);
     // }, 6000);
 
+  }
+
+  function testDemoTsunami() {
+    const url = "https://bmkg-content-inatews.storage.googleapis.com/last30tsunamievent.xml";
+    //fecth and parse xml
+    fetch(url)
+      .then(response => response.text())
+      .then(data => {
+        const parser = new XMLParser();
+        let jObj = parser.parse(data);
+        var infos = jObj.alert.info;
+        infos = infos.filter((v) => v.wzarea != undefined)
+        var randInfo = infos[(Math.random() * infos.length) | 0]
+        console.log(randInfo);
+
+
+
+        // for (let i = 0; i < infos.length; i++) {
+        //   const info = infos[i];
+
+
+        // }
+        warningTsunamiHandler(randInfo);
+
+      }).catch((error) => {
+        alert("Failed load geojson data : " + error);
+        console.error('Error fetching data:', error);
+      });
+
+    //warningTsunamiHandler(null);
   }
 
   function readTextFile(e: string) {
@@ -1321,6 +1534,19 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     }, t.send(null)
   }
 
+  function generateDiv(max) {
+    let arrayDivs: any = [];
+    for (let index = 0; index < max; index++) {
+      arrayDivs.push(<div key={index} style={{
+        animationDelay: `${index * 0.001}s`
+      }}>
+        <img src="/images/warning_hex_red.png" alt="" />
+      </div>);
+    }
+
+    return arrayDivs;
+  }
+
 
   return (
     <div>
@@ -1330,7 +1556,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       <div ref={mapContainer} className="w-full h-screen" />
 
-      {!loadingScreen && stackAlert && <Card title={
+      {!loadingScreen && alertGempaBumi && <Card title={
         <div className='overflow-hidden'>
           <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
           <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
@@ -1345,12 +1571,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             <div>
               <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
                 <div className="flex flex-col items-center p-1 ">
-                  <div className="text -characters">{stackAlert.mag}</div>
+                  <div className="text -characters">{alertGempaBumi.readableMag}</div>
                   <div className="text">MAG</div>
                 </div>
                 <div className="decal -blink -striped"></div>
               </div>
-              <p className='text-glow font-bold'>DEPTH : {parseFloat(stackAlert.depth.replace(" Km", "")).toFixed(2)} KM</p>
+              <p className='text-glow font-bold'>DEPTH : {alertGempaBumi.readableDepth} KM</p>
             </div>
             <div className="bordered p-2 w-full">
               <table className='w-full'>
@@ -1358,38 +1584,38 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
                   <tr>
                     <td className='text-left'>TIME</td>
-                    <td className='text-right'>{stackAlert.time} WIB</td>
+                    <td className='text-right'>{alertGempaBumi.readableTime} WIB</td>
                   </tr>
                   <tr>
                     <td className='text-left'>MAG</td>
-                    <td className='text-right'>{stackAlert.mag}</td>
+                    <td className='text-right'>{alertGempaBumi.mag}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>DEPTH</td>
-                    <td className='text-right'>{stackAlert.depth}</td>
+                    <td className='text-right'>{alertGempaBumi.depth}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>LAT</td>
-                    <td className='text-right'>{stackAlert.lat}</td>
+                    <td className='text-right'>{alertGempaBumi.infoGempa.lat}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>LNG</td>
-                    <td className='text-right'>{stackAlert.lng}</td>
+                    <td className='text-right'>{alertGempaBumi.infoGempa.lng}</td>
                   </tr>
                 </tbody>
               </table>
             </div>
 
           </div>
-          <div className='mt-2 bordered'>
-            <p className='text-glow p-2 break-words'>{stackAlert.message}</p>
+          <div className='mt-2 bordered w-full'>
+            <p className='text-glow p-2 break-words'>{alertGempaBumi.infoGempa.message}</p>
           </div>
         </div>
-        {stackAlert.mag >= 5 &&  <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
+        {alertGempaBumi.mag >= 5 && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
           maxHeight: "20vh",
         }}>
           <ul>
-            {stackAlert.listKotaTerdampak && stackAlert.listKotaTerdampak.map((kota, i) => {
+            {alertGempaBumi.infoGempa.listKotaTerdampak && alertGempaBumi.infoGempa.listKotaTerdampak.map((kota, i) => {
               if (kota.hit) {
                 return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
                   <ItemKotaTerdampak kota={kota} />
@@ -1404,12 +1630,20 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>}
       </Card>}
 
+      <div className='fixed  top-12 w-28 md:bottom-auto md:top-2 left-0 right-0 m-auto flex flex-col justify-center items-center gap-2'>
+        <div className=' bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
+          testDemoGempa();
+        }}>
+          TEST GEMPA
+        </div>
 
-      <div className='fixed  top-12 md:bottom-auto md:top-2 left-0 right-0 m-auto bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
-        testDemoGempa();
-      }}>
-        TEST GEMPA
+        <div className=' bordered w-28 text-sm text-center bg-black cursor-pointer' onClick={() => {
+          testDemoTsunami();
+        }}>
+          TEST TSUNAMI
+        </div>
       </div>
+
 
 
       {!loadingScreen && <Card title={
@@ -1418,11 +1652,11 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         }}>EVENT LOG</p>
       } className=' fixed right-0  md:right-6 top-1 md:top-6 card-float md:w-1/3 lg:w-1/5 show-pop-up'>
         <ul >
-          {infoGempas.map((v: InfoGempa, i) => {
+          {events.map((v: TitikGempa, i) => {
 
             return <li key={i}
               onClick={() => {
-                selectEvent(v);
+                selectEvent(v.infoGempa);
 
               }}
               className='flex flex-col mb-2 list-event cursor-pointer  slide-in-left' style={{
@@ -1431,11 +1665,11 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               }}>
               <span className='block mb-1' style={{
                 fontSize: "11px"
-              }}>{v.time} WIB</span>
+              }}>{v.infoGempa.time} WIB</span>
               <div className=' bordered p-2 overflow-hidden' style={{
                 fontSize: "12px"
               }}>
-                {Number(v.mag).toFixed(2)} M - {v.place || "uknown"}
+                {v.readableMag} M - {v.infoGempa.place || "uknown"}
               </div>
             </li>
           })}
@@ -1445,9 +1679,9 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
 
 
-      
 
-      {!loadingScreen && infoGempaTerakhir && <Card title={
+
+      {!loadingScreen && gempaTerakhir && <Card title={
         <div className='w-full flex justify-center text-center'>
           <p className='font-bold text-glow-red text-sm '>
             GEMPA TERDETEKSI TERAKHIR
@@ -1455,13 +1689,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
         </div>
       }
-      footer={
-        <div className='flex justify-center w-full  cursor-pointer' onClick={()=>{
-          selectEvent(infoGempaTerakhir);
-        }}>
-          <span ><IoLocationSharp /></span>
-        </div>
-      }
+        footer={
+          <div className='flex justify-center w-full  cursor-pointer' onClick={() => {
+            selectEvent(gempaTerakhir.infoGempa);
+          }}>
+            <span ><IoLocationSharp /></span>
+          </div>
+        }
 
         className='hidden md:block show-pop-up fixed bottom-28 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/6'>
         <div className='text-glow text-sm w-full ' style={{
@@ -1471,34 +1705,34 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             <tbody>
               <tr>
                 <td className='text-left'>PLACE</td>
-                <td className='text-right'>{infoGempaTerakhir.place}</td>
+                <td className='text-right'>{gempaTerakhir.infoGempa.place}</td>
               </tr>
               <tr>
                 <td className='text-left'>TIME</td>
-                <td className='text-right' data-time={infoGempaTerakhir.time}>{infoGempaTerakhir.time} WIB</td>
+                <td className='text-right' >{gempaTerakhir.readableTime} WIB</td>
               </tr>
               <tr>
                 <td className='text-left'>MAG</td>
-                <td className='text-right'>{infoGempaTerakhir.mag}</td>
+                <td className='text-right'>{gempaTerakhir.infoGempa.mag}</td>
               </tr>
               <tr>
                 <td className='text-left'>DEPTH</td>
-                <td className='text-right'>{parseFloat(infoGempaTerakhir.depth.replace(" Km", "")).toFixed(2)} KM</td>
+                <td className='text-right'>{gempaTerakhir.readableDepth} KM</td>
               </tr>
               <tr>
                 <td className='text-left'>LAT</td>
-                <td className='text-right'>{infoGempaTerakhir.lat}</td>
+                <td className='text-right'>{gempaTerakhir.infoGempa.lat}</td>
               </tr>
               <tr>
                 <td className='text-left'>LNG</td>
-                <td className='text-right'>{infoGempaTerakhir.lng}</td>
+                <td className='text-right'>{gempaTerakhir.infoGempa.lng}</td>
               </tr>
             </tbody>
           </table>
         </div>
       </Card>}
 
-      {!loadingScreen && infoGempaDirasakanTerakhir && <Card title={
+      {!loadingScreen && gempaDirasakan && <Card title={
         <div className='w-full flex justify-center text-center'>
           <p className='font-bold text-glow-red text-sm '>
             GEMPA DIRASAKAN TERAKHIR
@@ -1506,13 +1740,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
         </div>
       }
-      footer={
-        <div className='flex justify-center w-full cursor-pointer' onClick={()=>{
-          selectEvent(infoGempaDirasakanTerakhir);
-        }}>
-          <span ><IoLocationSharp /></span>
-        </div>
-      }
+        footer={
+          <div className='flex justify-center w-full cursor-pointer' onClick={() => {
+            selectEvent(gempaDirasakan.infoGempa);
+          }}>
+            <span ><IoLocationSharp /></span>
+          </div>
+        }
 
         className='hidden md:block show-pop-up fixed bottom-10 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
         <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
@@ -1522,12 +1756,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             <div>
               <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
                 <div className="flex flex-col items-center p-1 ">
-                  <div className="text -characters">{infoGempaDirasakanTerakhir.mag}</div>
+                  <div className="text -characters">{gempaDirasakan.readableMag}</div>
                   <div className="text">MAG</div>
                 </div>
                 <div className="decal -blink -striped"></div>
               </div>
-              <p className='text-glow font-bold'>DEPTH : {parseFloat(infoGempaDirasakanTerakhir.depth.replace(" Km", "")).toFixed(2)} KM</p>
+              <p className='text-glow font-bold'>DEPTH : {gempaDirasakan.readableDepth} KM</p>
             </div>
             <div className="bordered p-2 w-full">
               <table className='w-full'>
@@ -1535,23 +1769,23 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
                   <tr>
                     <td className='text-left'>TIME</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.time} WIB</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.time} WIB</td>
                   </tr>
                   <tr>
                     <td className='text-left'>MAG</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.mag}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.mag}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>DEPTH</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.depth}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.depth}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>LAT</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.lat}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.lat}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>LNG</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.lng}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.lng}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1559,7 +1793,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
           </div>
           <div className='mt-2 bordered'>
-            <p className='text-glow p-2 break-words'>{infoGempaDirasakanTerakhir.message}</p>
+            <p className='text-glow p-2 break-words'>{gempaDirasakan.infoGempa.message}</p>
           </div>
         </div>
       </Card>}
@@ -1577,7 +1811,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           }}>X</button>
         </div>
       }
-        className='right-6 bottom-6 fixed hidden md:block  card-float  show-pop-up '>
+        className='right-6 bottom-10 md:bottom-6 fixed  card-float  show-pop-up '>
         <div className='text-glow text-sm w-full ' style={{
           fontSize: "10px"
         }}>
@@ -1668,7 +1902,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </Card>}
 
-      {!loadingScreen && stackAlert && infoGempaDirasakanTerakhir && <Card title={
+      {!loadingScreen && alertGempaBumi && gempaDirasakan && <Card title={
         <div className='overflow-hidden'>
           <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
           <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
@@ -1683,12 +1917,12 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             <div>
               <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
                 <div className="flex flex-col items-center p-1 ">
-                  <div className="text -characters">{infoGempaDirasakanTerakhir.mag}</div>
+                  <div className="text -characters">{gempaDirasakan.readableMag}</div>
                   <div className="text">MAG</div>
                 </div>
                 <div className="decal -blink -striped"></div>
               </div>
-              <p className='text-glow font-bold'>DEPTH : {parseFloat(infoGempaDirasakanTerakhir.depth.replace(" Km", "")).toFixed(2)} KM</p>
+              <p className='text-glow font-bold'>DEPTH : {gempaDirasakan.readableDepth} KM</p>
             </div>
             <div className="bordered p-2 w-full">
               <table className='w-full'>
@@ -1696,23 +1930,23 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
                   <tr>
                     <td className='text-left'>TIME</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.time} WIB</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.time} WIB</td>
                   </tr>
                   <tr>
                     <td className='text-left'>MAG</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.mag}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.mag}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>DEPTH</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.depth}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.depth}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>LAT</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.lat}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.lat}</td>
                   </tr>
                   <tr>
                     <td className='text-left'>LNG</td>
-                    <td className='text-right'>{infoGempaDirasakanTerakhir.lng}</td>
+                    <td className='text-right'>{gempaDirasakan.infoGempa.lng}</td>
                   </tr>
                 </tbody>
               </table>
@@ -1720,10 +1954,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
           </div>
           <div className='mt-2 bordered'>
-            <p className='text-glow p-2 break-words'>{infoGempaDirasakanTerakhir.message}</p>
+            <p className='text-glow p-2 break-words'>{gempaDirasakan.infoGempa.message}</p>
           </div>
         </div>
-        
+
       </Card>}
 
       {!loadingScreen && alertGempaBumis.map((v, i) => {
@@ -1741,6 +1975,16 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       })}
 
+      {/* {!loadingScreen && alertGempaBumi && <GempaBumiAlert key={alertGempaBumi.id}
+            props={
+              {
+                magnitudo: alertGempaBumi.mag || 9.0,
+                kedalaman: alertGempaBumi.depth || '0 km',
+                show: true,
+                closeInSecond: 6
+              }
+            } />} */}
+
 
       <div className="fixed bottom-2 md:bottom-1 m-auto right-0 md:right-72 left-0 md:left-auto flex justify-center items-center gap-2 w-36  md:w-auto">
         <a title="Link Github" href="https://inatews.bmkg.go.id" className='flex gap-1 text-center justify-center  m-auto'>
@@ -1753,6 +1997,143 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </a>
 
       </div>
+
+      {!loadingScreen && alertTsunami && infoTsunami && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center' id="tsunami-warning">
+
+        <div className='w-full h-full absolute -rotate-90'>
+          <div className="main " id='bg-tsunami'>
+            <div className="hex-bg">
+              {generateDiv(window.screen.width + (window.screen.width / 3))}
+
+            </div>
+          </div>
+        </div>
+
+        <div className='w-full flex flex-col items-center justify-center '>
+          <div className='warning scale-75 md:scale-150 flex flex-col justify-center items-center'>
+            <div className='long-hex flex flex-col justify-center opacity-0 show-pop-up animation-delay-1'>
+              <div className="flex justify-evenly w-full items-center">
+                <div className='warning-black opacity-0 blink animation-fast animation-delay-2'></div>
+                <div className='flex flex-col font-bold text-center text-black'>
+                  <span className='text-xl'>TSUNAMI</span>
+                  <span className='text-xs'>Peringatan Dini Tsunami</span>
+                </div>
+                <div className='warning-black opacity-0 blink animation-fast animation-delay-2'></div>
+              </div>
+            </div>
+            <div className=' w-3/4 overflow-hidden bg-black relative rounded flex justify-center items-center opacity-0 show-pop-up animation-delay-2'>
+
+              <div className='absolute w-full h-2 m-auto top-0 left-0 right-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red strip-animation'></div>
+              </div>
+              <div className='absolute w-full h-2 m-auto bottom-0 left-0 right-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red strip-animation-reverse'></div>
+              </div>
+              <div className='absolute w-2 h-full m-auto top-0 bottom-0 left-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red-vertical strip-animation-vertical-reverse'></div>
+
+              </div>
+
+              <div className='absolute w-2 h-full m-auto top-0 bottom-0 right-0 overflow-hidden'>
+                <div className='w-2 h-full strip-bar-red-vertical strip-animation-vertical'></div>
+
+              </div>
+              <div className='w-full h-full p-6'>
+                <div className="red-bordered p-2 text-center w-full mb-2">
+                  <div className='overflow-hidden relative'>
+                    <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+                    <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                      <p className='p-1 bg-black font-bold text-xs text-glow'>POTENSI TSUNAMI</p>
+                    </div>
+                  </div>
+                </div>
+                <Card title={
+                  <div className='overflow-hidden relative'>
+                    <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+                    <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                      <p className='p-1 bg-black font-bold text-xs text-glow uppercase'>Warning Tsunami PD-3.1</p>
+                    </div>
+                  </div>
+                } className='w-full h-auto'>
+                  <p className='text-xs'>
+                    {infoTsunami.description}
+                  </p>
+                </Card>
+              </div>
+
+            </div>
+          </div>
+
+
+
+        </div>
+        <div className='absolute top-0 bottom-0 left-0 right-0 '>
+          <div className='z-20 absolute top-28 left-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up animation-delay-2'>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute bottom-28 left-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "2.5s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute top-28 right-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "3s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+
+          <div className='z-20 absolute bottom-28 right-28 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "3.5s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute h-28 block m-auto bottom-0 top-0 right-16 md:right-1/4 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
+              animationDelay: "2s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow"></div>
+              </div>
+            </div>
+          </div>
+
+          <div className='z-20 absolute h-28 block m-auto bottom-0 top-0 left-16 md:left-1/4 scale-150'>
+            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up del' style={{
+              animationDelay: "2.5s"
+            }}>
+              <div className='p-1 red-bordered'>
+                <div className="warning-tsunami-yellow "></div>
+              </div>
+            </div>
+          </div>
+
+
+
+        </div>
+
+
+
+      </div>}
 
 
       <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg text-center' id='loading-screen'>
