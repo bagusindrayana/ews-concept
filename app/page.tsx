@@ -81,6 +81,7 @@ export default function Home() {
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
 
   const [alertTsunami, setAlertTsunami] = useState<boolean>(false);
+  const [infoTsunami, setInfoTsunami] = useState<any>(null);
   const blinkInterval = useRef<any>(null);
 
 
@@ -174,25 +175,55 @@ export default function Home() {
   }
 
   const warningTsunamiHandler = async (data: any) => {
+    setInfoTsunami(data);
     if(blinkInterval.current){
       clearInterval(blinkInterval.current);
     }
     const results: any = [];
     daerahTsunami.current = [];
-    for (let x = 0; x < geoJsonCoastline.current.features.length; x++) {
-      const feature = geoJsonCoastline.current.features[x];
-      const cek = data.wzarea.find((w) => w.district.replaceAll("-", " ").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", "") == feature.properties.alt_name.replaceAll("KABUPATEN ", "").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", ""));
+    // for (let x = 0; x < geoJsonCoastline.current.features.length; x++) {
+    //   const feature = geoJsonCoastline.current.features[x];
+    //   const cek = data.wzarea.find((w) => w.district.replaceAll("-", " ").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", "") == feature.properties.alt_name.replaceAll("KABUPATEN ", "").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", ""));
+    //   if (cek) {
+    //     let color = "yellow";
+    //     if(cek.level == "SIAGA"){
+    //       color = "orange";
+    //     } else if(cek.level == "AWAS") {
+    //       color = "red";
+    //     }
+    //     feature.properties.color = color;
+    //     results.push(feature);
+    //   } else {
+    //     // console.log(info.wzarea);
+    //   }
+
+    // }
+    for (let x = 0; x < data.wzarea.length; x++) {
+      const wz = data.wzarea[x];
+      const cek = geoJsonCoastline.current.features.find((f) => 
+        wz.district.replaceAll("-", " ")
+        .replaceAll("PULAU ", "")
+        .replaceAll("KEPULAUAN ", "")
+        .replaceAll(" BAGIAN UTARA", "")
+        .replaceAll(" BAGIAN BARAT", "")
+        .replaceAll(" BAGIAN SELATAN", "")
+        .replaceAll(" BAGIAN TIMUR", "")
+        == 
+        f.properties.alt_name.replaceAll("KABUPATEN ", "")
+        .replaceAll("PULAU ", "")
+        .replaceAll("KEPULAUAN ", ""));
       if (cek) {
         let color = "yellow";
-        if(cek.level == "SIAGA"){
+        if(wz.level == "SIAGA"){
           color = "orange";
-        } else if(cek.level == "AWAS") {
+        } else if(wz.level == "AWAS") {
           color = "red";
         }
-        feature.properties.color = color;
-        results.push(feature);
+        cek.properties.color = color;
+        results.push(cek);
       } else {
         // console.log(info.wzarea);
+        console.log(wz);
       }
 
     }
@@ -243,6 +274,7 @@ export default function Home() {
       zoomToPosition: true,
     })
     blinkCoastline();
+    map.current!.moveLayer('outline-coastline');
 
     // tgs.current.push(nt);
     // setEvents(tgs.current);
@@ -492,6 +524,7 @@ export default function Home() {
       });
 
       map.current!.moveLayer('outline');
+      map.current!.moveLayer('outline-coastline');
       for (let tg of tgs.current) {
         if (map.current!.getLayer(tg.id)) {
           map.current!.moveLayer(tg.id);
@@ -533,7 +566,7 @@ export default function Home() {
             },
             'paint': {
               'line-color': ['get', 'color'],
-              'line-width': 10,
+              'line-width': 5,
               'line-opacity': 1
             }
           });
@@ -1227,7 +1260,18 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             });
 
             if(data.info.wzarea != undefined && data.info.wzarea.length > 0){
-              warningTsunamiHandler(data.info);
+              if(data.info.subject == "Warning Tsunami PD-4"){
+                //delete outline-costline layer
+                try {
+                  map.current!.removeLayer('outline-coastline');
+                  map.current!.removeLayer('outline');
+                } catch (error) {
+                  
+                }
+              } else if (data.info.subject.includes("Warning Tsunami")){
+                warningTsunamiHandler(data.info);
+              }
+              
             }
 
           }
@@ -1954,7 +1998,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </div>
 
-      {!loadingScreen && alertTsunami && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center' id="tsunami-warning">
+      {!loadingScreen && alertTsunami && infoTsunami && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center' id="tsunami-warning">
 
         <div className='w-full h-full absolute -rotate-90'>
           <div className="main " id='bg-tsunami'>
@@ -2012,7 +2056,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                   </div>
                 } className='w-full h-auto'>
                   <p className='text-xs'>
-                    Pemutakhiran Peringatan Dini, Tsunami akibat gempa dengan kekuatan:-, lokasi: - km - -, waktu:- - WIB
+                    {infoTsunami.description}
                   </p>
                 </Card>
               </div>
