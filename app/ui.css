@@ -25,7 +25,7 @@
 
     /* background-image: url("/images/strip.svg");
     background-size: 17%; */
-    width: 200vw;
+    width: max(200vw,2000px);
     height: 30px;
     display: inline-block;
     margin-bottom: -5px;
@@ -55,7 +55,7 @@
 
     /* background-image: url("/images/strip.svg");
     background-size: 17%; */
-    width: 200vw;
+    width: max(200vw,2000px);
     height: 30px;
     display: inline-block;
     margin-bottom: -5px;
@@ -180,7 +180,7 @@
 }
 
 .strip-wrapper {
-    width: 200vw;
+    width: max(200vw,2000px);
     overflow: hidden;
     white-space: nowrap;
 }
