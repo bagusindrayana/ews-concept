@@ -2,7 +2,7 @@
 - [x] UI Concept
 - [x] Informasi Gempa
 - [x] Update UI Mobile
-- [ ] Informasi Tsunami
+- [x] Informasi Tsunami
 - [ ] Informasi Lokasi User (IP/Geolocation)
 - [x] Data Geojson Garis Pantai/Pesisir
 - [x] Reduce Geojson Size
