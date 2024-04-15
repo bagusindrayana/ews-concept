@@ -95,8 +95,8 @@ export default function GempaBumiAlert({ props }: { props: GempaBumiAlertProps }
                 </div>
             </div>
             <div className="w-full flex justify-between show-pop-up">
-                <div className="warning-yellow -mt-28 ml-6 opacity-0 blink animation-delay-2"></div>
-                <div className="warning-yellow -mt-28 mr-6 opacity-0 blink animation-delay-2"></div>
+                <div className="warning-yellow -mt-24 ml-6 opacity-0 blink animation-delay-2"></div>
+                <div className="warning-yellow -mt-24 mr-6 opacity-0 blink animation-delay-2"></div>
             </div>
         </div>
         <div className='strip top-0'>
