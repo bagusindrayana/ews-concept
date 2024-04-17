@@ -1631,17 +1631,17 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       </Card>}
 
       <div className='fixed  top-12 w-28 md:bottom-auto md:top-2 left-0 right-0 m-auto flex flex-col justify-center items-center gap-2'>
-        <div className=' bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
+        <button className=' bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
           testDemoGempa();
         }}>
           TEST GEMPA
-        </div>
+        </button>
 
-        <div className=' bordered w-28 text-sm text-center bg-black cursor-pointer' onClick={() => {
+        <button className=' bordered w-28 text-sm text-center bg-black cursor-pointer' onClick={() => {
           testDemoTsunami();
         }}>
           TEST TSUNAMI
-        </div>
+        </button>
       </div>
 
 
