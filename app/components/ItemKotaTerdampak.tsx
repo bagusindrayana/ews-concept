@@ -50,7 +50,7 @@ export default function ItemKotaTerdampak({ kota, onClick }: { kota: KotaTerdamp
             {kota.hit && <audio id={"error-"+kota.distance} className='hidden' autoPlay={true}>
                 <source src={errorSound} type="audio/wav" />
             </audio>}
-            <div className={'jajar-genjang flex justify-end ' + (kota.hit ? "danger " : "")}>
+            <div className={'jajar-genjang flex justify-end ' + (finish ? "danger " : "")}>
                 <p style={{
                     fontSize: '10px',
                 }}>{kota.name}</p>

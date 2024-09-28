@@ -13,7 +13,8 @@ type TitikGempaSetting = {
     sWaveSpeed?: number,
     pWaveSpeed?: number,
     description?: string;
-    showPopUpInSecond?:number
+    showPopUpInSecond?:number;
+    closePopUpInSecond?:number;
 
 }
 
