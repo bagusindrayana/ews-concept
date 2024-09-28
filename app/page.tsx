@@ -12,11 +12,12 @@ import Card from './components/card/card';
 import { createRoot } from 'react-dom/client';
 import AnimatedPopup from 'mapbox-gl-animated-popup';
 import ItemKotaTerdampak from './components/ItemKotaTerdampak';
-import { KotaTerdampak, InfoGempa } from "../libs/interface";
+import { KotaTerdampak, InfoGempa, InfoTsunami } from "../libs/interface";
 import Jam from './components/Jam';
 const { DateTime } = require("luxon");
 import { IoLocationSharp } from "react-icons/io5";
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
+import TitikTsunami from './components/mapbox_marker/titik_tsunami';
 
 // import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex, GridGenerator, HexUtils } from 'react-hexgrid';
 // import { css } from "@emotion/react"
@@ -63,6 +64,8 @@ export default function Home() {
   const tgs = useRef<TitikGempa[]>([]);
   const titikGempaBaru = useRef<TitikGempa[]>([]);
 
+  const tts = useRef<TitikTsunami[]>([]);
+
   const kts = useRef<KotaTerdampak[]>([]);
   const markerDaerahs = useRef<any[]>([]);
   const daerahTsunami = useRef<any[]>([]);
@@ -80,8 +83,10 @@ export default function Home() {
 
   const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
 
-  const [alertTsunami, setAlertTsunami] = useState<boolean>(false);
-  const [infoTsunami, setInfoTsunami] = useState<any>(null);
+  const [alertTsunami, setAlertTsunami] = useState<TitikTsunami | null>(null);
+
+
+  const [infoTsunami, setInfoTsunami] = useState<TitikTsunami | null>(null);
   const blinkInterval = useRef<any>(null);
 
 
@@ -138,6 +143,10 @@ export default function Home() {
       if (audioDangerElement) {
         (audioDangerElement as HTMLAudioElement).play();
       }
+      setTimeout(() => {
+        var voice = new Audio("/voice/gempabumi.wav");
+        voice.play();
+      }, 2000);
     }, 2000);
 
 
@@ -157,10 +166,10 @@ export default function Home() {
   }
 
   function blinkCoastline() {
-    if(blinkInterval.current){
+    if (blinkInterval.current) {
       clearInterval(blinkInterval.current);
     }
-    blinkInterval.current = setInterval(()=>{
+    blinkInterval.current = setInterval(() => {
       const visibility = map.current!.getLayoutProperty(
         'outline-coastline',
         'visibility'
@@ -170,63 +179,122 @@ export default function Home() {
         'visibility',
         visibility == 'visible' ? 'none' : 'visible'
       );
-    },1000);
-    
+    }, 1000);
+
   }
 
   const warningTsunamiHandler = async (data: any) => {
-    setInfoTsunami(data);
-    if(blinkInterval.current){
+    // setInfoTsunami(data);
+    if (blinkInterval.current) {
       clearInterval(blinkInterval.current);
     }
     const results: any = [];
     daerahTsunami.current = [];
-    // for (let x = 0; x < geoJsonCoastline.current.features.length; x++) {
-    //   const feature = geoJsonCoastline.current.features[x];
-    //   const cek = data.wzarea.find((w) => w.district.replaceAll("-", " ").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", "") == feature.properties.alt_name.replaceAll("KABUPATEN ", "").replaceAll("PULAU ", "").replaceAll("KEPULAUAN ", ""));
-    //   if (cek) {
-    //     let color = "yellow";
-    //     if(cek.level == "SIAGA"){
-    //       color = "orange";
-    //     } else if(cek.level == "AWAS") {
-    //       color = "red";
-    //     }
-    //     feature.properties.color = color;
-    //     results.push(feature);
-    //   } else {
-    //     // console.log(info.wzarea);
-    //   }
 
-    // }
+    const time = new Date().toLocaleTimeString();
+    const id = data.id ?? `tg-${time}`;
+
+    const coordinates = data.point.coordinates.split(",");
+    const nit: InfoTsunami = {
+      id: id,
+      lng: parseFloat(coordinates[0]),
+      lat: parseFloat(coordinates[1]),
+      message: data.description + "\n" + data.instruction,
+      level: data.subject,
+      time: data.time || new Date().toLocaleString(),
+      listKotaTerdampak: []
+    };
+
+    let level = "WASPADA";
+
     for (let x = 0; x < data.wzarea.length; x++) {
       const wz = data.wzarea[x];
-      const cek = geoJsonCoastline.current.features.find((f) => 
+      const cek = geoJsonCoastline.current.features.find((f) =>
         wz.district.replaceAll("-", " ")
-        .replaceAll("PULAU ", "")
-        .replaceAll("KEPULAUAN ", "")
-        .replaceAll(" BAGIAN UTARA", "")
-        .replaceAll(" BAGIAN BARAT", "")
-        .replaceAll(" BAGIAN SELATAN", "")
-        .replaceAll(" BAGIAN TIMUR", "")
-        == 
+          .replaceAll("PULAU ", "")
+          .replaceAll("KEPULAUAN ", "")
+          .replaceAll(" BAGIAN UTARA", "")
+          .replaceAll(" BAGIAN BARAT", "")
+          .replaceAll(" BAGIAN SELATAN", "")
+          .replaceAll(" BAGIAN TIMUR", "")
+        ===
         f.properties.alt_name.replaceAll("KABUPATEN ", "")
-        .replaceAll("PULAU ", "")
-        .replaceAll("KEPULAUAN ", ""));
+          .replaceAll("PULAU ", "")
+          .replaceAll("KEPULAUAN ", ""));
       if (cek) {
+
         let color = "yellow";
-        if(wz.level == "SIAGA"){
+        if (wz.level == "SIAGA") {
           color = "orange";
-        } else if(wz.level == "AWAS") {
+        } else if (wz.level == "AWAS") {
           color = "red";
         }
+        if (level == "WASPADA" && wz.level == "SIAGA") {
+          level = wz.level;
+        }
+
+        if (level == "SIAGA" && wz.level == "AWAS") {
+          level = wz.level;
+        }
+
+
         cek.properties.color = color;
         results.push(cek);
+
+        const dist = turf.distance(turf.point([nit.lng, nit.lat]), turf.point([cek.properties.longitude, cek.properties.latitude]));
+        const timeDist = Math.floor(dist / 3) * 1000;
+        nit.listKotaTerdampak!.push({
+          lng: cek.properties.longitude,
+          lat: cek.properties.latitude,
+          distance: dist,
+          name: cek.properties.alt_name,
+          hit: false,
+          timeArrival: new Date(new Date().getTime() + timeDist)
+        });
       } else {
         // console.log(info.wzarea);
         console.log(wz);
       }
 
+      nit.listKotaTerdampak!.sort((a, b) => a.distance - b.distance);
+
     }
+
+    for (let x = 0; x < results.length; x++) {
+      const element = results[x];
+      const p: number[] = turf.centroid(element).geometry.coordinates;
+      if (markerDaerahs.current.findIndex((el) => el[0] == p[0] && el[1] == p[1]) == -1) {
+        markerDaerahs.current.push([p[0], p[1]]);
+        const markerParent = document.createElement('div');
+        const markerEl = document.createElement('div');
+        markerEl.innerHTML = '<p class="uppercase">' + element.properties.alt_name + '</p>';
+        markerEl.classList.add('marker-daerah');
+        markerEl.classList.add('show-pop-up');
+        markerParent.appendChild(markerEl);
+        new mapboxgl.Marker(markerParent)
+          .setLngLat([p[0], p[1]])
+          .addTo(map.current!)
+
+      }
+
+    }
+
+    const tt = new TitikTsunami(id, nit, {
+      pWaveSpeed: 6000,
+      sWaveSpeed: 3000,
+      map: map.current!,
+      showMarker: true,
+      description: data.description + "\n" + data.instruction,
+      showPopup: true,
+      showPopUpInSecond: 6,
+      zoomToPosition: true,
+      closePopUpInSecond: 13
+    });
+    tts.current.push(tt);
+
+    setAlertTsunami(tt);
+
+
     daerahTsunami.current = results;
     if (results.length > 0) {
       if (map.current!.getSource('coastline')) {
@@ -237,21 +305,18 @@ export default function Home() {
           'data': { "type": "FeatureCollection", "features": results }
         });
       }
-      console.log(results);
       map.current!.setLayoutProperty(
         'outline-coastline',
         'visibility',
         'visible'
       );
-     
+
     } else {
       testDemoTsunami();
       return;
     }
 
-    const coordinates = data.point.coordinates.split(",");
 
-    
 
     if (!map.current) return;
     // map.current.flyTo({
@@ -260,19 +325,7 @@ export default function Home() {
     //   essential: true
     // });
 
-    const nt = new TitikGempa("tsunami-"+new Date().toLocaleTimeString(), {
-      id: "tsunami-"+new Date().toLocaleTimeString(),
-      lng: coordinates[0],
-      lat: coordinates[1],
-      mag: parseFloat(data.magnitude),
-      depth: data.depth,
-      place: data.area,
-      time: new Date().toLocaleString(),
-    },{
-      map: map.current!,
-      showMarker: true,
-      zoomToPosition: true,
-    })
+
     blinkCoastline();
     map.current!.moveLayer('outline-coastline');
 
@@ -280,9 +333,44 @@ export default function Home() {
     // setEvents(tgs.current);
 
     console.log("WARNING TSUNAMI!!!");
-    setAlertTsunami(true);
+
     var notif = new Audio(tsunamiAlertSound);
+    notif.loop = true;
     notif.play();
+    setTimeout(() => {
+      var voice = new Audio("/voice/terdeteksi.wav");
+      voice.play();
+
+      setTimeout(() => {
+        var voice = new Audio("/voice/" + level.toLowerCase() + ".wav");
+        voice.play();
+        setTimeout(() => {
+          var voice = new Audio("/voice/potensi.wav");
+          voice.play();
+
+          if (level == "AWAS") {
+            setTimeout(() => {
+              var voice = new Audio("/voice/evakuasi.wav");
+              voice.play();
+              setTimeout(() => {
+                notif.pause();
+              }, 2000);
+            }, 6000);
+          } else {
+            setTimeout(() => {
+              var voice = new Audio("/voice/informasi.wav");
+              voice.play();
+              setTimeout(() => {
+                notif.pause();
+              }, 2000);
+            }, 6000);
+          }
+
+        }, 5000);
+      }, 5000);
+    }, 2000);
+
+
     setTimeout(() => {
       const tsunamiWarning: HTMLDivElement = document.querySelector("#tsunami-warning") as HTMLDivElement;
       //find div inside bg-tsunami
@@ -307,8 +395,9 @@ export default function Home() {
         });
       }
       setTimeout(() => {
-        setAlertTsunami(false);
+        setAlertTsunami(null);
       }, 1000);
+      setInfoTsunami(tt);
     }, 10000);
   }
 
@@ -1259,19 +1348,19 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
               time: readAbleTime
             });
 
-            if(data.info.wzarea != undefined && data.info.wzarea.length > 0){
-              if(data.info.subject == "Warning Tsunami PD-4"){
+            if (data.info.wzarea != undefined && data.info.wzarea.length > 0) {
+              if (data.info.subject == "Warning Tsunami PD-4") {
                 //delete outline-costline layer
                 try {
                   map.current!.removeLayer('outline-coastline');
                   map.current!.removeLayer('outline');
                 } catch (error) {
-                  
+
                 }
-              } else if (data.info.subject.includes("Warning Tsunami")){
+              } else if (data.info.subject.includes("Warning Tsunami")) {
                 warningTsunamiHandler(data.info);
               }
-              
+
             }
 
           }
@@ -1486,15 +1575,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         var infos = jObj.alert.info;
         infos = infos.filter((v) => v.wzarea != undefined)
         var randInfo = infos[(Math.random() * infos.length) | 0]
-        console.log(randInfo);
 
-
-
-        // for (let i = 0; i < infos.length; i++) {
-        //   const info = infos[i];
-
-
-        // }
         warningTsunamiHandler(randInfo);
 
       }).catch((error) => {
@@ -1556,79 +1637,116 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       <div ref={mapContainer} className="w-full h-screen" />
 
-      {!loadingScreen && alertGempaBumi && <Card title={
-        <div className='overflow-hidden'>
-          <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-          <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-            <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+      {!loadingScreen && alertGempaBumi &&
+        <Card title={
+          <div className='overflow-hidden'>
+            <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+            <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+              <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+            </div>
           </div>
-        </div>
-      } className='hidden md:block show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
-        <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
-          fontSize: "10px"
-        }}>
-          <div className='w-full flex   gap-2' >
-            <div>
-              <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
-                <div className="flex flex-col items-center p-1 ">
-                  <div className="text -characters">{alertGempaBumi.readableMag}</div>
-                  <div className="text">MAG</div>
+        } className='hidden md:block show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
+          <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+            fontSize: "10px"
+          }}>
+            <div className='w-full flex   gap-2' >
+              <div>
+                <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
+                  <div className="flex flex-col items-center p-1 ">
+                    <div className="text -characters">{alertGempaBumi.readableMag}</div>
+                    <div className="text">MAG</div>
+                  </div>
+                  <div className="decal -blink -striped"></div>
                 </div>
-                <div className="decal -blink -striped"></div>
+                <p className='text-glow font-bold'>DEPTH : {alertGempaBumi.readableDepth} KM</p>
               </div>
-              <p className='text-glow font-bold'>DEPTH : {alertGempaBumi.readableDepth} KM</p>
-            </div>
-            <div className="bordered p-2 w-full">
-              <table className='w-full'>
-                <tbody>
+              <div className="bordered p-2 w-full">
+                <table className='w-full'>
+                  <tbody>
 
-                  <tr>
-                    <td className='text-left'>TIME</td>
-                    <td className='text-right'>{alertGempaBumi.readableTime} WIB</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>MAG</td>
-                    <td className='text-right'>{alertGempaBumi.mag}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>DEPTH</td>
-                    <td className='text-right'>{alertGempaBumi.depth}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>LAT</td>
-                    <td className='text-right'>{alertGempaBumi.infoGempa.lat}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>LNG</td>
-                    <td className='text-right'>{alertGempaBumi.infoGempa.lng}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+                    <tr>
+                      <td className='text-left'>TIME</td>
+                      <td className='text-right'>{alertGempaBumi.readableTime} WIB</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left'>MAG</td>
+                      <td className='text-right'>{alertGempaBumi.mag}</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left'>DEPTH</td>
+                      <td className='text-right'>{alertGempaBumi.depth}</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left'>LAT</td>
+                      <td className='text-right'>{alertGempaBumi.infoGempa.lat}</td>
+                    </tr>
+                    <tr>
+                      <td className='text-left'>LNG</td>
+                      <td className='text-right'>{alertGempaBumi.infoGempa.lng}</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
 
+            </div>
+            <div className='mt-2 bordered w-full'>
+              <p className='text-glow p-2 break-words'>{alertGempaBumi.infoGempa.message}</p>
+            </div>
           </div>
-          <div className='mt-2 bordered w-full'>
-            <p className='text-glow p-2 break-words'>{alertGempaBumi.infoGempa.message}</p>
+          {alertGempaBumi.mag >= 5 && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
+            maxHeight: "20vh",
+          }}>
+            <ul>
+              {alertGempaBumi.infoGempa.listKotaTerdampak && alertGempaBumi.infoGempa.listKotaTerdampak.map((kota, i) => {
+                if (kota.hit) {
+                  return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
+                    <ItemKotaTerdampak kota={kota} />
+                  </li>
+                } else {
+                  return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
+                    <ItemKotaTerdampak kota={kota} />
+                  </li>
+                }
+              })}
+            </ul>
+          </div>}
+        </Card>}
+
+      {!loadingScreen && infoTsunami &&
+        <Card title={
+          <div className='overflow-hidden'>
+            <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+            <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+              <p className='p-1 bg-black font-bold text-xs text-glow'>PERINGATAN TSUNAMI</p>
+            </div>
           </div>
-        </div>
-        {alertGempaBumi.mag >= 5 && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
-          maxHeight: "20vh",
-        }}>
-          <ul>
-            {alertGempaBumi.infoGempa.listKotaTerdampak && alertGempaBumi.infoGempa.listKotaTerdampak.map((kota, i) => {
-              if (kota.hit) {
-                return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
-                  <ItemKotaTerdampak kota={kota} />
-                </li>
-              } else {
+        }
+          footer={
+            <div className='flex justify-center w-full' >
+              <span >{infoTsunami.infoTsunami.level}</span>
+            </div>
+          }
+          className='hidden md:block show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
+          <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+            fontSize: "10px"
+          }}>
+
+            <div className='mt-2 bordered w-full'>
+              <p className='text-glow p-2 break-words'>{infoTsunami.infoTsunami.message}</p>
+            </div>
+          </div>
+          {(infoTsunami.infoTsunami.level?.includes("PD-1") || infoTsunami.infoTsunami.level?.includes("PD-2")) && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
+            maxHeight: "20vh",
+          }}>
+            <ul>
+              {infoTsunami.infoTsunami.listKotaTerdampak && infoTsunami.infoTsunami.listKotaTerdampak.map((kota, i) => {
                 return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
                   <ItemKotaTerdampak kota={kota} />
                 </li>
-              }
-            })}
-          </ul>
-        </div>}
-      </Card>}
+              })}
+            </ul>
+          </div>}
+        </Card>}
 
       <div className='fixed  top-12 w-28 md:bottom-auto md:top-2 left-0 right-0 m-auto flex flex-col justify-center items-center gap-2'>
         <button className=' bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
@@ -1998,7 +2116,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </div>
 
-      {!loadingScreen && alertTsunami && infoTsunami && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center' id="tsunami-warning">
+      {!loadingScreen && alertTsunami && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center' id="tsunami-warning">
 
         <div className='w-full h-full absolute -rotate-90'>
           <div className="main " id='bg-tsunami'>
@@ -2051,12 +2169,13 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                   <div className='overflow-hidden relative'>
                     <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
                     <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                      <p className='p-1 bg-black font-bold text-xs text-glow uppercase'>Warning Tsunami PD-3.1</p>
+                      <p className='p-1 bg-black font-bold text-xs text-glow uppercase'>{alertTsunami.infoTsunami.level}</p>
                     </div>
                   </div>
-                } className='w-full h-auto'>
+                }
+                  className='w-full h-auto'>
                   <p className='text-xs'>
-                    {infoTsunami.description}
+                    {alertTsunami.infoTsunami.message}
                   </p>
                 </Card>
               </div>
