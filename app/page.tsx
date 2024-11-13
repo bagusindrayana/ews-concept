@@ -87,6 +87,8 @@ export default function Home() {
 
 
   const [infoTsunami, setInfoTsunami] = useState<TitikTsunami | null>(null);
+  const [shakeMap, setShakeMap] = useState<string | null>(null);
+
   const blinkInterval = useRef<any>(null);
 
 
@@ -136,7 +138,10 @@ export default function Home() {
     // tgs.current.sort(function (a: any, b: any) {
     //   return new Date(b.time).getTime() - new Date(a.time).getTime();
     // });
-
+    var bgNotif = new Audio("/sounds/alert-109578.wav");
+    bgNotif.volume = 0.3;
+    bgNotif.loop = true;
+    bgNotif.play();
     const audioDangerElement = document.getElementById('danger');
     setTimeout(() => {
 
@@ -147,6 +152,10 @@ export default function Home() {
         var voice = new Audio("/voice/gempabumi.wav");
         voice.play();
       }, 2000);
+
+      setTimeout(() => {
+        fadeOutAudio(bgNotif, 2000);
+      }, 6000);
     }, 2000);
 
 
@@ -181,6 +190,21 @@ export default function Home() {
       );
     }, 1000);
 
+  }
+
+  function fadeOutAudio(audioElement, duration) {
+    let fadeInterval = 50; // Interval in milliseconds
+    let step = audioElement.volume / (duration / fadeInterval); // Volume decrease per interval
+
+    let fadeAudio = setInterval(() => {
+      if (audioElement.volume > step) {
+        audioElement.volume -= step;
+      } else {
+        audioElement.volume = 0;
+        audioElement.pause(); // Optionally pause the audio when the volume is 0
+        clearInterval(fadeAudio); // Stop the interval
+      }
+    }, fadeInterval);
   }
 
   const warningTsunamiHandler = async (data: any) => {
@@ -326,6 +350,8 @@ export default function Home() {
     // });
 
 
+
+
     blinkCoastline();
     map.current!.moveLayer('outline-coastline');
 
@@ -333,7 +359,10 @@ export default function Home() {
     // setEvents(tgs.current);
 
     console.log("WARNING TSUNAMI!!!");
-
+    var bgNotif = new Audio("/sounds/security-alarm-63578.wav");
+    bgNotif.volume = 0.3;
+    bgNotif.loop = true;
+    bgNotif.play();
     var notif = new Audio(tsunamiAlertSound);
     notif.loop = true;
     notif.play();
@@ -353,16 +382,23 @@ export default function Home() {
               var voice = new Audio("/voice/evakuasi.wav");
               voice.play();
               setTimeout(() => {
-                notif.pause();
-              }, 2000);
+
+                fadeOutAudio(notif, 1000);
+                fadeOutAudio(bgNotif, 1000);
+                // notif.pause();
+                // bgNotif.pause();
+              }, 4000);
             }, 6000);
           } else {
             setTimeout(() => {
               var voice = new Audio("/voice/informasi.wav");
               voice.play();
               setTimeout(() => {
-                notif.pause();
-              }, 2000);
+                fadeOutAudio(notif, 1000);
+                fadeOutAudio(bgNotif, 1000);
+                // notif.pause();
+                // bgNotif.pause();
+              }, 4000);
             }, 6000);
           }
 
@@ -381,6 +417,8 @@ export default function Home() {
           v.classList.add("close-pop-up");
         });
       }
+
+      setShakeMap(data.shakemap);
     }, 9000);
     setTimeout(() => {
 
@@ -1575,7 +1613,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         var infos = jObj.alert.info;
         infos = infos.filter((v) => v.wzarea != undefined)
         var randInfo = infos[(Math.random() * infos.length) | 0]
-
+        
         warningTsunamiHandler(randInfo);
 
       }).catch((error) => {
@@ -1637,116 +1675,123 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       <div ref={mapContainer} className="w-full h-screen" />
 
-      {!loadingScreen && alertGempaBumi &&
-        <Card title={
-          <div className='overflow-hidden'>
-            <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-            <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-              <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+      <div className='fixed top-6 md:top-3 left-6 md:left-3 right-0 flex gap-2 justify-start items-start pointer-events-none'>
+        {!loadingScreen && alertGempaBumi &&
+          <Card title={
+            <div className='overflow-hidden'>
+              <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+              <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+              </div>
             </div>
-          </div>
-        } className='hidden md:block show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
-          <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
-            fontSize: "10px"
-          }}>
-            <div className='w-full flex   gap-2' >
-              <div>
-                <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
-                  <div className="flex flex-col items-center p-1 ">
-                    <div className="text -characters">{alertGempaBumi.readableMag}</div>
-                    <div className="text">MAG</div>
+          } className='hidden md:block show-pop-up   md:left-6 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
+            <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+              fontSize: "10px"
+            }}>
+              <div className='w-full flex   gap-2' >
+                <div>
+                  <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
+                    <div className="flex flex-col items-center p-1 ">
+                      <div className="text -characters">{alertGempaBumi.readableMag}</div>
+                      <div className="text">MAG</div>
+                    </div>
+                    <div className="decal -blink -striped"></div>
                   </div>
-                  <div className="decal -blink -striped"></div>
+                  <p className='text-glow font-bold'>DEPTH : {alertGempaBumi.readableDepth} KM</p>
                 </div>
-                <p className='text-glow font-bold'>DEPTH : {alertGempaBumi.readableDepth} KM</p>
-              </div>
-              <div className="bordered p-2 w-full">
-                <table className='w-full'>
-                  <tbody>
+                <div className="bordered p-2 w-full">
+                  <table className='w-full'>
+                    <tbody>
 
-                    <tr>
-                      <td className='text-left'>TIME</td>
-                      <td className='text-right'>{alertGempaBumi.readableTime} WIB</td>
-                    </tr>
-                    <tr>
-                      <td className='text-left'>MAG</td>
-                      <td className='text-right'>{alertGempaBumi.mag}</td>
-                    </tr>
-                    <tr>
-                      <td className='text-left'>DEPTH</td>
-                      <td className='text-right'>{alertGempaBumi.depth}</td>
-                    </tr>
-                    <tr>
-                      <td className='text-left'>LAT</td>
-                      <td className='text-right'>{alertGempaBumi.infoGempa.lat}</td>
-                    </tr>
-                    <tr>
-                      <td className='text-left'>LNG</td>
-                      <td className='text-right'>{alertGempaBumi.infoGempa.lng}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+                      <tr>
+                        <td className='text-left'>TIME</td>
+                        <td className='text-right'>{alertGempaBumi.readableTime} WIB</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>MAG</td>
+                        <td className='text-right'>{alertGempaBumi.mag}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>DEPTH</td>
+                        <td className='text-right'>{alertGempaBumi.depth}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>LAT</td>
+                        <td className='text-right'>{alertGempaBumi.infoGempa.lat}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>LNG</td>
+                        <td className='text-right'>{alertGempaBumi.infoGempa.lng}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
 
+              </div>
+              <div className='mt-2 bordered w-full'>
+                <p className='text-glow p-2 break-words'>{alertGempaBumi.infoGempa.message}</p>
+              </div>
             </div>
-            <div className='mt-2 bordered w-full'>
-              <p className='text-glow p-2 break-words'>{alertGempaBumi.infoGempa.message}</p>
+            {alertGempaBumi.mag >= 5 && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2  pointer-events-auto' style={{
+              maxHeight: "20vh",
+            }}>
+              <ul>
+                {alertGempaBumi.infoGempa.listKotaTerdampak && alertGempaBumi.infoGempa.listKotaTerdampak.map((kota, i) => {
+                  if (kota.hit) {
+                    return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
+                      <ItemKotaTerdampak kota={kota} />
+                    </li>
+                  } else {
+                    return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
+                      <ItemKotaTerdampak kota={kota} />
+                    </li>
+                  }
+                })}
+              </ul>
+            </div>}
+          </Card>}
+
+        {!loadingScreen && infoTsunami &&
+          <Card title={
+            <div className='overflow-hidden'>
+              <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+              <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                <p className='p-1 bg-black font-bold text-xs text-glow'>PERINGATAN TSUNAMI</p>
+              </div>
             </div>
-          </div>
-          {alertGempaBumi.mag >= 5 && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
-            maxHeight: "20vh",
-          }}>
-            <ul>
-              {alertGempaBumi.infoGempa.listKotaTerdampak && alertGempaBumi.infoGempa.listKotaTerdampak.map((kota, i) => {
-                if (kota.hit) {
-                  return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
-                    <ItemKotaTerdampak kota={kota} />
-                  </li>
-                } else {
+          }
+            footer={
+              <div className='flex justify-center w-full' >
+                <span >{infoTsunami.infoTsunami.level}</span>
+              </div>
+            }
+            className='hidden md:block show-pop-up   md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
+            <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+              fontSize: "10px"
+            }}>
+
+              <div className='mt-2 bordered w-full'>
+                <p className='text-glow p-2 break-words'>{infoTsunami.infoTsunami.message}</p>
+              </div>
+            </div>
+            {(infoTsunami.infoTsunami.level?.includes("PD-1") || infoTsunami.infoTsunami.level?.includes("PD-2")) && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2 pointer-events-auto' style={{
+              maxHeight: "20vh",
+            }}>
+              <ul>
+                {infoTsunami.infoTsunami.listKotaTerdampak && infoTsunami.infoTsunami.listKotaTerdampak.map((kota, i) => {
                   return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
                     <ItemKotaTerdampak kota={kota} />
                   </li>
-                }
-              })}
-            </ul>
-          </div>}
-        </Card>}
+                })}
+              </ul>
+            </div>}
+          </Card>}
 
-      {!loadingScreen && infoTsunami &&
-        <Card title={
-          <div className='overflow-hidden'>
-            <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-            <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-              <p className='p-1 bg-black font-bold text-xs text-glow'>PERINGATAN TSUNAMI</p>
-            </div>
-          </div>
-        }
-          footer={
-            <div className='flex justify-center w-full' >
-              <span >{infoTsunami.infoTsunami.level}</span>
-            </div>
-          }
-          className='hidden md:block show-pop-up  fixed top-12 md:top-6 left-0 card-float right-0 md:left-6 md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
-          <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
-            fontSize: "10px"
-          }}>
 
-            <div className='mt-2 bordered w-full'>
-              <p className='text-glow p-2 break-words'>{infoTsunami.infoTsunami.message}</p>
-            </div>
-          </div>
-          {(infoTsunami.infoTsunami.level?.includes("PD-1") || infoTsunami.infoTsunami.level?.includes("PD-2")) && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2' style={{
-            maxHeight: "20vh",
-          }}>
-            <ul>
-              {infoTsunami.infoTsunami.listKotaTerdampak && infoTsunami.infoTsunami.listKotaTerdampak.map((kota, i) => {
-                return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
-                  <ItemKotaTerdampak kota={kota} />
-                </li>
-              })}
-            </ul>
-          </div>}
-        </Card>}
+      </div>
+
+
+
 
       <div className='fixed  top-12 w-28 md:bottom-auto md:top-2 left-0 right-0 m-auto flex flex-col justify-center items-center gap-2'>
         <button className=' bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
@@ -1799,226 +1844,250 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
 
 
-      {!loadingScreen && gempaTerakhir && <Card title={
-        <div className='w-full flex justify-center text-center'>
-          <p className='font-bold text-glow-red text-sm '>
-            GEMPA TERDETEKSI TERAKHIR
-          </p>
 
-        </div>
-      }
-        footer={
-          <div className='flex justify-center w-full  cursor-pointer' onClick={() => {
-            selectEvent(gempaTerakhir.infoGempa);
-          }}>
-            <span ><IoLocationSharp /></span>
+
+      <div className='fixed bottom-6 left-6 md:right-0 md:left-3 flex gap-2 justify-start items-end pointer-events-none'>
+        {!loadingScreen && gempaDirasakan && <Card title={
+          <div className='w-full flex justify-center text-center '>
+            <p className='font-bold text-glow-red text-sm '>
+              GEMPA DIRASAKAN TERAKHIR
+            </p>
+
           </div>
         }
+          footer={
+            <div className='flex justify-center w-full cursor-pointer' onClick={() => {
+              selectEvent(gempaDirasakan.infoGempa);
+            }}>
+              <span ><IoLocationSharp /></span>
+            </div>
+          }
 
-        className='hidden md:block show-pop-up fixed bottom-28 md:bottom-6 card-float left-1 right-1 m-auto md:w-1/4 lg:w-1/6'>
-        <div className='text-glow text-sm w-full ' style={{
-          fontSize: "10px"
-        }}>
-          <table className='w-full'>
-            <tbody>
-              <tr>
-                <td className='text-left'>PLACE</td>
-                <td className='text-right'>{gempaTerakhir.infoGempa.place}</td>
-              </tr>
-              <tr>
-                <td className='text-left'>TIME</td>
-                <td className='text-right' >{gempaTerakhir.readableTime} WIB</td>
-              </tr>
-              <tr>
-                <td className='text-left'>MAG</td>
-                <td className='text-right'>{gempaTerakhir.infoGempa.mag}</td>
-              </tr>
-              <tr>
-                <td className='text-left'>DEPTH</td>
-                <td className='text-right'>{gempaTerakhir.readableDepth} KM</td>
-              </tr>
-              <tr>
-                <td className='text-left'>LAT</td>
-                <td className='text-right'>{gempaTerakhir.infoGempa.lat}</td>
-              </tr>
-              <tr>
-                <td className='text-left'>LNG</td>
-                <td className='text-right'>{gempaTerakhir.infoGempa.lng}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </Card>}
-
-      {!loadingScreen && gempaDirasakan && <Card title={
-        <div className='w-full flex justify-center text-center'>
-          <p className='font-bold text-glow-red text-sm '>
-            GEMPA DIRASAKAN TERAKHIR
-          </p>
-
-        </div>
-      }
-        footer={
-          <div className='flex justify-center w-full cursor-pointer' onClick={() => {
-            selectEvent(gempaDirasakan.infoGempa);
+          className='hidden md:block show-pop-up  md:w-1/3 lg:w-2/5 xl:w-1/5 pointer-events-auto'>
+          <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+            fontSize: "10px"
           }}>
-            <span ><IoLocationSharp /></span>
-          </div>
-        }
-
-        className='hidden md:block show-pop-up fixed bottom-10 left-1 right-1 md:right-0 md:left-6 card-float  md:w-1/3 lg:w-1/4 xl:w-1/5 2xl:w-1/6'>
-        <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
-          fontSize: "10px"
-        }}>
-          <div className='w-full flex   gap-2' >
-            <div>
-              <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
-                <div className="flex flex-col items-center p-1 ">
-                  <div className="text -characters">{gempaDirasakan.readableMag}</div>
-                  <div className="text">MAG</div>
+            <div className='w-full flex flex-col lg:flex-row   gap-2' >
+              <div>
+                <div id="internal" className="label bordered flex justify-between mb-2 w-full lg:w-32">
+                  <div className="flex flex-col items-center p-1 ">
+                    <div className="text -characters">{gempaDirasakan.readableMag}</div>
+                    <div className="text">MAG</div>
+                  </div>
+                  <div className="decal -blink -striped"></div>
                 </div>
-                <div className="decal -blink -striped"></div>
+                <p className='text-glow font-bold'>DEPTH : {gempaDirasakan.readableDepth} KM</p>
               </div>
-              <p className='text-glow font-bold'>DEPTH : {gempaDirasakan.readableDepth} KM</p>
-            </div>
-            <div className="bordered p-2 w-full">
-              <table className='w-full'>
-                <tbody>
-
-                  <tr>
-                    <td className='text-left'>TIME</td>
-                    <td className='text-right'>{gempaDirasakan.infoGempa.time} WIB</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>MAG</td>
-                    <td className='text-right'>{gempaDirasakan.infoGempa.mag}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>DEPTH</td>
-                    <td className='text-right'>{gempaDirasakan.infoGempa.depth}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>LAT</td>
-                    <td className='text-right'>{gempaDirasakan.infoGempa.lat}</td>
-                  </tr>
-                  <tr>
-                    <td className='text-left'>LNG</td>
-                    <td className='text-right'>{gempaDirasakan.infoGempa.lng}</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-
-          </div>
-          <div className='mt-2 bordered'>
-            <p className='text-glow p-2 break-words'>{gempaDirasakan.infoGempa.message}</p>
-          </div>
-        </div>
-      </Card>}
-
-      {!loadingScreen && detailInfoGempa && <Card title={
-        <div className='w-full flex justify-between'>
-          <p className='font-bold text-glow-red text-sm'>
-            DETAIL EVENT
-          </p>
-          <button onClick={() => {
-            if (selectedPopup.current) {
-              selectedPopup.current.remove();
-            }
-            setDetailInfoGempa(null);
-          }}>X</button>
-        </div>
-      }
-        className='right-6 bottom-10 md:bottom-6 fixed  card-float  show-pop-up '>
-        <div className='text-glow text-sm w-full ' style={{
-          fontSize: "10px"
-        }}>
-          <div className='flex flex-col w-full gap-2'>
-            {/* <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + (detailInfoGempa.time?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")) + ".mmi.jpg"} alt="" className='w-52' /> */}
-
-            <div>
-              <div className='bordered p-2'>
+              <div className="bordered p-2 w-full">
                 <table className='w-full'>
                   <tbody>
-                    <tr>
-                      <td className='text-left flex'>PLACE</td>
-                      <td className='text-right break-words pl-2'>{detailInfoGempa.place}</td>
+
+                    <tr className=' p-0'>
+                      <td className='text-left p-0'>TIME</td>
+                      <td className='text-right p-0'>{gempaDirasakan.infoGempa.time} WIB</td>
                     </tr>
-                    <tr>
-                      <td className='text-left flex'>TIME</td>
-                      <td className='text-right break-words pl-2' data-time={detailInfoGempa.time}>{detailInfoGempa.time} WIB</td>
+                    <tr className=' p-0'>
+                      <td className='text-left p-0'>MAG</td>
+                      <td className='text-right p-0'>{gempaDirasakan.infoGempa.mag}</td>
                     </tr>
-                    <tr>
-                      <td className='text-left flex'>MAG</td>
-                      <td className='text-right break-words pl-2'>{detailInfoGempa.mag}</td>
+                    <tr className=' p-0'>
+                      <td className='text-left p-0'>DEPTH</td>
+                      <td className='text-right p-0'>{gempaDirasakan.infoGempa.depth}</td>
                     </tr>
-                    <tr>
-                      <td className='text-left flex'>DEPTH</td>
-                      <td className='text-right break-words pl-2'>{parseFloat(detailInfoGempa.depth.replace(" Km", "")).toFixed(2)} KM</td>
+                    <tr className=' p-0'>
+                      <td className='text-left p-0'>LAT</td>
+                      <td className='text-right p-0'>{gempaDirasakan.infoGempa.lat}</td>
                     </tr>
-                    <tr>
-                      <td className='text-left flex'>LAT</td>
-                      <td className='text-right break-words pl-2'>{detailInfoGempa.lat}</td>
+                    <tr className=' p-0'>
+                      <td className='text-left p-0'>LNG</td>
+                      <td className='text-right p-0'>{gempaDirasakan.infoGempa.lng}</td>
                     </tr>
+                  </tbody>
+                </table>
+              </div>
+
+            </div>
+            <div className='mt-2 bordered'>
+              <p className='text-glow p-2 break-words'>{gempaDirasakan.infoGempa.message}</p>
+            </div>
+          </div>
+        </Card>}
+
+        {!loadingScreen && gempaTerakhir && <Card title={
+          <div className='w-full flex justify-center text-center'>
+            <p className='font-bold text-glow-red text-sm '>
+              GEMPA TERDETEKSI TERAKHIR
+            </p>
+
+          </div>
+        }
+          footer={
+            <div className='flex justify-center w-full  cursor-pointer' onClick={() => {
+              selectEvent(gempaTerakhir.infoGempa);
+            }}>
+              <span ><IoLocationSharp /></span>
+            </div>
+          }
+
+          className='hidden md:block show-pop-up  md:w-1/4 lg:w-1/6 pointer-events-auto'>
+          <div className='text-glow text-sm w-full ' style={{
+            fontSize: "10px"
+          }}>
+            <table className='w-full'>
+              <tbody>
+                <tr>
+                  <td className='text-left'>PLACE</td>
+                  <td className='text-right'>{gempaTerakhir.infoGempa.place}</td>
+                </tr>
+                <tr>
+                  <td className='text-left'>TIME</td>
+                  <td className='text-right' >{gempaTerakhir.readableTime} WIB</td>
+                </tr>
+                <tr>
+                  <td className='text-left'>MAG</td>
+                  <td className='text-right'>{gempaTerakhir.infoGempa.mag}</td>
+                </tr>
+                <tr>
+                  <td className='text-left'>DEPTH</td>
+                  <td className='text-right'>{gempaTerakhir.readableDepth} KM</td>
+                </tr>
+                <tr>
+                  <td className='text-left'>LAT</td>
+                  <td className='text-right'>{gempaTerakhir.infoGempa.lat}</td>
+                </tr>
+                <tr>
+                  <td className='text-left'>LNG</td>
+                  <td className='text-right'>{gempaTerakhir.infoGempa.lng}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </Card>}
+      </div>
+
+      <div className='right-6 bottom-6 md:bottom-3 md:right-3 fixed  pointer-events-none flex gap-2 justify-end items-end'>
+      
+
+        {!loadingScreen && detailInfoGempa && <Card title={
+          <div className='w-full flex justify-between'>
+            <p className='font-bold text-glow-red text-sm'>
+              DETAIL EVENT
+            </p>
+            <button onClick={() => {
+              if (selectedPopup.current) {
+                selectedPopup.current.remove();
+              }
+              setDetailInfoGempa(null);
+            }}>X</button>
+          </div>
+        }
+          className='  show-pop-up pointer-events-auto'>
+          <div className='text-glow text-sm w-full ' style={{
+            fontSize: "10px"
+          }}>
+            <div className='flex flex-col w-full gap-2'>
+              {/* <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + (detailInfoGempa.time?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")) + ".mmi.jpg"} alt="" className='w-52' /> */}
+
+              <div>
+                <div className='bordered p-2'>
+                  <table className='w-full'>
+                    <tbody>
+                      <tr>
+                        <td className='text-left flex'>PLACE</td>
+                        <td className='text-right break-words pl-2'>{detailInfoGempa.place}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left flex'>TIME</td>
+                        <td className='text-right break-words pl-2' data-time={detailInfoGempa.time}>{detailInfoGempa.time} WIB</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left flex'>MAG</td>
+                        <td className='text-right break-words pl-2'>{detailInfoGempa.mag}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left flex'>DEPTH</td>
+                        <td className='text-right break-words pl-2'>{parseFloat(detailInfoGempa.depth.replace(" Km", "")).toFixed(2)} KM</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left flex'>LAT</td>
+                        <td className='text-right break-words pl-2'>{detailInfoGempa.lat}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left flex'>LNG</td>
+                        <td className='text-right break-words pl-2'>{detailInfoGempa.lng}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <div className='bordered p-2'>
+                <table id='histori_tabel' style={{
+                  fontSize: "10px"
+                }} className='w-full text-right'>
+                  <thead>
                     <tr>
-                      <td className='text-left flex'>LNG</td>
-                      <td className='text-right break-words pl-2'>{detailInfoGempa.lng}</td>
+                      <th className='p-1'>
+                        Time(UTC)
+                      </th>
+                      <th className='p-1'>
+                        +OT(min)
+                      </th>
+                      <th className='p-1'>
+                        Lat
+                      </th>
+                      <th className='p-1'>
+                        Lng
+                      </th>
+                      <th className='p-1'>
+                        Depth
+                      </th>
+                      <th className='p-1'>
+                        Phase
+                      </th>
+                      <th className='p-1'>
+                        MagType
+                      </th>
+                      <th className='p-1'>
+                        Mag
+                      </th>
+                      <th className='p-1'>
+                        MagCount
+                      </th>
+                      <th className='p-1'>
+                        Status
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td></td>
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div className='bordered p-2'>
-              <table id='histori_tabel' style={{
-                fontSize: "10px"
-              }} className='w-full text-right'>
-                <thead>
-                  <tr>
-                    <th className='p-1'>
-                      Time(UTC)
-                    </th>
-                    <th className='p-1'>
-                      +OT(min)
-                    </th>
-                    <th className='p-1'>
-                      Lat
-                    </th>
-                    <th className='p-1'>
-                      Lng
-                    </th>
-                    <th className='p-1'>
-                      Depth
-                    </th>
-                    <th className='p-1'>
-                      Phase
-                    </th>
-                    <th className='p-1'>
-                      MagType
-                    </th>
-                    <th className='p-1'>
-                      Mag
-                    </th>
-                    <th className='p-1'>
-                      MagCount
-                    </th>
-                    <th className='p-1'>
-                      Status
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
           </div>
 
-        </div>
+        </Card>}
+        { shakeMap &&
+          <Card title={
+          <div className='w-full flex justify-between'>
+            <p className='font-bold text-glow-red text-sm'>
+              SHAKEMAP
+            </p>
+           
+          </div>
+        }
+        className='  show-pop-up pointer-events-auto'
+        >
+          <img src={"https://bmkg-content-inatews.storage.googleapis.com/"+shakeMap} alt="" width={300} style={{filter: "invert(1)"}}/>
+        </Card>}
+        
+      </div>
 
-      </Card>}
+
 
       {!loadingScreen && alertGempaBumi && gempaDirasakan && <Card title={
         <div className='overflow-hidden'>
