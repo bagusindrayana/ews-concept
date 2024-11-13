@@ -1202,3 +1202,6 @@ label#internal {
     }
   }
   
+  .mapboxgl-popup-close-button {
+    font-size: 24px;
+  }

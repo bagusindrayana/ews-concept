@@ -19,33 +19,11 @@ import { IoLocationSharp } from "react-icons/io5";
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
 import TitikTsunami from './components/mapbox_marker/titik_tsunami';
 
-// import { HexGrid, Layout, Hexagon, Text, Pattern, Path, Hex, GridGenerator, HexUtils } from 'react-hexgrid';
-// import { css } from "@emotion/react"
-
-// const initialConfig: any = {
-//   width: 1000,
-//   height: 800,
-//   layout: { width: 8, height: 8, flat: false, spacing: 1.02 },
-//   origin: { x: 0, y: 0 },
-//   map: "parallelogram",
-//   mapProps: [10],
-// }
-// const generator = GridGenerator.getGenerator(initialConfig.map)
-
-// const initialHexagons: Hex[] = generator(initialConfig.mapProps)
-
-
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
-
-
 
 let socket;
 export default function Home() {
-  // const [hexagons, setHexagons] = React.useState(initialHexagons)
-  // const [config, setConfig] = React.useState<any>(initialConfig)
 
-  // const layout = config.layout
-  // const size = { x: layout.width, y: layout.height }
 
   const dangerSound = "/sounds/siren-alarm-96503.mp3"
   const smallEarthQuakeSound = "/sounds/wrong-answer-129254.mp3"
@@ -114,7 +92,8 @@ export default function Home() {
       message: data.message,
       place: data.place,
       time: data.time || new Date().toLocaleString(),
-      listKotaTerdampak: []
+      listKotaTerdampak: [],
+      mmi: parseInt((data.time || new Date().toLocaleString())?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", ""))
     };
 
     const tg = new TitikGempa(id, nig, {
@@ -550,7 +529,8 @@ export default function Home() {
         message: tg.message,
         place: tg.place,
         time: new Date().toLocaleString(),
-        listKotaTerdampak: []
+        mmi: parseInt(new Date().toLocaleString()?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")),
+        listKotaTerdampak: [],
       };
 
       for (let il = 0; il < tg.areaTerdampak.length; il++) {
@@ -893,7 +873,8 @@ export default function Home() {
             mag: feature.properties.mag,
             depth: feature.properties.depth,
             place: feature.properties.place,
-            time: readAbleTime
+            time: readAbleTime,
+            mmi: 0
           }));
         }
         tgs.current = ntg;
@@ -943,7 +924,7 @@ export default function Home() {
           const root = createRoot(placeholder)
           root.render(<Card title={
             <div className='overflow-hidden'>
-              <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+              <div className='strip-wrapper'><div className='strip-bar'></div></div>
               <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
                 <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
               </div>
@@ -1016,27 +997,6 @@ export default function Home() {
       'data': url
     });
 
-    // Add a layer to use the image to represent the data.
-    // map.current!.addLayer({
-    //   'id': 'timezone-fill',
-    //   'type': 'fill',
-    //   'source': 'timezone', // reference the data source
-    //   'layout': {
-
-    //   },
-    //   'paint': {
-    //     // 'line-color': 'blue',
-    //     // 'line-width': 1
-    //     'fill-color': 'red',
-    //     'fill-opacity': [
-    //       'case',
-    //       ['boolean', ['feature-state', 'hover'], false],
-    //       0.1,
-    //       0
-    //     ],
-
-    //   }
-    // });
 
     map.current!.addLayer({
       'id': 'timezone-line',
@@ -1102,35 +1062,6 @@ export default function Home() {
       .setLngLat([131.58387377752751, 3.4359354227361933])
       .addTo(map.current!)
 
-    // map.current!.on('click', 'timezone-fill', (e: any) => {
-    //   console.log(e);
-    // });
-
-    // map.current!.on('mousemove', 'timezone-fill', (e: any) => {
-    //   if (e.features.length > 0) {
-    //     if (hoverTimezone.current !== null) {
-    //       map.current!.setFeatureState(
-    //         { source: 'timezone', id: hoverTimezone.current },
-    //         { hover: false }
-    //       );
-    //     }
-    //     hoverTimezone.current = e.features[0].id;
-    //     map.current!.setFeatureState(
-    //       { source: 'timezone', id: hoverTimezone.current },
-    //       { hover: true }
-    //     );
-    //   }
-    // });
-
-    // map.current!.on('mouseleave', 'timezone-fill', () => {
-    //   if (hoverTimezone.current !== null) {
-    //     map.current!.setFeatureState(
-    //       { source: 'timezone', id: hoverTimezone.current },
-    //       { hover: false }
-    //     );
-    //   }
-    //   hoverTimezone.current = null;
-    // });
   }
 
   function getFaultLineGeojson() {
@@ -1190,7 +1121,8 @@ export default function Home() {
           mag: data.info.magnitude || 9.0,
           depth: data.info.depth || "10 Km",
           message: data.info.description,
-          time: readAbleTime
+          time: readAbleTime,
+          mmi: parseInt(readAbleTime?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", ""))
         };
 
         const cek = tgs.current.find((v) => v.id == data.identifier);
@@ -1203,6 +1135,7 @@ export default function Home() {
             depth: data.info.depth,
             message: data.info.description + "\n" + data.info.instruction,
             time: readAbleTime,
+            mmi: readAbleTime?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")
           });
           const ntg = new TitikGempa(nig.id, nig, {
             map: map.current!,
@@ -1293,7 +1226,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             depth: feature.properties.depth || "10 Km",
             message: msg,
             place: feature.properties.place,
-            time: readAbleTime
+            time: readAbleTime,
+            mmi: parseInt(readAbleTime?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", ""))
           };
 
 
@@ -1370,7 +1304,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       depth: feature.properties.depth || "10 Km",
       message: msg,
       place: feature.properties.place,
-      time: readAbleTime
+      time: readAbleTime,
+      mmi: parseInt(readAbleTime?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", ""))
     };
     if (lastGempaKecilId.current != feature.properties.id) {
       lastGempaKecilId.current = feature.properties.id;
@@ -1513,6 +1448,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       selectedPopup.current.remove();
     }
 
+    if (d.mmi != 0) {
+      setShakeMap((d.mmi).toString() + ".mmi.jpg");
+    }
+
     map.current!.flyTo({
       center: [d.lng, d.lat],
       zoom: 6,
@@ -1522,7 +1461,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     const root = createRoot(placeholder)
     root.render(<Card title={
       <div className='overflow-hidden'>
-        <div className='strip-wrapper'><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+        <div className='strip-wrapper'><div className='strip-bar '></div></div>
         <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
           <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
         </div>
@@ -1587,7 +1526,8 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       mag: parseFloat(mag),
       depth: depth || "10 Km",
       message: message,
-      time: readAbleTime
+      time: readAbleTime,
+      mmi: parseInt(readAbleTime?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", ""))
     };
 
 
@@ -1610,7 +1550,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         var infos = jObj.alert.info;
         infos = infos.filter((v) => v.wzarea != undefined)
         var randInfo = infos[(Math.random() * infos.length) | 0]
-        
+
         warningTsunamiHandler(randInfo);
 
       }).catch((error) => {
@@ -1654,7 +1594,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     let arrayDivs: any = [];
     for (let index = 0; index < max; index++) {
       arrayDivs.push(<div key={index} style={{
-        animationDelay: `${index * 0.001}s`
+        animationDelay: `${index * 0.002}s`
       }}>
         <img src="/images/warning_hex_red.png" alt="" />
       </div>);
@@ -1963,7 +1903,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       </div>
 
       <div className='right-6 bottom-6 md:bottom-3 md:right-3 fixed  pointer-events-none flex gap-2 justify-end items-end'>
-      
+
 
         {!loadingScreen && detailInfoGempa && <Card title={
           <div className='w-full flex justify-between'>
@@ -1983,7 +1923,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             fontSize: "10px"
           }}>
             <div className='flex flex-col w-full gap-2'>
-              {/* <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + (detailInfoGempa.time?.replaceAll("-", "").replaceAll(" ", "").replaceAll(":", "")) + ".mmi.jpg"} alt="" className='w-52' /> */}
+              {/* {detailInfoGempa.mmi != 0 && <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + (detailInfoGempa.mmi) + ".mmi.jpg"} alt="" className='w-52' />} */}
 
               <div>
                 <div className='bordered p-2'>
@@ -2018,10 +1958,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                 </div>
               </div>
 
-              <div className='bordered p-2'>
+              <div className='bordered p-2 overflow-y-auto max-h-60'>
                 <table id='histori_tabel' style={{
                   fontSize: "10px"
-                }} className='w-full text-right'>
+                }} className='w-full text-right '>
                   <thead>
                     <tr>
                       <th className='p-1'>
@@ -2068,20 +2008,24 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           </div>
 
         </Card>}
-        { shakeMap &&
+        {shakeMap &&
           <Card title={
-          <div className='w-full flex justify-between'>
-            <p className='font-bold text-glow-red text-sm'>
-              SHAKEMAP
-            </p>
-           
-          </div>
-        }
-        className='  show-pop-up pointer-events-auto'
-        >
-          <img src={"https://bmkg-content-inatews.storage.googleapis.com/"+shakeMap} alt="" width={300} style={{filter: "invert(1)"}}/>
-        </Card>}
-        
+            <div className='w-full flex justify-between'>
+              <p className='font-bold text-glow-red text-sm'>
+                SHAKEMAP
+              </p>
+              <button onClick={() => {
+                setShakeMap(null);
+              }}>X</button>
+            </div>
+          }
+            className='  show-pop-up pointer-events-auto'
+          >
+            <a href={"https://bmkg-content-inatews.storage.googleapis.com/" + shakeMap} target='_blank'>
+            <img src={"https://bmkg-content-inatews.storage.googleapis.com/" + shakeMap} alt="" width={300} style={{ filter: "invert(1)" }} />
+            </a>
+          </Card>}
+
       </div>
 
 

@@ -8,6 +8,7 @@ export interface InfoGempa {
   time?: string;
   message?: string;
   listKotaTerdampak?: KotaTerdampak[];
+  mmi: number;
 }
 
 export interface KotaTerdampak {
