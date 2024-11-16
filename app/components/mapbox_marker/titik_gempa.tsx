@@ -13,8 +13,8 @@ type TitikGempaSetting = {
     sWaveSpeed?: number,
     pWaveSpeed?: number,
     description?: string;
-    showPopUpInSecond?:number;
-    closePopUpInSecond?:number;
+    showPopUpInSecond?: number;
+    closePopUpInSecond?: number;
 
 }
 
@@ -31,7 +31,7 @@ export default class TitikGempa {
     finishWave: boolean = false;
     initalPWaveRadius: number = 0;
     initalSWaveRadius: number = 0;
-    constructor(id: string,infoGempa: InfoGempa, setting?: TitikGempaSetting) {
+    constructor(id: string, infoGempa: InfoGempa, setting?: TitikGempaSetting) {
         this.id = id;
         this.infoGempa = infoGempa;
         this.setting = setting;
@@ -59,12 +59,12 @@ export default class TitikGempa {
         return this.infoGempa.depth;
     }
 
-    get time(){
+    get time() {
         return this.infoGempa.time;
     }
-    
+
     get timeDiff() {
-        if(this.infoGempa.time != null){
+        if (this.infoGempa.time != null) {
             const d = new Date(this.infoGempa.time);
             const now = new Date();
             return new Date(now.getTime() - d.getTime()).toLocaleTimeString();
@@ -73,32 +73,32 @@ export default class TitikGempa {
     }
 
     get readableMag() {
-        if(this.mag != null){
+        if (this.mag != null) {
             return parseFloat(this.mag.toString()).toFixed(1);
         }
         return 0;
     }
 
     get readableDepth() {
-        if(this.infoGempa.depth){
+        if (this.infoGempa.depth) {
             return parseFloat(this.infoGempa.depth.replace(" Km", "")).toFixed(2);
         }
         return 0;
     }
 
     get readableTime() {
-        if(this.infoGempa.time != null){
+        if (this.infoGempa.time != null) {
             return new Date(this.infoGempa.time).toLocaleString();
         }
         return "-"
     }
 
     init() {
-        if (this.setting != null ) {
-            
+        if (this.setting != null) {
+
 
             if (this.setting.map != null) {
-                if(this.infoGempa.time != null && this.setting.pWaveSpeed != null && this.setting.sWaveSpeed != null){
+                if (this.infoGempa.time != null && this.setting.pWaveSpeed != null && this.setting.sWaveSpeed != null) {
                     const d = new Date(this.infoGempa.time);
                     const now = new Date();
                     const diff = now.getTime() - d.getTime();
@@ -110,36 +110,36 @@ export default class TitikGempa {
                     }, ((Math.abs(this.mag || 1) * 20000) - diff));
 
                     setTimeout(() => {
-                    
+
                         this.animateWave();
-                        
+
                     }, 1000);
                 }
-                
-                if(this.setting.showMarker){
+
+                if (this.setting.showMarker) {
                     this.renderMarker();
                 }
 
-                if(this.setting.zoomToPosition){
+                if (this.setting.zoomToPosition) {
                     this.flyTo();
                 }
-                
 
-                if(this.setting.showPopup){
-                    if(this.setting.showPopUpInSecond){
+
+                if (this.setting.showPopup) {
+                    if (this.setting.showPopUpInSecond) {
                         setTimeout(() => {
                             this.renderPopup();
-                            
+
                         }, this.setting.showPopUpInSecond * 1000);
                     } else {
                         setTimeout(() => {
                             this.renderPopup();
-                            
+
                         }, 1000);
                     }
                 }
 
-                
+
             }
         }
     }
@@ -152,11 +152,11 @@ export default class TitikGempa {
         const rootMarker = createRoot(titikGempa)
         rootMarker.render(
             <div className="circles flex justify-center items-center">
-            <div className="circle1"></div>
-            <div className="circle2"></div>
-            <div className="circle3"></div>
-            <GiCancel className="blink"/>
-        </div>);
+                <div className="circle1"></div>
+                <div className="circle2"></div>
+                <div className="circle3"></div>
+                <GiCancel className="blink" />
+            </div>);
 
         // create the marker
         this.gempaMarker = new mapboxgl.Marker(titikGempa)
@@ -177,28 +177,22 @@ export default class TitikGempa {
                 </div>
             </div>
         } className='min-h-48 min-w-48 whitespace-pre-wrap' >
-            {this.mag && <div className='text-glow text-sm w-full bordered p-1' style={{
-                fontSize: "10px"
-              }}>
-                <table className='w-full'>
-                  <tbody>
-                    <tr>
-                      <td className='flex'>Time</td>
-                      <td className='text-right break-words pl-2'>{this.infoGempa.time}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>Magnitudo</td>
-                      <td className='text-right break-words pl-2'>{this.mag}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>Kedalaman</td>
-                      <td className='text-right break-words pl-2'>{this.depth}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>}
+            {this.mag && <ul className='text-glow'>
+                    <li>
+                        Magnitudo : {Number(this.mag).toFixed(1)}
+                    </li>
+                    <li>
+                        Kedalaman : {this.depth}
+                    </li>
+                    <li>
+                        Waktu : {new Date(this.infoGempa.time!).toLocaleString()}
+                    </li>
+                    <li>
+                        Lokasi (Lat,Lng) : <br />{this.infoGempa.lat} , {this.infoGempa.lng}
+                    </li>
+                </ul>}
             <p className="mt-1">
-            {this.setting?.description}
+                {this.setting?.description}
             </p>
         </Card>)
 
@@ -300,7 +294,7 @@ export default class TitikGempa {
     }
 
     animateWave() {
-        if(this.setting != null && this.infoGempa.time != null){
+        if (this.setting != null && this.infoGempa.time != null) {
             const d = new Date(this.infoGempa.time);
             const now = new Date();
             const diff = now.getTime() - d.getTime();
@@ -336,7 +330,7 @@ export default class TitikGempa {
     flyTo() {
         if (this.setting?.map != null) {
             this.setting.map.flyTo({
-                center:[this.infoGempa.lng, this.infoGempa.lat],
+                center: [this.infoGempa.lng, this.infoGempa.lat],
                 zoom: 6
             });
         }
@@ -367,9 +361,9 @@ export default class TitikGempa {
                 const markers = document.querySelectorAll('.marker-daerah');
                 //get parent and remove
                 markers.forEach((v) => {
-                  v.parentElement!.remove();
+                    v.parentElement!.remove();
                 });
-              }
+            }
             this.finishWave = true;
         }
     }

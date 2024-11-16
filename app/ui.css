@@ -412,7 +412,7 @@
 
 @keyframes blink {
     0% {
-        opacity: 0;
+        opacity: 0.4;
     }
 
     50% {
@@ -420,7 +420,7 @@
     }
 
     100% {
-        opacity: 0;
+        opacity: 0.4;
     }
 }
 
@@ -1204,4 +1204,63 @@ label#internal {
   
   .mapboxgl-popup-close-button {
     font-size: 24px;
+    color: #e60003;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 0.8; }
+    50% { opacity: 1; }
+  }
+  
+  @keyframes scanline {
+    0% { transform: translateY(-100%); }
+    100% { transform: translateY(100%); }
+  }
+  
+  .hex-grid {
+    background-image: repeating-linear-gradient(120deg, #000000 0, #000000 2px, transparent 2px, transparent 20px),
+                      repeating-linear-gradient(60deg, #000000 0, #000000 2px, transparent 2px, transparent 20px),
+                      linear-gradient(180deg, #000000 0%, #001100 100%);
+  }
+  
+  .neon-glow {
+    text-shadow: 0 0 5px rgba(255, 140, 0, 0.8),
+                 0 0 10px rgba(255, 140, 0, 0.5),
+                 0 0 15px rgba(255, 140, 0, 0.3);
+  }
+  
+  .neon-box {
+    box-shadow: 0 0 5px rgba(255, 140, 0, 0.8),
+                0 0 10px rgba(255, 140, 0, 0.5),
+                inset 0 0 5px rgba(255, 140, 0, 0.5);
+  }
+
+  .backgroundline {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+      transparent 50%,
+      rgba(0, 0, 0, 0.1) 50%
+    );
+    background-size: 100% 4px;
+    pointer-events: none;
+  }
+  
+  .scanline::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+      transparent 50%,
+      rgba(255, 0, 0, 0.1) 50%
+    );
+    background-size: 100% 4px;
+    animation: scanline 8s linear infinite;
+    pointer-events: none;
   }

@@ -26,6 +26,7 @@ export default function ItemKotaTerdampak({ kota, onClick }: { kota: KotaTerdamp
 
 
     useEffect(() => {
+        setFinish(false);
         // const interval = setInterval(() => {
         //     const seconds = Math.floor(miliseconds / 1000);
         //     const minutes = Math.floor(seconds / 60);
@@ -50,7 +51,7 @@ export default function ItemKotaTerdampak({ kota, onClick }: { kota: KotaTerdamp
             {kota.hit && <audio id={"error-"+kota.distance} className='hidden' autoPlay={true}>
                 <source src={errorSound} type="audio/wav" />
             </audio>}
-            <div className={'jajar-genjang flex justify-end ' + (finish ? "danger " : "")}>
+            <div className={'jajar-genjang flex justify-end ' + (finish ? "danger blink blink-fast" : "")}>
                 <p style={{
                     fontSize: '10px',
                 }}>{kota.name}</p>
