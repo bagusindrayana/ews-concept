@@ -18,6 +18,7 @@ const { DateTime } = require("luxon");
 import { IoLocationSharp } from "react-icons/io5";
 import { XMLParser, XMLBuilder, XMLValidator } from "fast-xml-parser";
 import TitikTsunami from './components/mapbox_marker/titik_tsunami';
+import TsunamiAlert from './components/TsunamiAlert';
 
 mapboxgl.accessToken = 'pk.eyJ1IjoiYmFndXNpbmRyYXlhbmEiLCJhIjoiY2p0dHMxN2ZhMWV5bjRlbnNwdGY4MHFuNSJ9.0j5UAU7dprNjZrouWnoJyg';
 
@@ -59,7 +60,7 @@ export default function Home() {
   const [events, setEvents] = useState<TitikGempa[]>([]);
   const [alertGempaBumi, setAlertGempaBumi] = useState<TitikGempa | null>(null);
 
-  const [alertGempaBumis, setAlertGempaBumis] = useState<InfoGempa[]>([]);
+  const [alertGempaBumis, setAlertGempaBumis] = useState<TitikGempa[]>([]);
 
   const [alertTsunami, setAlertTsunami] = useState<TitikTsunami | null>(null);
 
@@ -109,7 +110,7 @@ export default function Home() {
     titikGempaBaru.current.push(tg);
 
 
-    setAlertGempaBumis([...alertGempaBumis, nig]);
+    setAlertGempaBumis([...alertGempaBumis, tg]);
 
 
     // tgs.current.push(tg);
@@ -516,6 +517,7 @@ export default function Home() {
 
   const recieveWave = async (data: any) => {
     let alerts: InfoGempa[] = [];
+    let ntgs: TitikGempa[] = [];
     for (let x = 0; x < data.titikGempa.length; x++) {
       const tg = data.titikGempa[x];
 
@@ -549,16 +551,33 @@ export default function Home() {
 
       //sort nig.listKotaTerdampak by distance
       nig.listKotaTerdampak!.sort((a, b) => a.distance - b.distance);
-
+      tg.infoGempa = nig;
       alerts.push(nig);
+
+      data.titikGempa[x] = tg;
+      ntgs.push(new TitikGempa(tg.id, nig));
     }
+
+    // console.log(data.titikGempa);
+    // console.log(alertGempaBumis);
 
     //get last alert
     if (alerts.length > 0) {
-      const fig = alerts.slice(-1).pop()!;
-      setAlertGempaBumi(new TitikGempa(fig.id, fig));
+      // const fig = alerts.slice(-1).pop()!;
+      // var newData = data.titikGempa;
+      // const indexTitik = newData.findIndex((v) => v.id == fig.id);
+      // if(indexTitik >= 0) {
+        
+      //   newData[indexTitik].infoGempa = fig;
+        
+      // }
+      // console.log(ntgs);
+      setAlertGempaBumis(ntgs);
+      
+      // titikGempaBaru.current[indexTitik] = new TitikGempa(fig.id, fig);
+      //setAlertGempaBumi(new TitikGempa(fig.id, fig));
     } else {
-      setAlertGempaBumi(null);
+      //setAlertGempaBumi(null);
     }
 
     const areas = data.area;
@@ -755,99 +774,6 @@ export default function Home() {
         console.error('Error fetching data:', error);
       });
   };
-
-  function getTitikStationJson() {
-    const url = "https://bmkg-content-inatews.storage.googleapis.com/sensor_seismic.json";
-    if (map.current) {
-      map.current.loadImage(
-        '/images/triangle-filled-svgrepo-com.png',
-        (error, image: any) => {
-          if (error) throw error;
-
-          // Add the image to the map style.
-          map.current!.addImage('station-icon', image);
-
-          // Add a data source containing one point feature.
-          map.current!.addSource('station', {
-            'type': 'geojson',
-            'data': url
-          });
-
-          // Add a layer to use the image to represent the data.
-          map.current!.addLayer({
-            'id': 'stations',
-            'type': 'symbol',
-            'source': 'station', // reference the data source
-            'layout': {
-              'icon-image': 'station-icon', // reference the image
-              'icon-size': 0.05
-            }
-          });
-
-          map.current!.on('click', 'stations', (e: any) => {
-            // Copy coordinates array.
-            const coordinates = e.features[0].geometry.coordinates.slice();
-            const d = e.features[0].properties;
-            const placeholder = document.createElement('div');
-            const root = createRoot(placeholder)
-            root.render(<Card title={
-              <p className='font-bold text-glow-red text-sm text-center' style={{
-                color: "red"
-              }}>SENSOR SEISMIK</p>
-            } className='min-h-48 min-w-48 whitespace-pre-wrap' >
-              <div className='text-glow text-sm w-full ' style={{
-                fontSize: "10px"
-              }}><table className='w-full'>
-                  <tbody>
-                    <tr>
-                      <td className='flex'>ID</td>
-                      <td className='text-right break-words pl-2'>{d.id}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>Stakeholder</td>
-                      <td className='text-right break-words pl-2'>{d.stakeholder}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>UPTBMKG</td>
-                      <td className='text-right break-words pl-2'>{d.uptbmkg}</td>
-                    </tr>
-                    <tr>
-                      <td className='flex'>Lokasi (Lat,Lng)</td>
-                      <td className='text-right break-words pl-2'>{coordinates[0]} , {coordinates[1]}</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            </Card>);
-
-            new AnimatedPopup({
-              openingAnimation: {
-                duration: 100,
-                easing: 'easeOutSine',
-                transform: 'scale'
-              },
-              closingAnimation: {
-                duration: 100,
-                easing: 'easeInOutSine',
-                transform: 'scale'
-              }
-            }).setDOMContent(placeholder).setLngLat(coordinates).addTo(map.current!);
-          });
-
-          map.current!.on('mouseenter', 'stations', () => {
-            map.current!.getCanvas().style.cursor = 'pointer';
-          });
-
-          // Change it back to a pointer when it leaves.
-          map.current!.on('mouseleave', 'stations', () => {
-            map.current!.getCanvas().style.cursor = '';
-          });
-        }
-      );
-
-    }
-  }
-
 
 
   function getTitikGempaJson() {
@@ -1367,7 +1293,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         return new Date(b.time).getTime() - new Date(a.time).getTime();
       });
       setEvents(tgs.current);
-      setAlertGempaBumi(new TitikGempa(nig.id, nig))
+      // setAlertGempaBumi(new TitikGempa(nig.id, nig))
 
       // const tg = new TitikGempa(lastGempaKecilId.current, nig, {
       //   pWaveSpeed: 6000,
@@ -1380,10 +1306,10 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       setGempaTerakhir(new TitikGempa(nig.id, nig));
     } else {
       const cek = tgs.current.find((v) => v.id == feature.properties.id);
-      if(cek){
+      if (cek) {
         if (cek.infoGempa.mag != parseFloat(feature.properties.mag) || cek.infoGempa.depth != feature.properties.depth) {
           setGempaTerakhir(new TitikGempa(nig.id, nig));
-          setAlertGempaBumi(new TitikGempa(nig.id, nig));
+          // setAlertGempaBumi(new TitikGempa(nig.id, nig));
           const indextgs = tgs.current.findIndex((v) => v.id == feature.properties.id);
           tgs.current[indextgs].infoGempa = nig;
         }
@@ -1435,7 +1361,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       if (tsunami) {
         const cek = tts.current.find((v) => v.id == data.identifier);
         if (cek && cek.infoTsunami.message != data.description + "\n" + data.instruction) {
-          
+
           // const tt = new TitikTsunami(data.identifier, cek.infoTsunami, {
           //   pWaveSpeed: 6000,
           //   sWaveSpeed: 3000,
@@ -1455,48 +1381,20 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         }
       } else {
         const cek = tgs.current.find((v) => v.id == data.identifier);
-        if(cek){
-          if(cek.infoGempa.mag != parseFloat(data.info.magnitude)){
+        if (cek) {
+          if (cek.infoGempa.mag != parseFloat(data.info.magnitude)) {
             cek.infoGempa.mag = data.info.magnitud;
           }
-          if(cek.infoGempa.depth != data.info.depth){
+          if (cek.infoGempa.depth != data.info.depth) {
             cek.infoGempa.depth = data.info.depth;
           }
-          setAlertGempaBumi(cek);
+          // setAlertGempaBumi(cek);
         }
       }
     }
   }
 
-  function getGempaPeriodik() {
-    setInterval(() => {
-      const url = "https://bmkg-content-inatews.storage.googleapis.com/datagempa.json?t=" + new Date().getTime()
-      //await fetch
-      fetch(url)
-        .then(response => response.json())
-        .then((data) => {
-          updateTsunami(data);
-        })
-        .catch((error) => {
-          console.error('Error initializing socket:', error);
-        });
-    }, 5000);
-
-    setInterval(() => {
-      const url = "https://bmkg-content-inatews.storage.googleapis.com/lastQL.json?t=" + new Date().getTime();
-      fetch(url)
-        .then(response => response.json())
-        .then((data) => {
-          updateGempa(data);
-
-
-        })
-        .catch((error) => {
-          console.error('Error initializing socket:', error);
-        });
-    }, 5000);
-  }
-
+  
   const selectedPopup = useRef<any>(null);
 
   function selectEvent(d: InfoGempa) {
@@ -1647,19 +1545,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
     }, t.send(null)
   }
 
-  function generateDiv(max) {
-    let arrayDivs: any = [];
-    for (let index = 0; index < max; index++) {
-      arrayDivs.push(<div key={index} style={{
-        animationDelay: `${index * 0.002}s`
-      }}>
-        <img src="/images/warning_hex_red.png" alt="" />
-      </div>);
-    }
-
-    return arrayDivs;
-  }
-
 
   return (
     <div className='min-h-screen bg-black font-mono relative overflow-hidden'>
@@ -1695,7 +1580,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
                   </div>
                   <p className='text-glow font-bold'>DEPTH : {alertGempaBumi.readableDepth} KM</p>
                 </div>
-                <div className="bordered p-2 w-full">
+                <div className="bordered p-1 w-full">
                   <table className='w-full'>
                     <tbody>
 
@@ -1783,11 +1668,92 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
             </div>}
           </Card>}
 
+        {!loadingScreen && alertGempaBumis.map((agi, i) => {
+          return <Card key={i} title={
+            <div className='overflow-hidden'>
+              <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
+              <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
+                <p className='p-1 bg-black font-bold text-xs text-glow'>GEMPA BUMI</p>
+              </div>
+
+              <div className='absolute top-1 right-1 flex justify-center items-center' style={{
+                color:"#e60003"
+              }}>
+                <button onClick={() => {
+
+                }}>X</button>
+              </div>
+
+            </div>
+          } className='hidden md:block show-pop-up  md:w-1/2 lg:w-2/5 xl:w-1/5 pointer-events-auto'>
+            <div className='flex flex-col w-full justify-center items-center text-glow text-sm ' style={{
+              fontSize: "10px"
+            }}>
+              <div className='w-full flex   gap-2' >
+                <div>
+                  <div id="internal" className="label bordered flex mb-2 w-full lg:w-32">
+                    <div className="flex flex-col items-center p-1 ">
+                      <div className="text -characters">{agi.readableMag}</div>
+                      <div className="text">MAG</div>
+                    </div>
+                    <div className="decal -blink -striped"></div>
+                  </div>
+                  <p className='text-glow font-bold'>DEPTH : {agi.readableDepth} KM</p>
+                </div>
+                <div className="bordered p-2 w-full">
+                  <table className='w-full'>
+                    <tbody>
+
+                      <tr>
+                        <td className='text-left'>TIME</td>
+                        <td className='text-right'>{agi.readableTime} WIB</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>MAG</td>
+                        <td className='text-right'>{Number(agi.mag).toFixed(1)}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>DEPTH</td>
+                        <td className='text-right'>{agi.depth}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>LAT</td>
+                        <td className='text-right'>{agi.infoGempa.lat}</td>
+                      </tr>
+                      <tr>
+                        <td className='text-left'>LNG</td>
+                        <td className='text-right'>{agi.infoGempa.lng}</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+
+              </div>
+              <div className='mt-2 bordered w-full'>
+                <p className='text-glow p-2 break-words'>{agi.infoGempa.message}</p>
+              </div>
+            </div>
+            {agi.mag >= 5 && <div className='red-bordered p-2 overflow-y-auto custom-scrollbar mt-2  pointer-events-auto' style={{
+              maxHeight: "20vh",
+            }}>
+              <ul>
+                {agi.infoGempa.listKotaTerdampak && agi.infoGempa.listKotaTerdampak.map((kota, i) => {
+                  if (kota.hit) {
+                    return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah danger slide-in-left'>
+                      <ItemKotaTerdampak kota={kota} />
+                    </li>
+                  } else {
+                    return <li key={i} className='flex flex-grow justify-between items-center mb-2 item-daerah slide-in-left'>
+                      <ItemKotaTerdampak kota={kota} />
+                    </li>
+                  }
+                })}
+              </ul>
+            </div>}
+          </Card>
+        })}
 
       </div>
-
-
-
 
       <div className='fixed  top-12 w-28 md:bottom-auto md:top-2 left-0 right-0 m-auto flex flex-col justify-center items-center gap-2'>
         <button className=' bordered w-24 text-sm text-center bg-black cursor-pointer' onClick={() => {
@@ -1835,11 +1801,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </ul>
 
       </Card>}
-
-
-
-
-
 
 
       <div id="gempa-bumi-dirasakan" className='fixed bottom-6 left-6 md:right-0 md:left-3 flex flex-col-reverse lg:flex-row gap-2 justify-start lg:items-end items-start pointer-events-none'>
@@ -1962,8 +1923,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
       </div>
 
       <div className='right-6 bottom-6 md:bottom-3 md:right-3 fixed  pointer-events-none flex gap-2 justify-end items-end'>
-
-
         {!loadingScreen && detailInfoGempa && <Card title={
           <div className='w-full flex justify-between'>
             <p className='font-bold text-glow-red text-sm'>
@@ -2067,6 +2026,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           </div>
 
         </Card>}
+
         {shakeMap &&
           <Card title={
             <div className='w-full flex justify-between'>
@@ -2086,8 +2046,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
           </Card>}
 
       </div>
-
-
 
       {!loadingScreen && alertGempaBumi && gempaDirasakan && <Card title={
         <div className='overflow-hidden'>
@@ -2162,17 +2120,6 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
         </div>
       })}
 
-      {/* {!loadingScreen && alertGempaBumi && <GempaBumiAlert key={alertGempaBumi.id}
-            props={
-              {
-                magnitudo: alertGempaBumi.mag || 9.0,
-                kedalaman: alertGempaBumi.depth || '0 km',
-                show: true,
-                closeInSecond: 6
-              }
-            } />} */}
-
-
       <div className="fixed bottom-2 md:bottom-1 m-auto right-0 md:right-72 left-0 md:left-auto flex justify-center items-center gap-2 w-36  md:w-auto">
         <a title="Link Github" href="https://inatews.bmkg.go.id" className='flex gap-1 text-center justify-center  m-auto'>
           <div className='bmkg-icon'></div>
@@ -2185,143 +2132,7 @@ ${feature.geometry.coordinates[0]} , ${feature.geometry.coordinates[1]}`;
 
       </div>
 
-      {!loadingScreen && alertTsunami && <div className='fixed m-auto top-0 left-0 right-0 bottom-0 flex justify-center' id="tsunami-warning">
-
-        <div className='w-full h-full absolute -rotate-90'>
-          <div className="main " id='bg-tsunami'>
-            <div className="hex-bg">
-              {generateDiv(window.screen.width + (window.screen.width / 3))}
-
-            </div>
-          </div>
-        </div>
-
-        <div className='w-full flex flex-col items-center justify-center '>
-          <div className='warning scale-75 md:scale-150 flex flex-col justify-center items-center'>
-            <div className='long-hex flex flex-col justify-center opacity-0 show-pop-up animation-delay-1'>
-              <div className="flex justify-evenly w-full items-center">
-                <div className='warning-black opacity-0 blink animation-fast animation-delay-2'></div>
-                <div className='flex flex-col font-bold text-center text-black'>
-                  <span className='text-xl'>TSUNAMI</span>
-                  <span className='text-xs'>Peringatan Dini Tsunami</span>
-                </div>
-                <div className='warning-black opacity-0 blink animation-fast animation-delay-2'></div>
-              </div>
-            </div>
-            <div className=' w-3/4 overflow-hidden bg-black relative rounded flex justify-center items-center opacity-0 show-pop-up animation-delay-2'>
-
-              <div className='absolute w-full h-2 m-auto top-0 left-0 right-0 overflow-hidden'>
-                <div className='w-2 h-full strip-bar-red strip-animation'></div>
-              </div>
-              <div className='absolute w-full h-2 m-auto bottom-0 left-0 right-0 overflow-hidden'>
-                <div className='w-2 h-full strip-bar-red strip-animation-reverse'></div>
-              </div>
-              <div className='absolute w-2 h-full m-auto top-0 bottom-0 left-0 overflow-hidden'>
-                <div className='w-2 h-full strip-bar-red-vertical strip-animation-vertical-reverse'></div>
-
-              </div>
-
-              <div className='absolute w-2 h-full m-auto top-0 bottom-0 right-0 overflow-hidden'>
-                <div className='w-2 h-full strip-bar-red-vertical strip-animation-vertical'></div>
-
-              </div>
-              <div className='w-full h-full p-6'>
-                <div className="red-bordered p-2 text-center w-full mb-2">
-                  <div className='overflow-hidden relative'>
-                    <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-                    <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                      <p className='p-1 bg-black font-bold text-xs text-glow'>POTENSI TSUNAMI</p>
-                    </div>
-                  </div>
-                </div>
-                <Card title={
-                  <div className='overflow-hidden relative'>
-                    <div className='strip-wrapper '><div className='strip-bar loop-strip-reverse anim-duration-20'></div><div className='strip-bar loop-strip-reverse anim-duration-20'></div></div>
-                    <div className='absolute top-0 bottom-0 left-0 right-0 flex justify-center items-center'>
-                      <p className='p-1 bg-black font-bold text-xs text-glow uppercase'>{alertTsunami.infoTsunami.level}</p>
-                    </div>
-                  </div>
-                }
-                  className='w-full h-auto'>
-                  <p className='text-xs'>
-                    {alertTsunami.infoTsunami.message}
-                  </p>
-                </Card>
-              </div>
-
-            </div>
-          </div>
-
-
-
-        </div>
-        <div className='absolute top-0 bottom-0 left-0 right-0 '>
-          <div className='z-20 absolute top-8 left-8 md:top-28 md:left-28 scale-150'>
-            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up animation-delay-2'>
-              <div className='p-1 red-bordered'>
-                <div className="warning-tsunami-yellow"></div>
-              </div>
-            </div>
-          </div>
-
-          <div className='z-20 absolute bottom-8 left-8 md:bottom-28 md:left-28 scale-150'>
-            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
-              animationDelay: "2.5s"
-            }}>
-              <div className='p-1 red-bordered'>
-                <div className="warning-tsunami-yellow"></div>
-              </div>
-            </div>
-          </div>
-
-          <div className='z-20 absolute top-8 right-8 md:top-28 md:right-28 scale-150'>
-            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
-              animationDelay: "3s"
-            }}>
-              <div className='p-1 red-bordered'>
-                <div className="warning-tsunami-yellow"></div>
-              </div>
-            </div>
-          </div>
-
-
-          <div className='z-20 absolute bottom-8 right-8 md:bottom-28 md:right-28 scale-150'>
-            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
-              animationDelay: "3.5s"
-            }}>
-              <div className='p-1 red-bordered'>
-                <div className="warning-tsunami-yellow"></div>
-              </div>
-            </div>
-          </div>
-
-          <div className='z-20 absolute h-28 m-auto bottom-0 top-0 right-16 md:right-1/4 hidden md:block scale-150'>
-            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up' style={{
-              animationDelay: "2s"
-            }}>
-              <div className='p-1 red-bordered'>
-                <div className="warning-tsunami-yellow"></div>
-              </div>
-            </div>
-          </div>
-
-          <div className='z-20 absolute h-28 m-auto bottom-0 top-0 left-16 md:left-1/4 hidden md:block scale-150'>
-            <div className='p-1 bg-black rounded-xl opacity-0 show-pop-up del' style={{
-              animationDelay: "2.5s"
-            }}>
-              <div className='p-1 red-bordered'>
-                <div className="warning-tsunami-yellow "></div>
-              </div>
-            </div>
-          </div>
-
-
-
-        </div>
-
-
-
-      </div>}
+      {!loadingScreen && alertTsunami && <TsunamiAlert alertTsunami={alertTsunami} />}
 
 
       <div className='fixed m-auto top-0 bottom-0 left-0 right-0 flex flex-col justify-center items-center overlay-bg text-center' id='loading-screen'>

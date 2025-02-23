@@ -1264,3 +1264,7 @@ label#internal {
     animation: scanline 8s linear infinite;
     pointer-events: none;
   }
+
+  table tr td {
+    padding: 0px;
+  }

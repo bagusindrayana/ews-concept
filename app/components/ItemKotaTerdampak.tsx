@@ -42,10 +42,10 @@ export default function ItemKotaTerdampak({ kota, onClick }: { kota: KotaTerdamp
         const interval = setInterval(() => {
             setReadableTime(calculateTimeLeft());
 
-        }, 10);
+        }, 20);
 
         return () => clearInterval(interval);
-    });
+    },[]);
     return (
         <>
             {kota.hit && <audio id={"error-"+kota.distance} className='hidden' autoPlay={true}>

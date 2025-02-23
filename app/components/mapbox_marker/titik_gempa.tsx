@@ -74,7 +74,7 @@ export default class TitikGempa {
 
     get readableMag() {
         if (this.mag != null) {
-            return parseFloat(this.mag.toString()).toFixed(1);
+            return Number(this.mag.toString()).toFixed(1);
         }
         return 0;
     }
